@@ -63,7 +63,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.HOST;
@@ -270,7 +269,10 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
             assertTrue(embedded.stream().allMatch(body -> body.contains("\"" + llm + "\"")), "each write asks for " + llm + ": " + embedded);
             // the location the spec was read from still holds the spec: the model lives in the space
             AbstractMetatronTest.checkEquality(LOG, uri(stand), Machine.read(location.extend(HOST)), true);
-            assertNotEquals(LLM_MODEL_TID, Machine.read(location).tid(), "the location keeps its spec: " + Machine.read(location));
+            AbstractMetatronTest.checkEquality(LOG, uri(LLM_MODEL_TID), uri(Machine.read(location).tid()), false);
+            // a document is embedded as it is: a str holding a template is not expanded, so its mtron never runs
+            ObjmtronSerializer.parse("<embed:notes/template> -> \"a \\${'b'} c\"").apply();
+            assertTrue(embedded.getLast().contains("${'b'}"), "the template's text is what is embedded: " + embedded.getLast());
         } finally {
             Machine.write(location, noobj());
             ollama.stop(0);
@@ -280,14 +282,18 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
 
     /**
      * the model a space's embedq names comes before its config's embedding function. A model whose build fails fails
-     * the write as itself, and the embedq keeps the spec for the next write. With neither a model nor a function, a
-     * write that brings no embedding fails naming the missing function
+     * the write as itself, and the embedq keeps the spec for the next write. A model that answers an empty embedding is
+     * refused under the model's name. With neither a model nor a function, a write that brings no embedding fails
+     * naming the missing function
      */
     @Test
     public void testAnEmbedqModelComesFirstAndAFailedBuildFailsItsWrite() throws IOException {
         final HttpServer ollama = ollama(new AtomicInteger(), new CopyOnWriteArrayList<>());
+        final HttpServer hollow = ollama(new AtomicInteger(), new CopyOnWriteArrayList<>(), "{\"model\":\"qwen3-embedding:4b\",\"embeddings\":[[]],\"prompt_eval_count\":1}");
         final fURI stand = f().scheme(HTTP).host(ollama.getAddress().getAddress().getHostAddress()).port(ollama.getAddress().getPort());
         final fURI closed = f().scheme(HTTP).host(stand.host()).port(1);
+        final fURI hollowHost = f().scheme(HTTP).host(stand.host()).port(hollow.getAddress().getPort());
+        final fURI hollowSpec = f("/sys/test/chroma/hollow");
         final fURI served = f("/sys/test/chroma/served");
         final fURI unserved = f("/sys/test/chroma/unserved");
         final String space = "<" + endpoint + ">.-<[pattern => %1$s:#, host => <" + endpoint + ">, " +
@@ -296,6 +302,7 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
         try {
             ObjmtronSerializer.parse("<" + served + "> -> [provider=>ollama,protocol=>ollama,host=><" + stand + ">,llm=><qwen3-embedding:4b>]").apply();
             ObjmtronSerializer.parse("<" + unserved + "> -> [provider=>ollama,protocol=>ollama,host=><" + closed + ">,llm=><qwen3-embedding:4b>]").apply();
+            ObjmtronSerializer.parse("<" + hollowSpec + "> -> [provider=>ollama,protocol=>ollama,host=><" + hollowHost + ">,llm=><qwen3-embedding:4b>]").apply();
             // the model ahead of the function, whose answer would be [9.0,9.0]
             ObjmtronSerializer.parse(String.format(space, "firstembed", "model=>!*<" + served + ">",
                     ", config => [embed => [# => inst?lst[real]<=#{?}(doc=>#::T){ [9.0,9.0] }]]")).apply();
@@ -307,6 +314,11 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
             assertTrue(unreachable.isFail() && unreachable.toString().contains("ConnectException") && !unreachable.toString().contains("not an embedding"),
                     "the build's own error, as itself: " + unreachable);
             AbstractMetatronTest.checkEquality(LOG, uri(closed), embedq(f("/memory/space/vec/failembed")).at(uri(MODEL)).asRec().at(uri(HOST)), true);
+            // a model that answers an empty embedding is refused under its own name, not a function's
+            ObjmtronSerializer.parse(String.format(space, "hollowembed", "model=>!*<" + hollowSpec + ">", "")).apply();
+            final Obj hollowed = ObjmtronSerializer.parse("<hollowembed:pile/volta> -> [n=>1]").apply();
+            assertTrue(hollowed.isFail() && hollowed.toString().contains("the model of collection pile answered") && hollowed.toString().contains("not an embedding"),
+                    "the model's answer, under the model's name: " + hollowed);
             // neither a model nor a function
             ObjmtronSerializer.parse(String.format(space, "noembed", "=>", "")).apply();
             final Obj unembedded = ObjmtronSerializer.parse("<noembed:pile/volta> -> [n=>1]").apply();
@@ -315,8 +327,10 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
         } finally {
             Machine.write(served, noobj());
             Machine.write(unserved, noobj());
+            Machine.write(hollowSpec, noobj());
             ollama.stop(0);
-            unmount(f("/memory/space/vec/firstembed"), f("/memory/space/vec/failembed"), f("/memory/space/vec/noembed"));
+            hollow.stop(0);
+            unmount(f("/memory/space/vec/firstembed"), f("/memory/space/vec/failembed"), f("/memory/space/vec/hollowembed"), f("/memory/space/vec/noembed"));
         }
     }
 
@@ -325,10 +339,17 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
      * model list once, /api/tags, and for each listed model's card twice, /api/show) and keeps what each embed asks for
      */
     private static HttpServer ollama(final AtomicInteger builds, final List<String> embedded) throws IOException {
+        return ollama(builds, embedded, OLLAMA_EMBED);
+    }
+
+    /**
+     * the stand-in, answering every embed with the given json
+     */
+    private static HttpServer ollama(final AtomicInteger builds, final List<String> embedded, final String embedding) throws IOException {
         final HttpServer ollama = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
         ollama.createContext("/api/tags", exchange -> answer(exchange, OLLAMA_TAGS, request -> builds.incrementAndGet()));
         ollama.createContext("/api/show", exchange -> answer(exchange, OLLAMA_SHOW, request -> {}));
-        ollama.createContext("/api/embed", exchange -> answer(exchange, OLLAMA_EMBED, embedded::add));
+        ollama.createContext("/api/embed", exchange -> answer(exchange, embedding, embedded::add));
         ollama.start();
         return ollama;
     }

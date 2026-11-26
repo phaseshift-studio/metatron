@@ -364,24 +364,26 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
                 final Obj rawObj = isAlreadyEmbedded ? obj.asRec().at(OBJ) : obj;
                 // a document that carries no embedding is embedded by the model the space's embedq names, and by the
                 // config's embedding function when the embedq names none
+                final Optional<vecEmbedQ> named = isAlreadyEmbedded ? Optional.empty() : this.at(uri(QPROC)).orElse(lst()).asLst().<QProc>elements()
+                        .filter(q -> q instanceof vecEmbedQ && !q.at(uri(MODEL)).isNoObj())
+                        .map(vecEmbedQ.class::cast)
+                        .findFirst();
                 final Obj embedded = isAlreadyEmbedded
                         ? obj.asRec().at(EMBED)
-                        : this.at(uri(QPROC)).orElse(lst()).asLst().<QProc>elements()
-                                .filter(q -> q instanceof vecEmbedQ && !q.at(uri(MODEL)).isNoObj())
-                                .findFirst()
-                                .map(q -> ((vecEmbedQ) q).embed(obj))
-                                .orElseGet(() -> this.sjvm().embeddingFunction(f(dp.collection())).apply(obj));
+                        : named.map(q -> q.embed(obj)).orElseGet(() -> this.sjvm().embeddingFunction(f(dp.collection())).apply(obj));
                 final Rec metadata = isAlreadyEmbedded ? obj.asRec().at(META).orElse(rec0()) : rec0();
                 // a failed embedding is its own failure (a model that could not be built, say), and an embedding that is no
                 // lst of reals, an empty one included, is no embedding: neither is cast first (the client casts each element
                 // to a real), where it would surface as a class cast naming neither. a refusal names the embedding's source:
                 // the address a carried lst was written to (VEC_EMBEDDING_TYPE asks for a lst under embed, so a carried
-                // non-lst is a document like any other, for the function), or the function that answered it
+                // non-lst is a document like any other), the model the embedq names, or the config's function
                 if (embedded.isFail())
                     throw embedded.asFail().asException();
                 if (!embedded.isLst() || embedded.lstValue().isEmpty() || !embedded.lstValue().stream().allMatch(Obj::isReal))
                     throw isAlreadyEmbedded
                             ? MTronException.of("the embedding written to %s is %s, not an embedding", pattern, embedded)
+                            : named.isPresent()
+                            ? MTronException.of("the model of collection %s answered %s, not an embedding", dp.collection(), embedded)
                             : MTronException.of("the embedding function of collection %s answered %s, not an embedding", dp.collection(), embedded);
                 final VectorDBClient.EntityData entity = new VectorDBClient.EntityData(f(id), rawObj, metadata, embedded.asLst());
                 this.sjvm().upsert(collId, f(dp.collection()), entity);

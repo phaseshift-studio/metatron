@@ -41,6 +41,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.EMBEDQ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -105,15 +106,22 @@ public class vecEmbedQ extends BaseQ {
     /**
      * the embedding of doc by the model this embedq names. The first embedding builds the model from its spec (a cast
      * to model::T, which builds nothing for an obj already typed model::T) and keeps it here in place of the spec, so
-     * a space mounts with no model server running and builds its model once. A build that fails answers its fail, and
-     * the spec stays for the next write. Both calls go through the machine (the instruction set defining model::T and
-     * embed already depends on this one), so the cast and embed are resolved as mtron resolves them
+     * a space mounts with no model server running. The cast and the keep run under this embedq's lock, so writes that
+     * race to the first embedding build the model once. A build that fails answers its fail, and the spec stays for the
+     * next write. Both calls go through the machine (the instruction set defining model::T and embed already depends
+     * on this one), so the cast and embed are resolved as mtron resolves them
      */
     public Obj embed(final Obj doc) {
-        final Obj model = Machine.evaluate(this.at(uri(MODEL)), Parser.Helper.toCode(Machine.parse("as(model::T)")));
+        final Obj model;
+        synchronized (this) {
+            model = Machine.evaluate(this.at(uri(MODEL)), Parser.Helper.toCode(Machine.parse("as(model::T)")));
+            if (!model.isFail())
+                this.at(uri(MODEL), model, MUTABLE);
+        }
         if (model.isFail())
             return model;
-        this.at(uri(MODEL), model, MUTABLE);
-        return Machine.evaluate(model, instB(f(EMBED), lst(doc)).asCode());
+        // the document reaches embed as it is: an inst computes a value argument against its lhs, which expands a str's
+        // or a uri's templates (running them as mtron), while a call's answer is kept as it is
+        return Machine.evaluate(model, instB(f(EMBED), lst(instLambda((lhs, inst) -> doc))).asCode());
     }
 }

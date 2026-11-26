@@ -877,7 +877,7 @@ public class mInstSet extends AbstractInstSet {
                                 "*abc?shortq=10 [-- optional value is max length of obj components (default " + DEFAULT_SHORTQ_MAX_LENGTH + ") --]"),
                         docWrap(SAFEQ_TYPE, "warns when the space is being written to"),
                         docWrap(INCRQ_TYPE, "internal counter increments and appends value to vid"),
-                        docWrap(EMBEDQ_TYPE, "either store and retrieve obj's vector embedding"),
+                        docWrap(EMBEDQ_TYPE, "store and retrieve an obj's vector embedding. On a vec space, embedq::[model=>...] names the model the space embeds with: a model, or the spec it is built from on the first write"),
                         docWrap(CONSTQ_TYPE, "prevents the vid from being mutated once set"),
                         docWrap(REFQ_TYPE, "enables uri-to-uri referencing"),
                         docWrap(LINEQ_TYPE, "read or write a str to another str at a particular line or line range",

@@ -31,7 +31,6 @@ import studio.phaseshift.metatron.isa.m.mach.type.analyzer.BasicAnalyzer;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
@@ -58,6 +57,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Type.LOG;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -152,13 +152,13 @@ public final class QCollection {
             .vid(EMBEDQ_TID)
             // the rec an embedq is built from may name the model a space embeds with, embedq::[model=>...], and the
             // embedq keeps it (Marko, 2026-11-26: "it should be in the embedq definition")
-            .constructor(MInst.instC(INST_CTOR_TID.dom(ALL.maybe()).rng(EMBEDQ_TID), lst(), (lhs, inst) -> {
+            .constructor(rec -> {
                 final QProc embedq = embedQ();
-                final Obj model = lhs.orElse(MRec.rec0()).asRec().at(uri(MODEL));
+                final Obj model = rec.isRec() ? rec.asRec().at(uri(MODEL)) : noobj();
                 if (!model.isNoObj())
-                    embedq.at(uri(MODEL), model, Poly.MUTABLE);
+                    embedq.at(uri(MODEL), model, MUTABLE);
                 return embedq;
-            }))
+            })
             .create();
     //
     public static final String ANALQ = "analq";
