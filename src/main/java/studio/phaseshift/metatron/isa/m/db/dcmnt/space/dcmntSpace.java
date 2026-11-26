@@ -765,6 +765,9 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
         if (value instanceof Long l) return new BsonInt64(l);
         if (value instanceof Double d) return new BsonDouble(d);
         if (value instanceof Float f) return new BsonDouble(f.doubleValue());
+        // another client's decimal (mtron writes doubles), which fell through to BsonNull: the projected field read noobj,
+        // and Space.Helper.held answered it only by reading the document above it again
+        if (value instanceof org.bson.types.Decimal128 d) return new BsonDecimal128(d);
         if (value instanceof Boolean b) return new BsonBoolean(b);
         if (value instanceof Document d) return d.toBsonDocument();
         if (value instanceof List<?> l) {

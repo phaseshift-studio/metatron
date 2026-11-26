@@ -102,14 +102,14 @@ public class tbleInstSet extends AbstractInstSet {
         };
 
         // A SUM OR A MEAN AGGREGATES ONE NUMERIC COLUMN OF THE TABLE (2026-11-26), the field its source names
-        // (DBRewriteBuilder.summandPath). A column holds no path below it, so +>>value/x and +/value>>x are left to the
+        // (DBRewriteBuilder.fieldPath). A column holds no path below it, so +>>value/x and +/value>>x are left to the
         // walk, which sums nothing to 0, where SUM(value) answered 55. A column that holds no number, or that the table
         // lacks, is left too: AVG(name) answered 0.0 on sqlite, MySQL and MariaDB, where the walk's mean of strs fails,
         // and over a column the table lacks SUM failed on sqlite and AVG on sqlite, MySQL and MariaDB, where the walk
         // sums nothing to 0 and means it to noobj
         final BiPredicate<tbleSpace, List<Inst>> columnGuard = (space, matches) -> {
-            if (!matches.getFirst().arg(0).isUri() || !tableGuard.test(space, matches)) return false;
-            final DataPath dp = DBRewriteBuilder.summandPath(space, matches);
+            if (!tableGuard.test(space, matches)) return false;
+            final DataPath dp = DBRewriteBuilder.fieldPath(space, matches);
             return null != dp && !dp.hasExtension() && space.existingTableSchema.getTableMetadata().stream()
                     .filter(table -> table.tableName().equalsIgnoreCase(dp.collection()))
                     .flatMap(table -> table.columns().stream())

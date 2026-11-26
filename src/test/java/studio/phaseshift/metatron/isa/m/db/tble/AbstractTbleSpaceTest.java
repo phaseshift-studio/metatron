@@ -2930,9 +2930,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      * take, skip, where, select, order and dedup plans answered rows for it: {@code +/value.take(10).sum()} summed ten rows
      * into their join, where the walk sums the values to 55, and {@code +/value.isa([value=>?>5])} counted the rows a
      * value filters (5), where no int is such a rec. An int has no {@code >>value} to sort by, so the walk's order fails,
-     * where sql_order sorted the rows. A sum and a mean read the column ({@link #testASumOrAMeanIsItsColumn}). The rows
-     * are {@code code % what the walk answers}; an {@code <ERROR>} row's plan holds no sql_ op, and every other plan is
-     * applied on its own as well.
+     * where sql_order sorted the rows. A trailing {@code /} leaves no field, so the plans read {@code +/} as {@code +},
+     * and its filtered count walks the rows' 5, as sql_where_count answers. A sum and a mean read the column
+     * ({@link #testASumOrAMeanIsItsColumn}). The rows are {@code code % what the walk answers}; an {@code <ERROR>} row's
+     * plan holds no sql_ op, and every other plan is applied on its own as well.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -2942,6 +2943,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             "*db:rewrite_test/+/value>>value                      % noobj",
             "*db:rewrite_test/+/value.order(>>value)>-.sum()      % <ERROR>",
             "*db:rewrite_test/+/name.dedup(>>active).count()      % 10",
+            "*db:rewrite_test/+/.isa([value=>?>5]).count()        % 5",
     })
     public void testAFieldSourceAnswersAsTheWalk(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
@@ -2961,7 +2963,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      * the rows to their join and its mean of rows fails. A column that holds no number, or that the table lacks, is the
      * walk's too: AVG(name) answered 0.0 on sqlite, MySQL and MariaDB, where the walk's mean of strs fails, and over a
      * column the table lacks SUM failed on sqlite and AVG on sqlite, MySQL and MariaDB, where the walk sums nothing to 0
-     * and means it to noobj (PostgreSQL's walk fails on such a column, so it skips those rows). The rows are
+     * and means it to noobj (PostgreSQL's walk fails on such a column, so it skips those rows). The table's own columns
+     * decide: users holds a numeric age, rewrite_test none. A wildcard field names no column, and {@code +/} none at
+     * all (sql_mean answered its 0.0 as for {@code +}): the walk's mean of a row's fields, or of the relation's
+     * members, fails. The rows are
      * {@code code % what the walk answers % the op the plan reads with}; a plan that holds no sql_ op reads with
      * {@code from}, and every row but an {@code <ERROR>} one is applied on its own as well.
      */
@@ -2977,6 +2982,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             "*db:rewrite_test/+/nothing.mean()   % noobj                    % from",
             "*db:rewrite_test/+.mean()           % <ERROR>                  % from",
             "*db:rewrite_test/+/name.mean()      % <ERROR>                  % from",
+            "*db:rewrite_test/+/age.sum()        % 0                        % from",
+            "*db:rewrite_test/+/+.mean()         % <ERROR>                  % from",
+            "*db:rewrite_test/+/.mean()          % <ERROR>                  % from",
     })
     public void testASumOrAMeanIsItsColumn(final String code, final String expected, final String reads) {
         checkCodeParseApply(LOG, code, expected);

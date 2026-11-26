@@ -208,7 +208,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                     // THE MEAN OF THE FIELD THE PATH NAMES (2026-11-25): {$avg: 1} averaged the literal 1, so
                                     // *mongo:rewrite_test/+/value.mean() answered 1.0 for 5.5. No document (an empty collection) and
                                     // no number to average ($avg answers null) are the mean of nothing, noobj, as the walk answers.
-                                    // MongoDB averages decimals to a Decimal128, which getDouble refused
+                                    // MongoDB averages decimals to a Decimal128, which getDouble refused; mongo-java-server
+                                    // averages them to a double, so no row of the tests can pin it
                                     final Document result = collection.aggregate(Arrays.asList(
                                             new Document("$group", new Document(ID_FIELD_STRING, null)
                                                     .append("average", new Document("$avg", "$" + dp.fieldPathStr())))
@@ -403,14 +404,15 @@ public class dcmntInstSet extends AbstractInstSet {
 
     /**
      * Guard for the native {@code sum} and {@code mean} aggregations: MongoDB aggregates one concrete field of the
-     * documents the source reads ({@link DBRewriteBuilder#summandPath}), a path below it as its dotted path. A source
+     * documents the source reads ({@link DBRewriteBuilder#fieldPath}), a path below it as its dotted path. A source
      * with no field reads whole documents, which MongoDB does not add as the walk does (the walk's sum of documents is
      * their join, and their mean fails): {@code $sum: 1} counted them, and {@code $avg: 1} answered 1.0 for any
-     * collection. A wildcard field (a {@code collection/entry/+} walk over a sub-document's values) is not representable
-     * either, and {@code $sum: "$+"} silently aggregated to 0. Declining lets the walk answer those paths.
+     * collection. A wildcard field, a wildcard shift or a wildcard below the field (a walk over a sub-document's values)
+     * is not representable either: {@code $sum: "$+"} and {@code $sum: "$points.+"} silently aggregated to 0. Declining
+     * lets the walk answer those paths.
      */
     private static boolean summablePath(final dcmntSpace space, final List<Inst> matches) {
-        return matches.getFirst().arg(0).isUri() && readsDocuments(space, matches) && null != DBRewriteBuilder.summandPath(space, matches);
+        return readsDocuments(space, matches) && null != DBRewriteBuilder.fieldPath(space, matches);
     }
 
     /**

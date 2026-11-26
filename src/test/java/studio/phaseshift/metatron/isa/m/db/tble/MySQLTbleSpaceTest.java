@@ -42,7 +42,8 @@ import org.junit.jupiter.api.TestMethodOrder;
  * {@code fURIAwareIndexedSchema.readMqttPattern} matched on generated segment columns, which a parent
  * row cannot satisfy for a deeper path. It now also matches ancestors of the concrete prefix.
  * <p>
- * Nothing is skipped here any more, matching {@code PostgreSQLTbleSpaceTest}.
+ * Nothing is skipped here any more. {@code PostgreSQLTbleSpaceTest} skips only the rows that read a column the
+ * table lacks, whose PostgreSQL read fails.
  * <p>
  * Container startup — a separate, genuinely MySQL-specific defect, where the first of MySQL's two
  * "ready for connections" lines returned before the port was accepting — is fixed in

@@ -240,7 +240,8 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
      * skip, where, order and dedup plans answered elements for it: {@code person/+/age.take(4)} summed four persons into
      * their join, where the walk sums the ages to 123. An int has no {@code >>age} to sort by, so the walk's order fails,
      * where gremlin_order sorted the persons. gremlin_sum reads one property, which holds no path below it:
-     * {@code >>age/x} and {@code /age>>x} summed the ages, where the walk sums nothing to 0. The rows are
+     * {@code >>age/x} and {@code /age>>x} summed the ages, where the walk sums nothing to 0, and a wildcard shift names
+     * no property ({@code values('+')} summed nothing to 0, where the walk's sum of names and ages fails). The rows are
      * {@code code % what the walk answers}; an {@code <ERROR>} row's plan holds no gremlin_ op, and every other plan is
      * applied on its own as well.
      */
@@ -253,6 +254,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
             "*/g/software/+/lang.dedup(>>name).count()   % 1",
             "*/g/person/+>>age/x.sum()                   % 0",
             "*/g/person/+/age>>x.sum()                   % 0",
+            "*/g/person/+>>+.sum()                       % <ERROR>",
     })
     public void testAFieldSourceAnswersAsTheWalk(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);

@@ -160,7 +160,8 @@ public class DBRewriteBuilder<S extends Space> {
      * or a mean ({@link #readsEveryEntry}).
      *
      * <p>Safe to call after {@link #match(fURI...)} — replaces the first
-     * element of the match pattern.  Idempotent: subsequent calls are no-ops.
+     * element of the match pattern.  A second call ANDs its {@code reads} with
+     * the first's.
      *
      * @param reads the sources the plan stands in for
      * @return this builder
@@ -204,13 +205,14 @@ public class DBRewriteBuilder<S extends Space> {
 
     /**
      * A PLAN THAT ANSWERS ENTRIES STANDS IN ONLY FOR A SOURCE THAT ANSWERS THEM (2026-11-26): every entry of one
-     * collection ({@link #readsEveryEntry}) and nothing below it, but the empty field a trailing {@code /} leaves. A
-     * source with a field answers the field: {@code *mongo:rewrite_test/+/name.take(2)} walks {@code {'item1','item2'}},
-     * and mql_limit answered two documents, as the take, skip, where, select, order and dedup plans of every space
-     * answered entries for {@code collection/+/field}.
+     * collection ({@link #readsEveryEntry}) and nothing below it. A source with a field answers the field:
+     * {@code *mongo:rewrite_test/+/name.take(10)} walks the ten names, and mql_limit answered ten documents, as the take,
+     * skip, where, select, order and dedup plans of every space answered entries for {@code collection/+/field}. A
+     * trailing {@code /} leaves no field, so a plan reads {@code collection/+/} as {@code collection/+}; the one shape
+     * measured agrees (the walk's filtered count of {@code rewrite_test/+/} is the rows' 5, as sql_where_count's).
      */
     static boolean answersEveryEntry(final DataPath source) {
-        return readsEveryEntry(source) && !source.hasExtension() && (null == source.field() || source.field().isEmpty());
+        return readsEveryEntry(source) && null == source.field() && !source.hasExtension();
     }
 
     /**
@@ -242,12 +244,13 @@ public class DBRewriteBuilder<S extends Space> {
      * THE FIELD A SUM OR A MEAN AGGREGATES (2026-11-26): the data path its plan reads (the source, the shift after it
      * folded in, taken apart as the space takes it), or null when that names no single field. With none, the walk's sum
      * of entries is their join and their mean fails, where {@code $sum: 1} counted the documents and SUM and AVG over
-     * no column answered 0 and 0.0; a wildcard field ({@code +/+}) or an empty one ({@code +/}) names no column either.
-     * A space declines what else it cannot aggregate, such as a path below a field that holds none.
+     * no column answered 0 and 0.0. A wildcard field ({@code +/+}) and a wildcard below the field ({@code +/points/+},
+     * whose walk sums the sub-document's values, where {@code $sum: "$points.+"} answered 0) name no single field
+     * either. A space declines what else it cannot aggregate, such as a path below a field that holds none.
      */
-    public static DataPath summandPath(final Space space, final List<Inst> matches) {
+    public static DataPath fieldPath(final Space space, final List<Inst> matches) {
         final DataPath source = sourcePath(space, space.redirect(fieldSource(matches), true));
-        return source.hasField() && !source.field().isEmpty() && !source.fieldIsWildcard() ? source : null;
+        return source.hasField() && !source.fieldIsWildcard() && !source.extensionIsWildcard() ? source : null;
     }
 
     /**

@@ -124,32 +124,15 @@ public final class CommonRewrites {
         return DBRewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTid)
                 .rng(Tokens.INT_TID)
-                // ALL (wildcard) catches both FROM_INST_TID (*) and AT_INST_TID (@);
-                // the matchPredicate below rejects non-source instructions.
-                .match(ALL, COUNT_INST_TID)
-                .matchPredicate(matches -> {
-                    final Inst first = matches.getFirst().asInst();
-                    // ONLY A SOURCE MAY BE COUNTED. This used to also accept a preceding pushed-down
-                    // sql_where/sql_limit/sql_skip ("it already carries the resolved data-path URI"), and that
-                    // is a WRONG ANSWER, not an optimization: `SELECT COUNT(*) FROM table` over a filtered,
-                    // limited or offset read counts every row. A chain like isa().take(2).count() means "count
-                    // of the two rows", and the plain count answered 10 — the same silent-downgrade family as
-                    // the case this rewrite sits beside. A pair the FUSING rules decline is counted in mtron,
-                    // where the filter/limit is real.
-                    if (!first.tid().basePath().equals(FROM_INST_TID) && !first.tid().basePath().equals(AT_INST_TID))
-                        return false;
-                    final Obj ref = first.arg(0);
-                    // only apply when the path ends at collection level (no field/extensions)
-                    // URIs with extensions (e.g., /V/1/OUT/+) represent traversals, not simple counts
-                    if (!ref.isUri()) return true;
-                    // Resolve through the space first so that space-prefixed paths
-                    // (e.g., /usr/dr/message/+) are correctly decomposed — otherwise
-                    // the space prefix segments are misidentified as collection/entry,
-                    // and the real collection lands in "field", blocking the rewrite.
-                    final fURI rawUri = ref.uriValue();
-                    final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(rawUri);
-                    return DBRewriteBuilder.answersEveryEntry(DBRewriteBuilder.sourcePath(space, space != null ? space.redirect(rawUri, true) : rawUri));
-                })
+                // ONLY A SOURCE MAY BE COUNTED, every entry of one collection and nothing below it
+                // (matchFromOrAt's FROM/AT guard). This used to also accept a preceding pushed-down
+                // sql_where/sql_limit/sql_skip ("it already carries the resolved data-path URI"), and that
+                // is a WRONG ANSWER, not an optimization: `SELECT COUNT(*) FROM table` over a filtered,
+                // limited or offset read counts every row. A chain like isa().take(2).count() means "count
+                // of the two rows", and the plain count answered 10. A pair the FUSING rules decline is
+                // counted in mtron, where the filter/limit is real.
+                .match(FROM_INST_TID, COUNT_INST_TID)
+                .matchFromOrAt(DBRewriteBuilder::answersEveryEntry)
                 .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_count", (space, dp, coeff) -> {
                     final long count = countFunction.apply(space, dp);

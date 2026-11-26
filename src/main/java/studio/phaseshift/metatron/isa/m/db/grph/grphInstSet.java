@@ -777,12 +777,12 @@ public class grphInstSet extends AbstractInstSet {
         // element carries. After two flat writes, */g/kv_scratch/+.count() walks 2 and its label count answered 0
         final BiPredicate<grphSpace, List<Inst>> elementGuard = (space, matches) -> !matches.getFirst().arg(0).isUri()
                 || !space.readsFlat(space.redirect(matches.getFirst().arg(0).uriValue(), true));
-        // A SUM AGGREGATES ONE PROPERTY (2026-11-26), the field its source names (DBRewriteBuilder.summandPath). A property
+        // A SUM AGGREGATES ONE PROPERTY (2026-11-26), the field its source names (DBRewriteBuilder.fieldPath). A property
         // holds no path below it, so +>>age/x and +/age>>x are left to the walk, which sums nothing to 0, where values(age)
         // summed the ages
         final BiPredicate<grphSpace, List<Inst>> propertyGuard = (space, matches) -> {
-            if (!matches.getFirst().arg(0).isUri() || !elementGuard.test(space, matches)) return false;
-            final DataPath dp = DBRewriteBuilder.summandPath(space, matches);
+            if (!elementGuard.test(space, matches)) return false;
+            final DataPath dp = DBRewriteBuilder.fieldPath(space, matches);
             return null != dp && !dp.hasExtension();
         };
         this.jvm().putAll(mutableMap(
