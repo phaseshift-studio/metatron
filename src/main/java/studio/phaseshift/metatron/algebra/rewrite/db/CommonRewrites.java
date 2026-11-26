@@ -148,12 +148,7 @@ public final class CommonRewrites {
                     // and the real collection lands in "field", blocking the rewrite.
                     final fURI rawUri = ref.uriValue();
                     final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(rawUri);
-                    final DataPath dp = DBRewriteBuilder.sourcePath(space, space != null ? space.redirect(rawUri, true) : rawUri);
-                    // An empty field segment (from asBranch() trailing "/")
-                    // is a branch marker, not a real field — allow it.
-                    return DBRewriteBuilder.readsEveryEntry(dp)
-                            && !dp.hasExtension()
-                            && (dp.field() == null || dp.field().isEmpty());
+                    return DBRewriteBuilder.answersEveryEntry(DBRewriteBuilder.sourcePath(space, space != null ? space.redirect(rawUri, true) : rawUri));
                 })
                 .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_count", (space, dp, coeff) -> {
@@ -192,7 +187,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(Tokens.INT_TID)
                 .match(FROM_INST_TID, SUM_INST_TID)
-                .matchFromOrAt()
+                .matchFromOrAt(DBRewriteBuilder::readsEveryEntry)
                 .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_sum", (space, dp, coeff) -> sumOf(sumFunction.apply(space, dp)))
                 .build();
@@ -223,7 +218,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(Tokens.INT_TID)
                 .match(FROM_INST_TID, RSHIFT_INST_TID, SUM_INST_TID)
-                .matchFromOrAt()
+                .matchFromOrAt(DBRewriteBuilder::readsEveryEntry)
                 .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_rshift_sum", (space, dp, coeff) -> sumOf(sumFunction.apply(space, dp)))
                 .build();
@@ -259,7 +254,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(Tokens.REAL_TID.maybe())
                 .match(FROM_INST_TID, MEAN_INST_TID)
-                .matchFromOrAt()
+                .matchFromOrAt(DBRewriteBuilder::readsEveryEntry)
                 .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_mean", (space, dp, coeff) -> {
                     // a mean of nothing is noobj, as the walk's: a null answers it
@@ -333,7 +328,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, TAKE_INST_TID)
-                .matchFromOrAt()
+                .matchFromOrAt(DBRewriteBuilder::answersEveryEntry)
                 .build();
     }
 
@@ -503,7 +498,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, RSHIFT_INST_TID)
-                .matchFromOrAt()
+                .matchFromOrAt(DBRewriteBuilder::answersEveryEntry)
                 .build();
     }
 
@@ -744,7 +739,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, ISA_INST_TID)
-                .matchFromOrAt()
+                .matchFromOrAt(DBRewriteBuilder::answersEveryEntry)
                 .build();
     }
 
@@ -1312,7 +1307,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, SKIP_INST_TID)
-                .matchFromOrAt()
+                .matchFromOrAt(DBRewriteBuilder::answersEveryEntry)
                 .build();
     }
 
@@ -1994,7 +1989,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, ORDER_INST_TID)
-                .matchFromOrAt()
+                .matchFromOrAt(DBRewriteBuilder::answersEveryEntry)
                 .build();
     }
 
@@ -2102,7 +2097,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, DEDUP_INST_TID)
-                .matchFromOrAt()
+                .matchFromOrAt(DBRewriteBuilder::answersEveryEntry)
                 .build();
     }
 

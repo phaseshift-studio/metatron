@@ -33,6 +33,7 @@ import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewrites;
+import studio.phaseshift.metatron.algebra.rewrite.db.DBRewriteBuilder;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -776,6 +777,14 @@ public class grphInstSet extends AbstractInstSet {
         // element carries. After two flat writes, */g/kv_scratch/+.count() walks 2 and its label count answered 0
         final BiPredicate<grphSpace, List<Inst>> elementGuard = (space, matches) -> !matches.getFirst().arg(0).isUri()
                 || !space.readsFlat(space.redirect(matches.getFirst().arg(0).uriValue(), true));
+        // A SUM AGGREGATES ONE PROPERTY (2026-11-26), the field its source names (DBRewriteBuilder.summandPath). A property
+        // holds no path below it, so +>>age/x and +/age>>x are left to the walk, which sums nothing to 0, where values(age)
+        // summed the ages
+        final BiPredicate<grphSpace, List<Inst>> propertyGuard = (space, matches) -> {
+            if (!matches.getFirst().arg(0).isUri() || !elementGuard.test(space, matches)) return false;
+            final DataPath dp = DBRewriteBuilder.summandPath(space, matches);
+            return null != dp && !dp.hasExtension();
+        };
         this.jvm().putAll(mutableMap(
                 uri(CONSTQ), lst(ObjTP3Serializer.single(), MODERN_SCHEMA),
                 uri(TYPE), lst(
@@ -926,14 +935,9 @@ public class grphInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.sumColumnRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_sum"),
-                                (grphSpace space, DataPath dp) -> {
-                                    final String field = dp.field();
-                                    if (field == null || field.isEmpty())
-                                        return 0L;
-                                    // nothing to sum is the sum's seed, as sql_sum_column's SUM over no row answers
-                                    return space.elements(dp.collection()).values(field).sum().tryNext().orElse(0L);
-                                },
-                                elementGuard
+                                // nothing to sum is the sum's seed, as sql_sum_column's SUM over no row answers
+                                (grphSpace space, DataPath dp) -> space.elements(dp.collection()).values(dp.field()).sum().tryNext().orElse(0L),
+                                propertyGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's sum()-reducer over an element property"),
                         docWrap(CommonRewrites.skipRewrite(
                                 grphSpace.class,

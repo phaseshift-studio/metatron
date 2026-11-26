@@ -163,7 +163,10 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
             return this.readInt(bson);
         if (bson.isInt64())
             return this.readInt(bson);
-        if (bson.isDouble())
+        // A DECIMAL128 IS A REAL (2026-11-26): mtron writes a real as a double, so only another client's data holds one,
+        // and it read as noobj ("unknown bson type"): the walk summed such a field to 0 while $avg answered its mean.
+        // A double holds ~16 of its 34 digits, so a long decimal reads rounded, and NaN, the infinities and -0 as theirs
+        if (bson.isDouble() || bson.isDecimal128())
             return this.readReal(bson);
         if (bson.isString())
             return this.readStr(bson);
@@ -237,7 +240,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
 
     @Override
     public Real readReal(final BsonValue bson) {
-        return real(bson.asDouble().getValue());
+        return real(bson.asNumber().doubleValue());
     }
 
     @Override

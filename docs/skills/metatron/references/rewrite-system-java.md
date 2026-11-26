@@ -213,9 +213,13 @@ RewriteBuilder.forDatabase(tbleSpace.class)
 1. `Rewriter.search().match().rewrite()` finds a matching instruction sequence
 2. The rewrite function checks `spaceType.isInstance(space)` — wrong space type → skip
 3. `matchPredicate` and `matchSpacePredicate` guards run — fail → return original unchanged. A plan that reads a
-   source (`matchFromOrAt()`, and `CommonRewrites.countRewrite`'s match) stands in only for one that reads every entry
-   of one collection, `collection/+`: `table/1`, `table` and `table/#` are left to the walk. The kv pushdowns, which
-   read the path below a table as a key prefix, do not ask.
+   source (`matchFromOrAt(reads)`, and `CommonRewrites.countRewrite`'s match) stands in only for one that reads every
+   entry of one collection, `collection/+`: `table/1`, `table` and `table/#` are left to the walk. A plan that answers
+   entries (count, take, skip, where, select, order, dedup: `DBRewriteBuilder::answersEveryEntry`) also wants nothing
+   below the entry, since `collection/+/field` answers the field's values. A sum or a mean
+   (`DBRewriteBuilder::readsEveryEntry`) reads one field of each entry, `collection/+/field` or `collection/+>>field`,
+   which `DBRewriteBuilder.summandPath` names and the space vets (a path below the field is a document's dotted path,
+   and no column's). The kv pushdowns, which read the path below a table as a key prefix, do not ask.
 4. Native lambda executes against the database, receiving the coefficient for cardinality tracking
 5. The matched sequence is replaced with a single native instruction
 

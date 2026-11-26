@@ -24,7 +24,9 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import org.bson.BsonDecimal128;
 import org.bson.Document;
+import org.bson.types.Decimal128;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -40,6 +42,7 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.SchemaSpaceTestContract;
+import studio.phaseshift.metatron.isa.m.db.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.space.dcmntSpaceSubQ;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -1522,16 +1525,24 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     /**
      * A REAL SUM IS NOT CUT TO ITS INTEGER PART, as on tble ({@code AbstractTbleSpaceTest}, which explains it): a real
      * is stored as a double, so {@code $sum} answers a double, which the sum plans' int range refuses. They answered its
-     * integer part. This asserts the refusal, not the ideal (the walk answers 1.5).
+     * integer part. Another client's decimals sum to a Decimal128, a real too (CommonRewrites.sumOf). This asserts the
+     * refusal, not the ideal (the walk answers 1.5, and the decimals' 3.75).
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
             "*mongo:reals/+>>w.sum()",
             "*mongo:reals/+/w.sum()",
+            "*mongo:decimals/+>>amount.sum()",
+            "*mongo:decimals/+/amount.sum()",
     })
     public void testARealSumIsRefusedNotCut(final String code) {
         ObjmtronSerializer.parse("mongo:reals/1 -> [w=>0.5]").apply();
         ObjmtronSerializer.parse("mongo:reals/2 -> [w=>1.0]").apply();
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            client.getDatabase(DB_NAME).getCollection("decimals").insertMany(List.of(
+                    new Document("_id", "1").append("amount", Decimal128.parse("1.25")),
+                    new Document("_id", "2").append("amount", Decimal128.parse("2.50"))));
+        }
         try {
             final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
             final Obj answer = MCode.of(plan.asCode().insts()).apply();
@@ -1540,6 +1551,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         } finally {
             try (final MongoClient client = MongoClients.create(connectionString)) {
                 client.getDatabase(DB_NAME).getCollection("reals").drop();
+                client.getDatabase(DB_NAME).getCollection("decimals").drop();
             }
         }
     }
@@ -1604,6 +1616,86 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         } finally {
             try (final MongoClient client = MongoClients.create(connectionString)) {
                 client.getDatabase(DB_NAME).getCollection("empty_means").drop();
+            }
+        }
+    }
+
+    /**
+     * A PLAN THAT ANSWERS DOCUMENTS STANDS IN ONLY FOR A SOURCE THAT ANSWERS THEM (2026-11-26), as on tble
+     * ({@code AbstractTbleSpaceTest}, which explains it): a source with a field answers the field's values, and
+     * mql_limit, mql_where and mql_select answered documents for it. {@code +/name.take(2)} read two documents, where the
+     * walk answers two names, and {@code users/+/sports} is BillyBob's sub-document alone: mql_limit took Alice, the
+     * filtered count counted users with a skating field (none), and the projection read users' skating fields (none).
+     * The rows are {@code code % what the walk answers}, and the plan is applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*mongo:rewrite_test/+/name.take(2)                   % {'item1','item2'}",
+            "*mongo:rewrite_test/+/value.take(10).sum()           % 55",
+            "*mongo:rewrite_test/+/value.isa([value=>?>5]).count() % 0",
+            "*mongo:rewrite_test/+/value>>value                   % noobj",
+            "*mongo:users/+/sports.take(1)                        % [skating=>true,shooting=>false]",
+            "*mongo:users/+/sports.isa([skating=>true]).count()   % 1",
+            "*mongo:users/+/sports>>skating                       % true",
+    })
+    public void testAFieldSourceAnswersAsTheWalk(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        final Obj want = Machine.parse(expected);
+        checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+    }
+
+    /**
+     * A DECIMAL128 IS A REAL (2026-11-26). mtron writes a real as a double, so a Decimal128 is another client's, and it
+     * read as noobj ("unknown bson type"). It reads as the double nearest it: 34 digits round to a double's 16, and NaN,
+     * the infinities and -0 read as the double's own. Each row is {@code the decimal % its real}: the read is that real
+     * (not the noobj it was), and written back as BSON (a double) it reads as itself.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "1.25                              % 1.25",
+            "-2.5                              % -2.5",
+            "0                                 % 0.0",
+            "-0                                % -0.0",
+            "1E+3                              % 1000.0",
+            "0.1                               % 0.1",
+            "3.141592653589793238462643383279  % 3.141592653589793",
+            "NaN                               % NaN",
+            "Infinity                          % Infinity",
+            "-Infinity                         % -Infinity",
+    })
+    public void testADecimalReadsAsItsReal(final String decimal, final String expected) {
+        final Obj read = ObjBSONSerializer.single().read(new BsonDecimal128(Decimal128.parse(decimal)));
+        checkEquality(LOG, real(Double.parseDouble(expected)), read, true);
+        checkEquality(LOG, read, ObjBSONSerializer.single().read(ObjBSONSerializer.single().write(read)), true);
+    }
+
+    /**
+     * A DECIMAL FIELD IS ITS REALS (2026-11-26), to the walk and to the plans alike. The walk read noobj for each
+     * Decimal128, so it meant the field to noobj, where mql_mean averaged it. Their sum is a real, which the sum plans'
+     * int range refuses ({@link #testARealSumIsRefusedNotCut}). The documents are another client's, inserted through the
+     * driver. The rows are {@code code % what the walk answers}, and the plan is applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*mongo:decimals/1/amount         % 1.25",
+            "*mongo:decimals/+/amount         % {1.25,2.5}",
+            "*mongo:decimals/+/amount.mean()  % 1.875",
+    })
+    public void testADecimalFieldIsItsReals(final String code, final String expected) {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            client.getDatabase(DB_NAME).getCollection("decimals").insertMany(List.of(
+                    new Document("_id", "1").append("amount", Decimal128.parse("1.25")),
+                    new Document("_id", "2").append("amount", Decimal128.parse("2.50"))));
+        }
+        try {
+            checkCodeParseApply(LOG, code, expected);
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            final Obj want = Machine.parse(expected);
+            checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+        } finally {
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("decimals").drop();
             }
         }
     }

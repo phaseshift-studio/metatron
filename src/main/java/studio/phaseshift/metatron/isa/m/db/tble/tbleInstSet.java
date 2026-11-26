@@ -101,10 +101,24 @@ public class tbleInstSet extends AbstractInstSet {
             return space.existingTableSchema != null && space.existingTableSchema.getTableNames().contains(dp.collection().toLowerCase());
         };
 
+        // A SUM OR A MEAN AGGREGATES ONE NUMERIC COLUMN OF THE TABLE (2026-11-26), the field its source names
+        // (DBRewriteBuilder.summandPath). A column holds no path below it, so +>>value/x and +/value>>x are left to the
+        // walk, which sums nothing to 0, where SUM(value) answered 55. A column that holds no number, or that the table
+        // lacks, is left too: AVG(name) answered 0.0 on sqlite, MySQL and MariaDB, where the walk's mean of strs fails,
+        // and over a column the table lacks SUM failed on sqlite and AVG on sqlite, MySQL and MariaDB, where the walk
+        // sums nothing to 0 and means it to noobj
+        final BiPredicate<tbleSpace, List<Inst>> columnGuard = (space, matches) -> {
+            if (!matches.getFirst().arg(0).isUri() || !tableGuard.test(space, matches)) return false;
+            final DataPath dp = DBRewriteBuilder.summandPath(space, matches);
+            return null != dp && !dp.hasExtension() && space.existingTableSchema.getTableMetadata().stream()
+                    .filter(table -> table.tableName().equalsIgnoreCase(dp.collection()))
+                    .flatMap(table -> table.columns().stream())
+                    .anyMatch(column -> column.name().equalsIgnoreCase(dp.field()) && column.isNumeric());
+        };
+
         // THE NUMBER THE DATABASE ANSWERS (2026-11-25), for sql_sum and sql_sum_column alike: getLong cut a REAL column's
         // sum on sqlite, whose driver does not type SUM(price) DOUBLE, and a double : long conditional widened every sum
         final BiFunction<tbleSpace, DataPath, Number> columnSum = (space, dp) -> {
-            if (!dp.hasField()) return 0L;
             final String query = "SELECT SUM(" + dp.field() + ") FROM " + dp.collection();
             LOG.debug("sql_sum query %s", query);
             try (final Statement stmt = space.sjvm().createStatement();
@@ -189,32 +203,30 @@ public class tbleInstSet extends AbstractInstSet {
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_sum").rng(INT_TID),
                                 columnSum,
-                                tableGuard
+                                columnGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(column) to sum entries in a table column"),
                         docWrap(CommonRewrites.sumColumnRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_sum_column").rng(INT_TID),
                                 columnSum,
-                                tableGuard
+                                columnGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(column) to sum entries in a table column"),
                         // Optimize: *table.mean() → SELECT AVG(*)
                         docWrap(CommonRewrites.meanRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_mean"),
                                 (space, dp) -> {
-                                    final String tableName = dp.collection();
-                                    if (!dp.hasField()) return 0.0;
-                                    final String columnName = dp.field();
-                                    final String query = "SELECT AVG(" + columnName + ") FROM " + tableName;
+                                    final String query = "SELECT AVG(" + dp.field() + ") FROM " + dp.collection();
                                     LOG.debug("sql_mean %s", query);
                                     try (final Statement stmt = space.sjvm().createStatement();
                                          final ResultSet rs = stmt.executeQuery(query)) {
-                                        return rs.next() ? rs.getDouble(1) : 0.0;
+                                        // AVG over no row is NULL, the mean of nothing: noobj, as the walk answers (getDouble read 0.0)
+                                        return rs.next() && rs.getObject(1) instanceof Number mean ? mean.doubleValue() : null;
                                     } catch (SQLException e) {
                                         throw MTronException.of(e);
                                     }
                                 },
-                                tableGuard
+                                columnGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT AVG(column) to average entries in a table column"),
                         docWrap(CommonRewrites.limitRewrite(
                                 tbleSpace.class,

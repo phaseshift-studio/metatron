@@ -234,6 +234,37 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
         checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
     }
 
+    /**
+     * A PLAN THAT ANSWERS ELEMENTS STANDS IN ONLY FOR A SOURCE THAT ANSWERS THEM (2026-11-26), as on tble
+     * ({@code AbstractTbleSpaceTest}, which explains it): a source with a property answers its values, and the limit,
+     * skip, where, order and dedup plans answered elements for it: {@code person/+/age.take(4)} summed four persons into
+     * their join, where the walk sums the ages to 123. An int has no {@code >>age} to sort by, so the walk's order fails,
+     * where gremlin_order sorted the persons. gremlin_sum reads one property, which holds no path below it:
+     * {@code >>age/x} and {@code /age>>x} summed the ages, where the walk sums nothing to 0. The rows are
+     * {@code code % what the walk answers}; an {@code <ERROR>} row's plan holds no gremlin_ op, and every other plan is
+     * applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*/g/person/+/age.take(4).sum()              % 123",
+            "*/g/person/+/age.skip(0).sum()              % 123",
+            "*/g/person/+/age.isa([age=>?>30]).count()   % 0",
+            "*/g/person/+/age.order(>>age)>-.sum()       % <ERROR>",
+            "*/g/software/+/lang.dedup(>>name).count()   % 1",
+            "*/g/person/+>>age/x.sum()                   % 0",
+            "*/g/person/+/age>>x.sum()                   % 0",
+    })
+    public void testAFieldSourceAnswersAsTheWalk(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        if ("<ERROR>".equals(expected.trim()))
+            assertEquals("from", plan.asCode().insts().getFirst().tid().name(), "the walk's failure is left to the walk: " + plan);
+        else {
+            final Obj want = Machine.parse(expected);
+            checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+        }
+    }
+
     // ========================================================================
     //  AbstractDataPathSpaceTest — flat namespace wiring
     // ========================================================================

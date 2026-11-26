@@ -2925,6 +2925,110 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     /**
+     * A PLAN THAT ANSWERS ROWS STANDS IN ONLY FOR A SOURCE THAT ANSWERS THEM (2026-11-26): {@code table/+}, as
+     * {@link #testAnEntrySourceAnswersAsTheWalk} explains. A source with a column answers the column's values, and the
+     * take, skip, where, select, order and dedup plans answered rows for it: {@code +/value.take(10).sum()} summed ten rows
+     * into their join, where the walk sums the values to 55, and {@code +/value.isa([value=>?>5])} counted the rows a
+     * value filters (5), where no int is such a rec. An int has no {@code >>value} to sort by, so the walk's order fails,
+     * where sql_order sorted the rows. A sum and a mean read the column ({@link #testASumOrAMeanIsItsColumn}). The rows
+     * are {@code code % what the walk answers}; an {@code <ERROR>} row's plan holds no sql_ op, and every other plan is
+     * applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:rewrite_test/+/value.take(10).sum()              % 55",
+            "*db:rewrite_test/+/value.skip(0).sum()               % 55",
+            "*db:rewrite_test/+/value.isa([value=>?>5]).count()   % 0",
+            "*db:rewrite_test/+/value>>value                      % noobj",
+            "*db:rewrite_test/+/value.order(>>value)>-.sum()      % <ERROR>",
+            "*db:rewrite_test/+/name.dedup(>>active).count()      % 10",
+    })
+    public void testAFieldSourceAnswersAsTheWalk(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        if ("<ERROR>".equals(expected.trim()))
+            assertEquals("from", plan.asCode().insts().getFirst().tid().name(), "the walk's failure is left to the walk: " + plan);
+        else {
+            final Obj want = Machine.parse(expected);
+            checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+        }
+    }
+
+    /**
+     * A SUM OR A MEAN IS ITS COLUMN'S (2026-11-26), one numeric column of the table. sql_sum, sql_sum_column and sql_mean
+     * read the path's field alone: SUM(value) answered 55 for {@code +>>value/x} and {@code +/value>>x}, whose walk sums
+     * nothing to 0 (a column holds no path below it), and a source with no field answered 0 and 0.0, where the walk sums
+     * the rows to their join and its mean of rows fails. A column that holds no number, or that the table lacks, is the
+     * walk's too: AVG(name) answered 0.0 on sqlite, MySQL and MariaDB, where the walk's mean of strs fails, and over a
+     * column the table lacks SUM failed on sqlite and AVG on sqlite, MySQL and MariaDB, where the walk sums nothing to 0
+     * and means it to noobj (PostgreSQL's walk fails on such a column, so it skips those rows). The rows are
+     * {@code code % what the walk answers % the op the plan reads with}; a plan that holds no sql_ op reads with
+     * {@code from}, and every row but an {@code <ERROR>} one is applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:rewrite_test/+/value.sum()      % 55                       % sql_sum",
+            "*db:rewrite_test/+>>value.sum()     % 55                       % sql_sum_column",
+            "*db:rewrite_test/+>>value/x.sum()   % 0                        % from",
+            "*db:rewrite_test/+/value>>x.sum()   % 0                        % from",
+            "*db:rewrite_test/+/nothing.sum()    % 0                        % from",
+            "*db:rewrite_test/+.sum()>>value     % {1,2,3,4,5,6,7,8,9,10}   % from",
+            "*db:rewrite_test/+/value.mean()     % 5.5                      % sql_mean",
+            "*db:rewrite_test/+/nothing.mean()   % noobj                    % from",
+            "*db:rewrite_test/+.mean()           % <ERROR>                  % from",
+            "*db:rewrite_test/+/name.mean()      % <ERROR>                  % from",
+    })
+    public void testASumOrAMeanIsItsColumn(final String code, final String expected, final String reads) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+        if (!"<ERROR>".equals(expected.trim())) {
+            final Obj want = Machine.parse(expected);
+            checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+        }
+    }
+
+    /**
+     * AN EMPTY TABLE'S MEAN IS NOOBJ (2026-11-26), the mean of nothing, as the walk answers: AVG over no row is NULL,
+     * which sql_mean's getDouble read as 0.0. Its sum is the seed, 0, as SUM's NULL already answered. The table is made
+     * by SQL, so a space mounted after it finds it, and each plan reads with its sql_ op, so the row is no walk's alone.
+     * The rows are {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on its own
+     * as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*em:empty_means/+/amount.mean()   % noobj   % sql_mean",
+            "*em:empty_means/+/amount.sum()    % 0       % sql_sum",
+    })
+    public void testAnEmptyTableMeansNothing(final String code, final String expected, final String reads) throws Exception {
+        try (final Connection conn = staticDbConfig.getConnection();
+             final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DROP TABLE IF EXISTS empty_means");
+            stmt.executeUpdate("CREATE TABLE empty_means (id INTEGER PRIMARY KEY, amount INTEGER)");
+        }
+        final tbleSpace mounted = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("em:#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(ROUTE), rec(uri("em:"), uri("")),
+                        uri(TABLE), lst()
+                ).jvm(),
+                f("/memory/space/tble/empty_test"));
+        try {
+            checkCodeParseApply(LOG, code, expected);
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+            final Obj want = Machine.parse(expected);
+            checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+        } finally {
+            mounted.sql("DROP TABLE IF EXISTS empty_means");
+            Machine.current().memory().removeSpace(mounted.vid());
+            mounted.close();
+        }
+    }
+
+    /**
      * A TABLE SPACE READS NO ROW OF AN ABSOLUTE WILDCARD, SO NO PLAN MAY (2026-11-25). Mounted at a table's name with no
      * route, a tble space answers nothing for {@code /rewrite_test/+}, while {@code /rewrite_test/1} reads its row. The
      * take, skip and where plans took the source apart with {@code DataPath.withoutDB} and read the whole table

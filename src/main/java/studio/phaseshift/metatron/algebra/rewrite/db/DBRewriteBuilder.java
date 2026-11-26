@@ -154,15 +154,18 @@ public class DBRewriteBuilder<S extends Space> {
      * source instructions.  A FROM/AT guard is merged into the
      * {@link #matchPredicate} — if the first matched instruction is neither
      * {@code FROM_INST_TID} nor {@code AT_INST_TID}, the rewrite is skipped,
-     * and so it is when its source does not read every entry of one
-     * collection ({@link #readsEveryEntry}).
+     * and so it is when its source is not one the plan reads: every entry of one
+     * collection and nothing below it for a plan that answers entries
+     * ({@link #answersEveryEntry}), every entry and the field below it for a sum
+     * or a mean ({@link #readsEveryEntry}).
      *
      * <p>Safe to call after {@link #match(fURI...)} — replaces the first
      * element of the match pattern.  Idempotent: subsequent calls are no-ops.
      *
+     * @param reads the sources the plan stands in for
      * @return this builder
      */
-    public DBRewriteBuilder<S> matchFromOrAt() {
+    public DBRewriteBuilder<S> matchFromOrAt(final Predicate<DataPath> reads) {
         // Replace first match-position TID with ALL so both FROM and AT match.
         if (!this.matchPattern.isEmpty()) {
             this.matchPattern.set(0, ALL);
@@ -177,7 +180,7 @@ public class DBRewriteBuilder<S extends Space> {
             if (first.arg(0).isUri()) {
                 final fURI source = first.arg(0).uriValue();
                 final Space space = Machine.current().memory().getSpaceFor(source);
-                if (!readsEveryEntry(sourcePath(space, null == space ? source : space.redirect(source, true))))
+                if (!reads.test(sourcePath(space, null == space ? source : space.redirect(source, true))))
                     return false;
             }
             if (existing != null && !existing.test(matches))
@@ -192,10 +195,22 @@ public class DBRewriteBuilder<S extends Space> {
      * {@code collection/+}. A source naming one entry ({@code table/1}), the collection itself (its type) or every level
      * below it ({@code table/#}) was pushed down as every row: {@code *db:rewrite_test/1.count()} answered 10 and
      * {@code >>value.sum()} 55 for one row of value 1. The kv pushdowns, which read the path below a table as a key
-     * prefix, never ask.
+     * prefix, never ask. A sum or a mean reads the field below the entry as well ({@code collection/+/field}), which
+     * its space vets; a plan that answers entries asks {@link #answersEveryEntry}.
      */
     static boolean readsEveryEntry(final DataPath source) {
         return source.hasCollection() && !source.collectionIsWildcard() && fURI.Singleton.WILD_ONE.name().equals(source.entry());
+    }
+
+    /**
+     * A PLAN THAT ANSWERS ENTRIES STANDS IN ONLY FOR A SOURCE THAT ANSWERS THEM (2026-11-26): every entry of one
+     * collection ({@link #readsEveryEntry}) and nothing below it, but the empty field a trailing {@code /} leaves. A
+     * source with a field answers the field: {@code *mongo:rewrite_test/+/name.take(2)} walks {@code {'item1','item2'}},
+     * and mql_limit answered two documents, as the take, skip, where, select, order and dedup plans of every space
+     * answered entries for {@code collection/+/field}.
+     */
+    static boolean answersEveryEntry(final DataPath source) {
+        return readsEveryEntry(source) && !source.hasExtension() && (null == source.field() || source.field().isEmpty());
     }
 
     /**
@@ -208,6 +223,31 @@ public class DBRewriteBuilder<S extends Space> {
      */
     static DataPath sourcePath(final Space space, final fURI routed) {
         return space instanceof AbstractDataPathSpace<?> data ? data.dataPath(routed) : DataPath.withoutDB(routed);
+    }
+
+    /**
+     * THE SOURCE A PLAN READS, ITS FIELD ACCESS FOLDED IN: {@code from(x) >> field} reads {@code from(x/field)}, so its
+     * data path resolves the column.
+     */
+    private static fURI fieldSource(final List<Inst> matched) {
+        final fURI source = matched.getFirst().arg(0).uriValue();
+        return matched.stream()
+                .filter(m -> m.tid().basePath().equals(RSHIFT_INST_TID.basePath()) && m.arg(0).isUri())
+                .findFirst()
+                .map(m -> source.extend(m.arg(0).uriValue()))
+                .orElse(source);
+    }
+
+    /**
+     * THE FIELD A SUM OR A MEAN AGGREGATES (2026-11-26): the data path its plan reads (the source, the shift after it
+     * folded in, taken apart as the space takes it), or null when that names no single field. With none, the walk's sum
+     * of entries is their join and their mean fails, where {@code $sum: 1} counted the documents and SUM and AVG over
+     * no column answered 0 and 0.0; a wildcard field ({@code +/+}) or an empty one ({@code +/}) names no column either.
+     * A space declines what else it cannot aggregate, such as a path below a field that holds none.
+     */
+    public static DataPath summandPath(final Space space, final List<Inst> matches) {
+        final DataPath source = sourcePath(space, space.redirect(fieldSource(matches), true));
+        return source.hasField() && !source.field().isEmpty() && !source.fieldIsWildcard() ? source : null;
     }
 
     /**
@@ -321,16 +361,7 @@ public class DBRewriteBuilder<S extends Space> {
             // dereferenced into a fail; the space type and the match predicate below decide the rest.
             if (!matched.getFirst().arg(0).isUri())
                 return matched;
-            // Extract fURI from the first instruction (FROM/AT instruction)
-            fURI oldfURI = matched.getFirst().arg(0).uriValue();
-            // Fold a field access (>>field / rshift) into the source URI so DataPath resolves the
-            // column: from(x) >> field  →  from(x/field).
-            for (final Inst m : matched) {
-                if (m.tid().basePath().equals(RSHIFT_INST_TID.basePath()) && m.arg(0).isUri()) {
-                    oldfURI = oldfURI.extend(m.arg(0).uriValue());
-                    break;
-                }
-            }
+            final fURI oldfURI = fieldSource(matched);
             final Space space = Machine.current().memory().getSpaceFor(oldfURI);
 
             // Check if this is the correct space type

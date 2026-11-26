@@ -159,9 +159,12 @@ native pushdown).
 | `kv_limit`               | `from(kvPattern).take(n)`      | `SELECT furi, obj FROM kv_store WHERE furi LIKE ... LIMIT n` |
 
 A table plan stands in only for a source that reads every row of one table, routed to a relative path: `table/+`
-(`table/+/col` for `sql_sum` and `sql_mean`). A single row (`table/1`), the table itself, `table/#` and a source no route
-made relative are read by the walk. A sum the plans' int range cannot hold (a REAL, DOUBLE or scaled DECIMAL column)
-fails that range rather than answering its integer part.
+(`table/+/col` or `table/+>>col` for `sql_sum`, `sql_sum_column` and `sql_mean`, where `col` is one numeric column of
+the table). A single row (`table/1`), the table itself, `table/#`, a source no route made relative, a column below a
+row for any other plan (`table/+/col.take(2)` answers values, not rows), and a sum or a mean of no column, of a path
+below a column, or of a column that holds no number are read by the walk. A sum the plans' int range cannot hold (a
+REAL, DOUBLE or scaled DECIMAL column) fails that range rather than answering its integer part, and an empty table's
+mean is noobj.
 
 **Composition:** Multiple rewrites can chain via the `Code.rewrite()` fixed-point loop. Simple example —
 `from(uri).skip(100).take(10)` fires two rewrites in sequence:
