@@ -219,8 +219,9 @@ RewriteBuilder.forDatabase(tbleSpace.class)
    below the entry, since `collection/+/field` answers the field's values. A sum
    (`collection/+/field`, or `collection/+>>field` for the shift form) or a mean (`collection/+/field`) reads one field
    of each entry (`DBRewriteBuilder::readsEveryEntry`). `DBRewriteBuilder.fieldPath` names the field, one concrete
-   field with no wildcard below it, and the space vets the rest (a path below the field is a document's dotted path,
-   and no column's). The kv pushdowns, which read the path below a table as a key prefix, do not ask.
+   field with no wildcard below it, no branch (`>>{value,id}`), and no shift key that is not a uri (`>>'x'`, which
+   the fold leaves out). The space vets the rest: a path below the field is a document's dotted path, though not an
+   index (`tags/0`), and no column's. The kv pushdowns, which read the path below a table as a key prefix, do not ask.
 4. Native lambda executes against the database, receiving the coefficient for cardinality tracking
 5. The matched sequence is replaced with a single native instruction
 

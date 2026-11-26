@@ -1489,19 +1489,24 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
      * A PLAN TAKES ITS SOURCE APART AS THE DOCUMENT READ DOES, AND READS DOCUMENTS (2026-11-25). The read's first segment
      * is the collection, absolute or not. Routed to an absolute path, as dcmntSpace's own docs route {@code mongo:} to
      * {@code /mongo/}, {@code *amongo:rewrite_test/+} is read as collection {@code amongo}, which holds nothing, and
-     * the count plan read it as db/collection and counted all of rewrite_test. {@code *amongo:+} is collection
-     * {@code amongo} itself. After a flat write the read lists the flat entry, and mql_count counted the absent
-     * collection: 0. After a document write mql_count counts it, where the old parse counted collection {@code +}. The
-     * rows are {@code the write % code % what the walk answers}, and the plan is applied on its own as well (see
-     * {@code CommonRewritesTestContract.runRewriteTest}).
+     * the count plan read it as db/collection and counted all of rewrite_test. {@code *amongo:+} reads every entry of
+     * collection {@code amongo}. After a flat write the read lists the flat entry, and the plans read the absent
+     * collection: mql_count counted 0, mql_sum summed 0 and mql_mean answered 0.0, and mql_limit read it too. After a
+     * document write mql_count counts it, which pins the plan's parse: the parse before 84bf76158 read the source as
+     * collection {@code +} and declined it. The rows are {@code the write % code % what the walk answers % the op the
+     * plan reads with}, and the plan is applied on its own as well.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
-            "                        % *amongo:rewrite_test/+.count()   % 0",
-            "amongo:x -> 1           % *amongo:+.count()                % 1",
-            "amongo:x -> [n=>1]      % *amongo:+.count()                % 1",
+            "                        % *amongo:rewrite_test/+.count()   % 0     % from",
+            "amongo:x -> 1           % *amongo:+.count()                % 1     % from",
+            "amongo:x -> [n=>1]      % *amongo:+.count()                % 1     % mql_count",
+            "amongo:x -> 1           % *amongo:+.take(1)                % 1     % from",
+            "amongo:x/n -> 3         % *amongo:+/n.sum()                % 3     % from",
+            "amongo:x/n -> 3         % *amongo:+/n.mean()               % 3.0   % from",
     })
-    public void testAnAbsoluteRouteReadsAsItsSpace(final String write, final String code, final String expected) throws Exception {
+    public void testAnAbsoluteRouteReadsAsItsSpace(final String write, final String code, final String expected,
+                                                   final String reads) throws Exception {
         final dcmntSpace mounted = dcmntSpace.of(
                 rec(
                         uri(PATTERN), uri("amongo:#"),
@@ -1515,14 +1520,37 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
                 ObjmtronSerializer.parse(write).apply();
             checkCodeParseApply(LOG, code, expected);
             final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
             final Obj want = Machine.parse(expected);
             checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
         } finally {
             ObjmtronSerializer.parse("amongo:x -> noobj").apply();
+            ObjmtronSerializer.parse("amongo:x/n -> noobj").apply();
             mounted.getDatabase().getCollection("amongo").drop();
             Machine.current().memory().removeSpace(mounted.vid());
             mounted.close();
         }
+    }
+
+    /**
+     * THE FLAT NAMESPACE IS LEFT TO THE WALK (2026-11-25). kv_store holds one document per flat key, so a plan over it read
+     * those documents, not the entries the walk lists (mql_count counted the whole collection). Each source plan
+     * declines it: count, limit, where and select through readsDocuments, sum and mean through summablePath. The rows
+     * are {@code code % the op the plan reads with}; a declined plan is the walk.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*mongo:kv_store/+.count()              % from",
+            "*mongo:kv_store/+.take(1)              % from",
+            "*mongo:kv_store/+.isa([n=>1]).count()  % from",
+            "*mongo:kv_store/+>>n                   % from",
+            "*mongo:kv_store/+/n.sum()              % from",
+            "*mongo:kv_store/+>>n.sum()             % from",
+            "*mongo:kv_store/+/n.mean()             % from",
+    })
+    public void testTheFlatNamespaceIsLeftToTheWalk(final String code, final String reads) {
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
     }
 
     /**
@@ -1564,8 +1592,11 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
      * past its field summed the field ({@code +/value/x} and {@code +>>value/x} added the values, 55), and mql_sum summed
      * 1 per document for a source with no field (a count, 10). Both now sum the field the path names, an extension as
      * Mongo's dotted path. A field no document holds sums to the seed, 0, and a source with no field is left to the walk,
-     * whose sum of documents is their join. The rows are {@code code % what the walk answers % the op the plan reads
-     * with}, and the plan is applied on its own as well.
+     * whose sum of documents is their join. So is a path MongoDB cannot sum as the walk does: a shift key that is no uri,
+     * which the fold leaves out (the plan summed the path's own field, 55, or {@code "$null"}), an index in the
+     * extension, and a branch ({@code +/{value,id}} summed {@code "${value,id}"}, which reads neither field, where the
+     * walk reads both; a branched shift is no uri, so mql_select reads it). The rows are
+     * {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on its own as well.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -1575,6 +1606,11 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
             "*mongo:rewrite_test/+>>value.sum()     % 55       % mql_sum_column",
             "*mongo:rewrite_test/+>>value/x.sum()   % 0        % mql_sum_column",
             "*mongo:rewrite_test/+.sum()            % [id=>{1,2,3,4,5,6,7,8,9,10},value=>{1,2,3,4,5,6,7,8,9,10},name=>{'item1','item2','item3','item4','item5','item6','item7','item8','item9','item10'},active=>{{5}true,{5}false}] % from",
+            "*mongo:rewrite_test/+/value>>'x'.sum() % 0        % from",
+            "*mongo:rewrite_test/+>>'value'.sum()   % 0        % from",
+            "*mongo:rewrite_test/+/value/0.sum()    % 0        % from",
+            "*mongo:rewrite_test/+>>{value,id}.sum() % 110     % mql_select",
+            "*mongo:rewrite_test/+/{value,id}.sum() % 110      % from",
     })
     public void testASumIsItsField(final String code, final String expected, final String reads) {
         checkCodeParseApply(LOG, code, expected);
@@ -1588,20 +1624,21 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
      * A MEAN IS ITS FIELD'S (2026-11-25). mql_mean averaged the literal 1 ({@code $avg: 1}), so every collection with a
      * document had mean 1.0. It now averages the field the path names, an extension as Mongo's dotted path. A field no
      * document holds, and a collection with no document, are the mean of nothing: noobj, as the walk answers. A source
-     * with no field, or a wildcard field, is left to the walk, whose mean of documents fails ({@code <ERROR>}: the plan
-     * holds no mql_ op). A string field is not covered: $avg skips what is no number and answers noobj, where the walk
-     * fails. The rows are {@code code % what the walk answers}, and the plan is applied on its own as well.
+     * with no field is left to the walk, whose mean of documents fails, and so is a wildcard field, whose walk reads
+     * every field's value (rewrite_test's strings and bools fail it). A string field is not covered: $avg skips what is
+     * no number and answers noobj, where the walk fails. The rows are
+     * {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on its own as well.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
-            "*mongo:rewrite_test/+/value.mean()     % 5.5",
-            "*mongo:rewrite_test/+/nothing.mean()   % noobj",
-            "*mongo:rewrite_test/+/value/x.mean()   % noobj",
-            "*mongo:empty_means/+/value.mean()      % noobj",
-            "*mongo:rewrite_test/+.mean()           % <ERROR>",
-            "*mongo:rewrite_test/+/+.mean()         % <ERROR>",
+            "*mongo:rewrite_test/+/value.mean()     % 5.5      % mql_mean",
+            "*mongo:rewrite_test/+/nothing.mean()   % noobj    % mql_mean",
+            "*mongo:rewrite_test/+/value/x.mean()   % noobj    % mql_mean",
+            "*mongo:empty_means/+/value.mean()      % noobj    % mql_mean",
+            "*mongo:rewrite_test/+.mean()           % <ERROR>  % from",
+            "*mongo:rewrite_test/+/+.mean()         % <ERROR>  % from",
     })
-    public void testAMeanIsItsFields(final String code, final String expected) {
+    public void testAMeanIsItsFields(final String code, final String expected, final String reads) {
         try (final MongoClient client = MongoClients.create(connectionString)) {
             client.getDatabase(DB_NAME).getCollection("empty_means").drop();
             client.getDatabase(DB_NAME).createCollection("empty_means");
@@ -1609,10 +1646,8 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         try {
             checkCodeParseApply(LOG, code, expected);
             final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
-            if ("<ERROR>".equals(expected.trim()))
-                assertTrue(plan.asCode().insts().stream().noneMatch(inst -> inst.tid().name().startsWith("mql_")),
-                        "a mean with no single field is left to the walk: " + plan);
-            else {
+            assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+            if (!"<ERROR>".equals(expected.trim())) {
                 final Obj want = Machine.parse(expected);
                 checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
             }

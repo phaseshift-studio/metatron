@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.Objs;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -61,21 +62,22 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * // In tbleInstSet:
  * CommonRewrites.countRewrite(
  *     tbleSpace.class,
- *     TBLE_ISA_REWRITE_TID.extend("native_count"),
- *     (space, furi) -> {
- *         String table = furi.segments().getFirst();
+ *     TBLE_ISA_REWRITE_TID.extend("sql_count"),
+ *     (space, dp) -> {
  *         try (Statement stmt = space.sjvm().createStatement();
- *              ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + table)) {
- *             return rs.next() ? (long) rs.getInt(1) : 0L;
+ *              ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + dp.collection())) {
+ *             return rs.next() ? rs.getLong(1) : 0L;
  *         }
- *     }
+ *     },
+ *     tableGuard
  * )
  *
  * // In dcmntInstSet:
  * CommonRewrites.countRewrite(
  *     dcmntSpace.class,
- *     DOC_ISA_REWRITE_TID.extend("mql_count"),
- *     (space, furi) -> space.database.getCollection(furi.segments().getFirst()).countDocuments()
+ *     DCMNT_ISA_REWRITE_TID.extend("mql_count"),
+ *     (space, dp) -> space.getDatabase().getCollection(dp.collection()).countDocuments(),
+ *     dcmntInstSet::readsDocuments
  * )
  * }</pre>
  *
@@ -96,24 +98,12 @@ public final class CommonRewrites {
      * @param spaceType     The database space type (e.g., tbleSpace.class, dcmntSpace.class)
      * @param rewriteTid    The type ID for this specific rewrite
      * @param countFunction Function that executes the native count operation
-     * @param <S>           The space type
-     * @return The rewrite instruction
-     */
-    public static <S extends Space> Inst countRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTid,
-            final BiFunction<S, DataPath, Long> countFunction) {
-        return countRewrite(spaceType, rewriteTid, countFunction, null);
-    }
-
-    /**
-     * Create a count optimization rewrite with an optional space-aware guard.
-     *
      * @param matchSpacePredicate optional predicate receiving the typed space and
      *                            matched instructions; return {@code false} to skip
      *                            the rewrite (e.g., when the collection is not a
      *                            real table)
-     * @see #countRewrite(Class, fURI, BiFunction)
+     * @param <S>           The space type
+     * @return The rewrite instruction
      */
     public static <S extends Space> Inst countRewrite(
             final Class<S> spaceType,
@@ -156,13 +146,6 @@ public final class CommonRewrites {
     public static <S extends Space> Inst sumRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
-            final BiFunction<S, DataPath, Number> sumFunction) {
-        return sumRewrite(spaceType, rewriteTID, sumFunction, null);
-    }
-
-    public static <S extends Space> Inst sumRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTID,
             final BiFunction<S, DataPath, Number> sumFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
@@ -178,15 +161,15 @@ public final class CommonRewrites {
 
     /**
      * A SUM THE PLANS' INT RANGE CANNOT HOLD IS A REAL, WHICH THE RANGE REFUSES, NEVER CUT (2026-11-25): longValue()
-     * answered the products' prices (2817.9) as 2817. The number's own type tells: an integral one (or an unscaled
-     * BigDecimal) is an int, and any other a real, whole or not (0.5 + 1.5 is the walk's 2.0): a Double, a Float, a
-     * scaled BigDecimal, and MongoDB's Decimal128, which is a Number of none of those types. It cannot tell a whole
-     * DECIMAL column's sum, which comes back unscaled as MySQL's sum of an INT column does, so that one still answers an
-     * int where the walk reads DECIMAL as a real.
+     * answered the products' prices (2817.9) as 2817. The number's own type tells: a Long, Integer, Short, Byte or
+     * BigInteger, or an unscaled BigDecimal, is an int, and any other a real, whole or not (0.5 + 1.5 is the walk's
+     * 2.0): a Double, a Float, a scaled BigDecimal, and MongoDB's Decimal128, a Number of none of those types. It cannot
+     * tell a whole DECIMAL column's sum, which comes back unscaled as MySQL's sum of an INT column does, so that one still
+     * answers an int where the walk reads DECIMAL as a real.
      */
     private static Obj sumOf(final Number sum) {
         return sum instanceof Long || sum instanceof Integer || sum instanceof Short || sum instanceof Byte
-                || (sum instanceof BigDecimal decimal && decimal.scale() <= 0)
+                || sum instanceof BigInteger || (sum instanceof BigDecimal decimal && decimal.scale() <= 0)
                 ? jnt(sum.longValue())
                 : real(sum.doubleValue());
     }
@@ -219,13 +202,6 @@ public final class CommonRewrites {
      * @param <S>          The space type
      * @return The rewrite instruction
      */
-    public static <S extends Space> Inst meanRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTID,
-            final BiFunction<S, DataPath, Double> meanFunction) {
-        return meanRewrite(spaceType, rewriteTID, meanFunction, null);
-    }
-
     public static <S extends Space> Inst meanRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
@@ -277,14 +253,14 @@ public final class CommonRewrites {
      * CommonRewrites.limitRewrite(
      *     tbleSpace.class,
      *     TBLE_ISA_REWRITE_TID.extend("native_limit"),
-     *     (space, furi, limit) -> {
-     *         String table = furi.segments().getFirst();
-     *         String query = "SELECT * FROM " + table + " LIMIT " + limit;
+     *     (space, dp, limit) -> {
+     *         String query = "SELECT * FROM " + dp.collection() + " LIMIT " + limit;
      *         try (Statement stmt = space.sjvm().createStatement();
      *              ResultSet rs = stmt.executeQuery(query)) {
      *             return ObjSQLSerializer.readLimitedAsRecObjs(rs, (int) limit);
      *         }
-     *     }
+     *     },
+     *     tableGuard
      * )
      * }</pre>
      *
@@ -294,13 +270,6 @@ public final class CommonRewrites {
      * @param <S>           The space type
      * @return The rewrite instruction
      */
-    public static <S extends Space> Inst limitRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTID,
-            final LimitOperation<S> limitFunction) {
-        return limitRewrite(spaceType, rewriteTID, limitFunction, null);
-    }
-
     public static <S extends Space> Inst limitRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
@@ -464,13 +433,6 @@ public final class CommonRewrites {
      * @param <S>            The space type
      * @return The rewrite instruction
      */
-    public static <S extends Space> Inst selectRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTID,
-            final SelectOperation<S> selectFunction) {
-        return selectRewrite(spaceType, rewriteTID, selectFunction, null);
-    }
-
     public static <S extends Space> Inst selectRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
@@ -701,15 +663,6 @@ public final class CommonRewrites {
      * @param <S>           The space type
      * @return The rewrite instruction
      */
-    public static <S extends Space> Inst whereRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTID,
-            final WhereOperation<S> whereFunction,
-            final PredicateJoiner predicateJoiner,
-            final ConditionFormatter conditionFormatter) {
-        return whereRewrite(spaceType, rewriteTID, whereFunction, predicateJoiner, conditionFormatter, null);
-    }
-
     public static <S extends Space> Inst whereRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
@@ -1276,13 +1229,6 @@ public final class CommonRewrites {
     public static <S extends Space> Inst skipRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
-            final SkipOperation<S> skipFunction) {
-        return skipRewrite(spaceType, rewriteTID, skipFunction, null);
-    }
-
-    public static <S extends Space> Inst skipRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTID,
             final SkipOperation<S> skipFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
@@ -1548,14 +1494,6 @@ public final class CommonRewrites {
             final Class<S> spaceType,
             final fURI whereRewriteTID,
             final fURI rewriteTID,
-            final WhereOffsetOperation<S> whereOffsetFunction) {
-        return whereOffsetRewrite(spaceType, whereRewriteTID, rewriteTID, whereOffsetFunction, null);
-    }
-
-    public static <S extends Space> Inst whereOffsetRewrite(
-            final Class<S> spaceType,
-            final fURI whereRewriteTID,
-            final fURI rewriteTID,
             final WhereOffsetOperation<S> whereOffsetFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
@@ -1639,14 +1577,6 @@ public final class CommonRewrites {
     @FunctionalInterface
     public interface WhereOrderOperation<S extends Space> {
         Obj execute(S space, DataPath dp, String filterClause, List<String> columns) throws Exception;
-    }
-
-    public static <S extends Space> Inst whereOrderRewrite(
-            final Class<S> spaceType,
-            final fURI whereRewriteTID,
-            final fURI rewriteTID,
-            final WhereOrderOperation<S> whereOrderFunction) {
-        return whereOrderRewrite(spaceType, whereRewriteTID, rewriteTID, whereOrderFunction, null);
     }
 
     public static <S extends Space> Inst whereOrderRewrite(
@@ -1759,14 +1689,6 @@ public final class CommonRewrites {
             final Class<S> spaceType,
             final fURI whereOrderRewriteTID,
             final fURI rewriteTID,
-            final WhereOrderOffsetOperation<S> whereOrderOffsetFunction) {
-        return whereOrderOffsetRewrite(spaceType, whereOrderRewriteTID, rewriteTID, whereOrderOffsetFunction, null);
-    }
-
-    public static <S extends Space> Inst whereOrderOffsetRewrite(
-            final Class<S> spaceType,
-            final fURI whereOrderRewriteTID,
-            final fURI rewriteTID,
             final WhereOrderOffsetOperation<S> whereOrderOffsetFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
@@ -1852,14 +1774,6 @@ public final class CommonRewrites {
     @FunctionalInterface
     public interface WhereOffsetLimitOperation<S extends Space> {
         Obj execute(S space, DataPath dp, String filterClause, long skip, long limit) throws Exception;
-    }
-
-    public static <S extends Space> Inst whereOffsetLimitRewrite(
-            final Class<S> spaceType,
-            final fURI whereOffsetRewriteTID,
-            final fURI rewriteTID,
-            final WhereOffsetLimitOperation<S> whereOffsetLimitFunction) {
-        return whereOffsetLimitRewrite(spaceType, whereOffsetRewriteTID, rewriteTID, whereOffsetLimitFunction, null);
     }
 
     public static <S extends Space> Inst whereOffsetLimitRewrite(
@@ -1953,13 +1867,6 @@ public final class CommonRewrites {
     @FunctionalInterface
     public interface OrderOperation<S extends Space> {
         Obj execute(S space, DataPath dp, List<String> columns) throws Exception;
-    }
-
-    public static <S extends Space> Inst orderRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTID,
-            final OrderOperation<S> orderFunction) {
-        return orderRewrite(spaceType, rewriteTID, orderFunction, null);
     }
 
     public static <S extends Space> Inst orderRewrite(
@@ -2061,13 +1968,6 @@ public final class CommonRewrites {
     @FunctionalInterface
     public interface DedupOperation<S extends Space> {
         Obj execute(S space, DataPath dp, List<String> columns) throws Exception;
-    }
-
-    public static <S extends Space> Inst dedupRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTID,
-            final DedupOperation<S> dedupFunction) {
-        return dedupRewrite(spaceType, rewriteTID, dedupFunction, null);
     }
 
     public static <S extends Space> Inst dedupRewrite(

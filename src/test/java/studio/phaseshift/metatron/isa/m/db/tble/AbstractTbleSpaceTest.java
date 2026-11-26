@@ -2976,6 +2976,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             "*db:rewrite_test/+>>value.sum()     % 55                       % sql_sum_column",
             "*db:rewrite_test/+>>value/x.sum()   % 0                        % from",
             "*db:rewrite_test/+/value>>x.sum()   % 0                        % from",
+            "*db:rewrite_test/+/value>>'x'.sum() % 0                        % from",
             "*db:rewrite_test/+/nothing.sum()    % 0                        % from",
             "*db:rewrite_test/+.sum()>>value     % {1,2,3,4,5,6,7,8,9,10}   % from",
             "*db:rewrite_test/+/value.mean()     % 5.5                      % sql_mean",

@@ -254,6 +254,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
             "*/g/software/+/lang.dedup(>>name).count()   % 1",
             "*/g/person/+>>age/x.sum()                   % 0",
             "*/g/person/+/age>>x.sum()                   % 0",
+            "*/g/person/+/age>>'x'.sum()                 % 0",
             "*/g/person/+>>+.sum()                       % <ERROR>",
     })
     public void testAFieldSourceAnswersAsTheWalk(final String code, final String expected) {

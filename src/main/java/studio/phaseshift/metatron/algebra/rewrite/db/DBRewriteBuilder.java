@@ -246,10 +246,17 @@ public class DBRewriteBuilder<S extends Space> {
      * of entries is their join and their mean fails, where {@code $sum: 1} counted the documents and SUM and AVG over
      * no column answered 0 and 0.0. A wildcard field ({@code +/+}) and a wildcard below the field ({@code +/points/+},
      * whose walk sums the sub-document's values, where {@code $sum: "$points.+"} answered 0) name no single field
-     * either. A space declines what else it cannot aggregate, such as a path below a field that holds none.
+     * either, nor do a shift whose key is no uri, which the fold leaves out ({@code +/value>>'x'} summed value, where
+     * the walk sums nothing to 0), and a branch ({@code >>{value,id}}, two fields). A space declines what else it cannot
+     * aggregate, such as a path below a field that holds none.
      */
     public static DataPath fieldPath(final Space space, final List<Inst> matches) {
-        final DataPath source = sourcePath(space, space.redirect(fieldSource(matches), true));
+        if (matches.stream().anyMatch(m -> m.tid().basePath().equals(RSHIFT_INST_TID.basePath()) && !m.arg(0).isUri()))
+            return null;
+        final fURI folded = fieldSource(matches);
+        if (folded.hasBranches())
+            return null;
+        final DataPath source = sourcePath(space, space.redirect(folded, true));
         return source.hasField() && !source.fieldIsWildcard() && !source.extensionIsWildcard() ? source : null;
     }
 

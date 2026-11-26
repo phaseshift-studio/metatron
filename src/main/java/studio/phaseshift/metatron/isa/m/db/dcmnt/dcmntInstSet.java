@@ -24,6 +24,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewrites;
 import studio.phaseshift.metatron.algebra.rewrite.db.DBRewriteBuilder;
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.SchemaSpace;
@@ -206,8 +207,9 @@ public class dcmntInstSet extends AbstractInstSet {
                                     final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     // THE MEAN OF THE FIELD THE PATH NAMES (2026-11-25): {$avg: 1} averaged the literal 1, so
-                                    // *mongo:rewrite_test/+/value.mean() answered 1.0 for 5.5. No document (an empty collection) and
-                                    // no number to average ($avg answers null) are the mean of nothing, noobj, as the walk answers.
+                                    // *mongo:rewrite_test/+/value.mean() answered 1.0 for 5.5. A field no document holds, and a
+                                    // collection with no document, give $avg null: the mean of nothing, noobj, as the walk answers
+                                    // (a field of strings or bools is not covered: $avg skips them, where the walk fails).
                                     // MongoDB averages decimals to a Decimal128, which getDouble refused; mongo-java-server
                                     // averages them to a double, so no row of the tests can pin it
                                     final Document result = collection.aggregate(Arrays.asList(
@@ -407,12 +409,17 @@ public class dcmntInstSet extends AbstractInstSet {
      * documents the source reads ({@link DBRewriteBuilder#fieldPath}), a path below it as its dotted path. A source
      * with no field reads whole documents, which MongoDB does not add as the walk does (the walk's sum of documents is
      * their join, and their mean fails): {@code $sum: 1} counted them, and {@code $avg: 1} answered 1.0 for any
-     * collection. A wildcard field, a wildcard shift or a wildcard below the field (a walk over a sub-document's values)
-     * is not representable either: {@code $sum: "$+"} and {@code $sum: "$points.+"} silently aggregated to 0. Declining
-     * lets the walk answer those paths.
+     * collection with a document. A wildcard field, a wildcard shift or a wildcard below the field (a walk over a
+     * sub-document's values) is not representable either: {@code $sum: "$+"} and {@code $sum: "$points.+"} silently
+     * aggregated to 0. Nor is an index below the field ({@code tags/0}): an aggregation path reads it as a field named
+     * 0, where the walk takes a lst's element. Declining lets the walk answer those paths.
      */
     private static boolean summablePath(final dcmntSpace space, final List<Inst> matches) {
-        return readsDocuments(space, matches) && null != DBRewriteBuilder.fieldPath(space, matches);
+        if (!readsDocuments(space, matches))
+            return false;
+        final DataPath dp = DBRewriteBuilder.fieldPath(space, matches);
+        return null != dp && (!dp.hasExtension() || dp.extension().segments().stream()
+                .noneMatch(segment -> !segment.isEmpty() && segment.chars().allMatch(Character::isDigit)));
     }
 
     /**
