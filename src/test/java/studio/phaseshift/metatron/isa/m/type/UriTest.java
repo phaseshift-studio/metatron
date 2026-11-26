@@ -215,6 +215,26 @@ public class UriTest extends AbstractAlgebraTest {
     }
 
     /**
+     * A URI IS NOOBJ ONLY WHEN NO TERM SURVIVES (Marko, 2026-11-26), its like terms cancelled, not when its terms'
+     * points add to zero: a difference of unlike terms is two terms and flows as one uri, as a literal spelling it does
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<a/b>.minus(<c>)                            % <{a/b,{-1}c}>",
+            "<a/b>.minus(<c>).count()                    % 1",
+            "<a/b>.minus(<c>).plus(<c>)                  % <a/b>",
+            "<a/b>.plus(<c>.neg())                       % <{a/b,{-1}c}>",
+            "{<a/b>,<{-1}c>}.sum()                       % <{a/b,{-1}c}>",
+            "<{a/b,{-1}c}>                               % <{a/b,{-1}c}>",
+            "<x/{a,{-1}b}/y>.count()                     % 1",
+            "<{a,a{-1}}>                                 % noobj",
+            "<{a,a{-1}}>.count()                         % 0",
+    }, delimiter = '%')
+    public void testAUriIsNoObjOnlyWhenNoTermSurvives(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
      * AT THE ZERO AN OPERAND KEEPS ITS VID AND TYPE, as every other answer of the ring's operations does, and as a
      * lst's do: the identity answers the argument's value under this uri's vid, and a cancelled sum and an absorbed
      * product the hole under it

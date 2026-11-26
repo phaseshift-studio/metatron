@@ -96,6 +96,33 @@ public class fURITest extends AbstractMetatronTest {
             assertEquals(a.hashCode(), b.hashCode(), "equal uris must share a hashCode — the hash contract");
     }
 
+    /**
+     * ZERO IS NO TERM SURVIVING (Marko, 2026-11-26): a branched uri is zero when its like terms cancel, not when its
+     * terms' points add to zero, which is all its count, c(), says: {@code {a/b,c{-1}}} is two terms at count 0. Like
+     * terms are the ones the canonical sum merges, equal once their dot segments fold.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{a/b,{-1}c}           | 0  | false",   // the review's <a/b>.minus(<c>): two terms
+            "{a/b,c{-1}}           | 0  | false",   // the point written after the element
+            "{a,{-1}a}             | 0  | true",    // like terms that cancel
+            "{a,a{-1}}             | 0  | true",
+            "{a,{-1}a,b}           | 1  | false",
+            "{a,{-1}a,b,{-1}b}     | 0  | true",
+            "{a,{-1}b,c,{-1}d}     | 0  | false",
+            "x/{a,{-1}a}/y         | 0  | true",    // cancelling between a prefix and a suffix
+            "x/{a,{-1}b}/y         | 0  | false",
+            "{a/x/..,{-1}a}        | 0  | true",    // like once folded, as equality reads them
+            "{{2}a,{-1}b,{-1}b}    | 0  | false",   // the points add to zero over unlike terms
+            "{a,b}{0}              | 0  | true",    // a zero point on the whole sum
+            "a{0}                  | 0  | true",
+            "a                     | 1  | false",
+    }, delimiter = '|')
+    public void testZeroIsNoTermSurviving(final String furi, final long count, final boolean zero) {
+        assertEquals(cInt.of(count), f(furi).c(), () -> furi + "'s count");
+        assertEquals(zero, f(furi).isZero(), () -> furi + " is zero: " + zero);
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "http://abc.xyz.com            | abc",

@@ -1079,7 +1079,13 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     /// ///////////////////////////////////
 
     default boolean isZero() {
-        return this.c().isZero();
+        // ZERO IS NO TERM SURVIVING (Marko, 2026-11-26): a branched uri is zero when its like terms cancel, not when its
+        // terms' points add to zero, as c() adds them: {a/b,c{-1}} is two terms. A zero count is necessary, so only a
+        // branched uri with a zero count pays for the canonical sum, which keeps the terms that survive
+        if (!this.c().isZero() || !this.hasBranches())
+            return this.c().isZero();
+        final fURI sum = Helper.sum(Stream.of(this));
+        return !sum.hasBranches() && sum.c().isZero();
     }
 
     default boolean isOne() {
