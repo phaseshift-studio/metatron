@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.db.vec.space.VectorDBClient;
 import studio.phaseshift.metatron.isa.m.db.vec.space.vecSpace;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.Set;
@@ -410,6 +411,28 @@ public abstract class AbstractVecSpaceTest extends AbstractDataPathTest {
         AbstractMetatronTest.checkEquality(LOG, str("1891"), noted.metadata().at(uri("year")), true);
         // an entity written without metadata reads none back
         AbstractMetatronTest.checkEquality(LOG, rec0(), plain.metadata(), true);
+    }
+
+    @Test
+    public void testCountCountsTheCollectionsDocuments() throws Exception {
+        final String collName = "census";
+        staticClient.createCollection(collName);
+        final VectorDBClient.CollectionData coll = staticClient.getCollection(collName);
+        assertEquals(0, staticClient.count(coll.id()), "a new collection holds no document");
+
+        staticClient.upsert(coll.id(), f(collName),
+                new VectorDBClient.EntityData(f("volta"), str("pile"), rec0(), null),
+                new VectorDBClient.EntityData(f("faraday"), str("cage"), rec0(), null),
+                new VectorDBClient.EntityData(f("ampere"), str("law"), rec0(), null));
+        assertEquals(3, staticClient.count(coll.id()));
+
+        // an upsert of a stored id replaces its document, and a delete removes one
+        staticClient.upsert(coll.id(), f(collName), new VectorDBClient.EntityData(f("volta"), str("battery"), rec0(), null));
+        staticClient.delete(coll.id(), List.of("ampere"));
+        assertEquals(2, staticClient.count(coll.id()));
+
+        // a collection the server does not hold is an error the server names, never a number misread from its answer
+        assertThrows(MTronException.class, () -> staticClient.count(f("00000000-0000-0000-0000-000000000000")));
     }
 
     @Test

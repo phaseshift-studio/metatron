@@ -242,8 +242,9 @@ public class ChromaV2Client implements VectorDBClient {
     @Override
     public int count(final fURI collectionId) throws Exception {
         final HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(collPath(collectionId).extend("count").toString())).GET().build();
+                .uri(URI.create(this.baseUrl.extend(collPath(collectionId)).extend("count").toString())).GET().build();
         final HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() != 200) throw MTronException.of("count: %s", resp.body());
         return Integer.parseInt(resp.body().trim());
     }
 
