@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * The vocabulary version — {@link InstSet#runtimeVersion()} — and the doors that advance it.
+ * The instruction set's version — {@link InstSet#runtimeVersion()} — and the doors that advance it.
  * <p>
  * The claim being pinned is narrow and load-bearing: a version must ADVANCE at every door that can change what a
  * level contributes to a union, because a memoized derived view (a union's merged rule list is the one that matters)
@@ -45,9 +45,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * forgets to bump does not fail loudly — it serves an answer derived from tables that have since changed, which is
  * how a rewriter silently stops firing a rule.
  * <p>
- * The stores here are throwaway levels ({@code new BasicInstSet()}), never a mounted ISA: an instruction set's
- * rewrite table has no removal door ({@code write} only puts), so a probe rule written into {@code /m} would be a
- * permanent rule of the whole test JVM.
+ * The stores here are throwaway levels ({@code new BasicInstSet()}), never a mounted ISA: a probe rule written into
+ * {@code /m} is a rule of the class's VM until a noobj write deletes it, and a test that fails before its delete leaves
+ * it there for the class's other tests.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -131,7 +131,7 @@ public class InstSetRuntimeVersionTest extends AbstractMetatronTest {
         final int before = level.runtimeVersion();
         level.setup();
         assertEquals(1, level.rewrites().size(), "setup populated the rewrite table");
-        assertNotEquals(before, level.runtimeVersion(), "the mount-time population is a change of the vocabulary");
+        assertNotEquals(before, level.runtimeVersion(), "the mount-time population is a change of the instruction set");
     }
 
     /**

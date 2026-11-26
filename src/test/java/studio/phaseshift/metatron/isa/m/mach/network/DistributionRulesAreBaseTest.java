@@ -364,9 +364,10 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
     }
 
     /**
-     * A LONE MACHINE HAS NO PEER AND STATES NO PLACE SET ({@code Shard.lone}), the one rule law_shard's pool pre-check
-     * and {@code Shard.apply} share: a stated {@code ?place} lets a peerless chain through, and so does a dial. Each
-     * row: the chain % whether a peer is dialed % whether the machine is lone for it.
+     * A LONE MACHINE HAS NO PEER A LANE CAN BE DEALT TO AND STATES NO PLACE SET ({@code Shard.lone}), the one rule
+     * law_shard's pool pre-check and {@code Shard.apply} share: a stated {@code ?place} lets a peerless chain through,
+     * and so does a dial of a peer that takes lanes (the gateways, which take none, are {@code LoneGatewayTest}'s).
+     * Each row: the chain % whether a peer is dialed % whether the machine is lone for it.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -374,7 +375,7 @@ public class DistributionRulesAreBaseTest extends AbstractMetatronTest {
             "start?place=[local,local,local,local]({1,2,3,4}).plus(1).sum() % false % false",
             "start({1,2,3,4}).plus(1).sum()                                % true  % false",
     }, delimiter = '%')
-    void testALoneMachineHasNoPeerAndStatesNoPlace(final String mtron, final boolean dialed, final boolean lone) {
+    void testALoneMachineCanDealNoLaneAndStatesNoPlace(final String mtron, final boolean dialed, final boolean lone) {
         if (dialed)
             Network.Helper.connect(Machine.current().network(), SIBLING);
         final Code code = ObjmtronSerializer.parse(mtron.trim()).asCode();

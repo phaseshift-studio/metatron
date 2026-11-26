@@ -52,7 +52,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Supplier;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static studio.phaseshift.metatron.Tokens.COUNT;
 import static studio.phaseshift.metatron.Tokens.PEER;
@@ -74,7 +73,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * end-to-end evaluation of the source text, each the best and the median of the measured runs after the warm-up runs.
  * A profiled pass then times every rule ({@code rewrite/<rule>/time}, the probes {@code profile()} reads). Every row is
  * measured under two peer maps: {@link Peers#none}, nothing dialed, and {@link Peers#gateway}, the two web gateways
- * every boot constructs ({@code http_client::[host=><http://#>]} and its https twin), peers no lane can be dealt to.
+ * that four of the stock boots construct, boot.mtron among them ({@code http_client::[host=><http://#>]} and its https
+ * twin), peers no lane can be dealt to.
  * {@code law_shard} declines either way, but only a lone machine declines before it plans.
  * <p>
  * The numbers go to {@code target/rewriter-performance.txt} (in a docker run, {@code .docker-target/}), one line per
@@ -189,7 +189,8 @@ public class FixPointRewriterPerformanceTest extends AbstractMetatronTest {
             }
         }
         checkCodeRewrite(LOG, program, rewrite, value, false);
-        assertEquals(rewritten.get(Peers.none), rewritten.get(Peers.gateway), "a peer no lane can be dealt to must not change the rewrite");
+        // a peer no lane can be dealt to must not change the rewrite
+        checkEquality(LOG, rewritten.get(Peers.none), rewritten.get(Peers.gateway), true);
     }
 
     @AfterAll

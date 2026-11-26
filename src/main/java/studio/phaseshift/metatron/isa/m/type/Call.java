@@ -259,16 +259,18 @@ public interface Call extends Obj {
             if (!rules.isRec())
                 throw MTronException.of("a matched run of code changes into a code or a rec of rules, not %s", rules);
             List<Inst> current = insts;
-            // the rules walked as the rec's own rels (elements()), never through at(): a rule's key and value are code
-            // held in a poly, and at() would fire an initial or an auto among them
+            // the rules walked as the rec's own rels (elements()). Rel.first() and second() resolve an auto or an
+            // initial inst a rule holds, as at() would, so a user's rule that holds one is evaluated here (an open
+            // question against the javadoc above: a law rule, read raw, is not)
             for (final Rel rule : rules.asRec().elements().toList())
                 current = update(current, rule.first(), rule.second(), runs);
             return current;
         }
 
         /**
-         * ONE RULE, {@code pattern => change}, over {@code insts}: what {@link #update(List, Obj, BiPredicate)} does for
-         * each rule of its rec, in order. A caller that already holds the rule's two sides hands them in directly: a law
+         * ONE RULE, {@code pattern => change}, over {@code insts}: the body of {@link #update(List, Obj, BiPredicate)}'s rec
+         * loop, with the two sides taken as given (the loop hands in Rel.first() and Rel.second(), which resolve an auto or
+         * an initial inst). A caller that already holds the rule's two sides hands them in directly: a law
          * rewrite reads them off its rule's raw map every pass, and a rec built to carry them, and a rel minted to read
          * them back, each ran a type check (Marko, 2026-11-25: read a rec with map.get(), not through rels).
          */

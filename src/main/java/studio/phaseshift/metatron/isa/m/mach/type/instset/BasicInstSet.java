@@ -595,9 +595,12 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
     public List<Inst> insts(final fURI op) {
         final long version = isaVersion();
         final Set<Inst> insts = this.insts();
-        View<Map<fURI, List<Inst>>> families = this.familiesView;
-        if (null == families || version != families.version())
-            this.familiesView = families = new View<>(version, new java.util.concurrent.ConcurrentHashMap<>());
+        final View<Map<fURI, List<Inst>>> held = this.familiesView;
+        final View<Map<fURI, List<Inst>>> families = null != held && version == held.version() ? held
+                : new View<>(version, new java.util.concurrent.ConcurrentHashMap<>());
+        // stored only when retaken: this runs on every law gate's deduction, and a volatile store per call is no read
+        if (families != held)
+            this.familiesView = families;
         return families.value().computeIfAbsent(op.basePath().asNode(), family -> Typer.Helper.family(insts.stream(), family).toList());
     }
 

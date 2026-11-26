@@ -99,9 +99,9 @@ public final class Shard {
      * address to dial back) or whose client serves none of what a shipped route needs (the web's gateways,
      * {@code http_client}, serve {@code to} but no {@code eval}) is no place {@link PlaceResolver} resolves, so planning
      * over it declines at every cut. Only the declared half of {@link PlaceResolver#serves} is read here, a map read:
-     * whether a dial is online is asked when the plan resolves its places. Every boot dials both gateways, so a
-     * machine with them and nothing else planned every chain on every pass, and declined (2026-11-25: a third of a
-     * rewrite's samples).
+     * whether a dial is online is asked when the plan resolves its places. Four of the stock boots (boot.mtron, dev.mtron,
+     * docker.boot.mtron, agent-ide.boot.mtron) dial both gateways, so a machine with them and nothing else planned every
+     * chain on every pass, and declined (2026-11-25: a third of a rewrite's samples).
      */
     public static boolean lone(final Rec peers, final Code code) {
         return code.insts().stream().noneMatch(inst -> inst.tid().hasQ(PLACE))

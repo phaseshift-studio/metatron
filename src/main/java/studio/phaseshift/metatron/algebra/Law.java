@@ -1374,8 +1374,11 @@ public enum Law {
         public static Code rewrite(final Code code, final List<Rec> rules, final TriFunction<Code, Integer, Integer, Boolean> admits) {
             Code out = code;
             // THE EQUATIONS ARE READ OFF EACH RULE'S RAW MAP (Marko, 2026-11-25): elements() minted, and type-checked, a rel
-            // per entry on every pass, a third of the rewrite stage. A law's rule rec holds code keys at coefficient one, so
-            // its entries are what its rels would answer
+            // per entry on every pass, about a sixth of the rewrite stage. A rel answers its raw entry unchanged when neither
+            // side is an auto or an initial inst and the rec sits at coefficient one, which holds for every rule rec /m builds
+            // (its constants, claimed()'s fill with its claimant insts, the theory rules, derivation_contraction's and
+            // form_map_unwrap's recs) while no law claimant is an initial or an auto inst. A
+            // user's ?decq derivation is read raw too, so the read fires no auto head in its rule
             for (final Map.Entry<Obj, Obj> equation : rules.stream().flatMap(rule -> rule.recValue().entrySet().stream()).toList()) {
                 final Code scanned = out;
                 // the chain's instructions, read once: insts() answers a copy per call

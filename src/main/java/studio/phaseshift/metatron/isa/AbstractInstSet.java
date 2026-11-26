@@ -74,12 +74,13 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
      * THE ISA VERSION — every level's {@link #isaChanged()} in this JVM, counted together. A union's view (the merge
      * {@code BasicInstSet} answers its kind accessors with) is a function of every level it walks, and a parent cannot
      * observe that a member's tables were written, so the union memoizes against this one number: a change at any level
-     * retakes every view, and an unchanged instruction set answers from the memo. Changes are configuration events,
-     * never per evaluation, so one coarse number costs one merge per change and a read per lookup.
+     * retakes every view, and an unchanged instruction set answers from the memo. Changes are rare next to lookups (a
+     * setup, a declaration, a database collection's type inferred on its first read), so one coarse number costs one
+     * merge per change and a read per lookup.
      */
     private static final AtomicLong ISA_VERSION = new AtomicLong();
 
-    public static long isaVersion() {
+    protected static long isaVersion() {
         return ISA_VERSION.get();
     }
 
@@ -557,8 +558,9 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         return QProc.Helper.processPreWrite(this.qs(), vid, obj).orElseGet(
                 () -> QProc.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(
                         () -> {
-                            // EVERY BRANCH BELOW LANDS IN A TABLE, so the version advances once, here, where the
-                            // mutation begins — a version bumped per branch is a version a new branch can forget.
+                            // EVERY BRANCH BELOW LANDS IN A TABLE, so the version advances here, where the mutation
+                            // begins, and once more where it ends — a version bumped per branch is a version a new
+                            // branch can forget.
                             this.isaChanged();
                             // noobj is the zero inst, so an actual instruction is told by isObjInst: an isInst() here took
                             // every noobj write for an instruction, filed noobj in INST_TABLE, and never reached the delete

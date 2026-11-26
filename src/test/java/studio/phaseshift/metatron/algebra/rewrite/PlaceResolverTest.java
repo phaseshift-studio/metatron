@@ -56,6 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -392,7 +393,9 @@ public class PlaceResolverTest extends AbstractMetatronTest {
     /**
      * THE ENV IS THE WHOLE INPUT. The factory freezes the three tables (a peer or an authority added to the caller's
      * tables afterwards does not reach the snapshot), and two envs of the same tables carry the same
-     * {@link Env#fingerprint()}, which is the comparison a later "re-plan iff the fingerprint differs" reads.
+     * {@link Env#fingerprint()}, which is the comparison a later "re-plan iff the fingerprint differs" reads. The
+     * fingerprint is taken with the snapshot: the tables are copied shallowly, so a member peer rec changed in place
+     * afterwards would change a hash taken when asked.
      */
     @Test
     public void testTheFactoryFreezesTheThreeTables() {
@@ -406,7 +409,10 @@ public class PlaceResolverTest extends AbstractMetatronTest {
         assertEquals("loop://ginger:8555{1}", rendered(PlaceResolver.resolve(places("peer"), env)),
                 "and the resolution reads the frozen tables, not the caller's");
         final Env same = Env.of(rec(uri("dial/one"), peer(SERVANT, true, true, EVAL_INST_TID)), ROSTER, Set.of(MINE));
-        assertEquals(env.fingerprint(), same.fingerprint(), "the same tables fingerprint the same");
+        peers.atDirect(uri("dial/one")).asRec().at(uri("note"), str("rewired"), MUTABLE);
+        assertEquals(env.fingerprint(), same.fingerprint(), "the same tables fingerprint the same, a member changed since included");
+        assertNotEquals(env.fingerprint(), Env.of(rec(uri("dial/one"), peers.atDirect(uri("dial/one"))), ROSTER, Set.of(MINE)).fingerprint(),
+                "and a snapshot of the changed member fingerprints differently");
     }
 
     /**
