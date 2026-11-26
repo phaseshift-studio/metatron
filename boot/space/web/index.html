@@ -130,6 +130,7 @@
             <div class="status-line">
                 <span class="page-name">splash_page</span>
                 <span class="page-vid">mfs:boot/space/web/default.mtron</span>
+                <button type="button" class="page-save" id="page-layout" title="the page as a project tree">layout</button>
                 <button type="button" class="page-save" id="page-open" title="open a page from this machine's file systems">open…</button>
                 <button type="button" class="page-save" id="page-save">save as…</button>
             </div>
@@ -156,6 +157,23 @@
                 <h2 id="h-console">console</h2>
                 <span class="hl-note" id="hl-note">syntax: loading</span>
                 <span class="meta" id="m-console">one message is one expression</span>
+                <span class="mimes" title="the codecs this console speaks: in reads a frame, out writes an answer">
+                    <span class="mime-label">in</span>
+                    <select id="in-mime" class="mime" aria-label="input codec">
+                        <option value="application/json">json</option>
+                        <option value="application/x-mtron" selected>x-mtron</option>
+                        <option value="application/x-mtron-ui">x-mtron-ui</option>
+                        <option value="text/plain">text/plain</option>
+                    </select>
+                    <span class="mime-sep" aria-hidden="true">·</span>
+                    <span class="mime-label">out</span>
+                    <select id="out-mime" class="mime" aria-label="output codec">
+                        <option value="application/json">json</option>
+                        <option value="application/x-mtron">x-mtron</option>
+                        <option value="application/x-mtron-ui" selected>x-mtron-ui</option>
+                        <option value="text/plain">text/plain</option>
+                    </select>
+                </span>
                 <span class="ep"><code id="ws-ep">ws://…/mtron</code></span>
             </div>
             <div class="pending" id="pending" hidden>
@@ -253,6 +271,37 @@
         <div class="actions">
             <button type="button" class="ghost" id="open-page-cancel">cancel</button>
             <button type="submit" class="primary" id="open-page-ok" disabled>open</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- ── the layout sidepanel: the whole cluster's pages as one project tree ── -->
+<aside class="sidepanel" id="sidepanel" aria-label="page layout">
+    <header class="sidepanel-head">
+        <h2>layout</h2>
+        <span class="sidepanel-count" id="sidepanel-count"></span>
+        <button type="button" class="ghost" id="sidepanel-close" title="close the layout panel">×</button>
+    </header>
+    <div class="sidepanel-tree" id="sidepanel-tree"></div>
+    <footer class="sidepanel-foot">
+        <button type="button" class="ghost" id="layout-export" title="every machine's page as one document">export</button>
+        <button type="button" class="ghost" id="layout-import" title="load a document back into the cluster">import</button>
+        <button type="button" class="ghost" id="layout-forget" title="drop this browser's copy of the page">forget</button>
+    </footer>
+</aside>
+
+<dialog class="save-as cluster" id="cluster-dialog" aria-labelledby="cluster-title">
+    <form id="cluster-form">
+        <header><h2 id="cluster-title">cluster layout</h2></header>
+        <div class="body">
+            <p id="cluster-note">every open machine's page, as one document.</p>
+            <textarea id="cluster-text" spellcheck="false" rows="14"></textarea>
+            <p class="save-as-error" id="cluster-error" hidden></p>
+        </div>
+        <div class="actions">
+            <button type="button" class="ghost" id="cluster-cancel">cancel</button>
+            <button type="button" class="ghost" id="cluster-copy">copy</button>
+            <button type="submit" class="primary" id="cluster-ok">save</button>
         </div>
     </form>
 </dialog>

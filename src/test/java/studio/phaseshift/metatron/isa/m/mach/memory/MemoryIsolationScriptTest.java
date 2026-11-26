@@ -60,7 +60,7 @@ public class MemoryIsolationScriptTest extends AbstractMetatronTest {
             // push a child: /thread is still the root's own set; ~/thread is now the child's own (empty)
             "[STATE] *~.push(xyz)",
             "*/sys/thread/+.count().gt(*~/sys/thread/+.count())      % true",
-            "*/sys/xyz/thread/+.count() % *~/sys/thread/+.count()    % true",
+            "*/xyz/sys/thread/+.count() % *~/sys/thread/+.count()    % true",
             // pop back to root: the two agree again
             "[STATE] *~.pop(_)",
             "*/sys/thread/+.count() % *~/sys/thread/+.count()        % true"

@@ -527,6 +527,92 @@ td.st {
     margin-bottom: .6rem;
 }
 
+/* THE CONSOLE HEAD IS ONE COMPACT LINE: it carried a page-heading h2 (18.75px with a
+   15.5px global margin above and below) over a head whose own text is 10.5–12.5px, so
+   ~31px of the space between the card's toolbar and the log was the title's margins.
+   the title keeps the head's scale and the log starts right under it. */
+.console-head {
+    align-items: center;
+    min-height: 0;
+    margin-bottom: .35rem;
+    line-height: 1.2;
+}
+
+.console-head h2 {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+/* the panel view's top slack is the card's toolbar spacing, not the console's */
+.popup-out.panel-view:has(> .console-panel) {
+    margin-top: 0;
+    padding-top: .3rem;
+}
+
+/* THE CONSOLE IS A LOG: its input stays put and only the log scrolls. the panel view
+   gives the console its height and clips (a scrolling view would carry the prompt
+   away), the log takes whatever is left and scrolls inside itself. */
+.popup-out.panel-view:has(> .console-panel) {
+    display: flex;
+    overflow: hidden;
+}
+
+.popup-out.panel-view > .console-panel {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.mpanel.console-panel > .out {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+}
+
+/* the page's own console card holds the same section: same shape, so the prompt is
+   pinned there too */
+#console-card.card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#console-card.card > .out {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* the two codec menus: in reads a frame, out writes an answer */
+.console-head .mimes {
+    display: inline-flex;
+    align-items: baseline;
+    gap: .3rem;
+    color: var(--faint);
+    font: 10.5px/1.4 var(--mono);
+}
+
+.console-head .mime-label {
+    color: var(--faint);
+    font-size: 9.5px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.console-head .mime {
+    background: #070a0f;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: .05rem .15rem;
+    color: var(--fg);
+    font: 10.5px/1.3 var(--mono);
+}
+
+.console-head .mime:focus {
+    outline: none;
+    border-color: var(--mred);
+}
+
 .console-head .ep {
     color: var(--faint);
     font-size: 11.5px;
@@ -545,8 +631,13 @@ td.st {
     border: 1px solid var(--line);
     border-radius: 8px;
     padding: .7rem .85rem;
-    height: 258px;
-    overflow: auto;
+    /* ONE LINE TALL, GROWING UP TO --out-lines: the console is a log, so the box follows
+       its content and then scrolls (the append pins the scroll to the bottom itself).
+       one line is 1.5em (line-height × the font size); 1.4rem + 2px is the padding+border. */
+    --out-lines: 10;
+    min-height: calc(1.5em + 1.4rem + 2px);
+    max-height: calc(var(--out-lines) * 1.5em + 1.4rem + 2px);
+    overflow-y: auto;
     font-size: 12.5px;
     line-height: 1.5;
     white-space: pre-wrap;
@@ -1078,6 +1169,40 @@ dialog.save-as .actions {
     border-left: 1px solid var(--line);
     display: flex;
     flex-direction: column;
+}
+
+/* the stage name is a RAIL beside its block, not a row above it: a fixed label
+   column keeps every code block at the same depth on the same x, and a long name
+   (a rewrite rule's path) wraps inside the rail where the code's height pays for it. */
+.cnode.cnode-inline {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    min-width: 0;
+}
+
+.cnode-inline > .cnode-head {
+    /* the column measures its widest name and sets this; 10rem is only the fallback */
+    flex: 0 0 var(--cnode-rail, 10rem);
+    padding-top: .15rem;
+}
+
+.cnode-inline .cnode-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cnode-inline > .cnode-kids {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: 0;
+}
+
+.cnode-inline > .cnode-code-wrap,
+.cnode-inline > .binder-kids {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .cnode-code {
@@ -2814,9 +2939,15 @@ button.machine-tile:focus-visible {
     user-select: none;
 }
 
-.obj-card.drop-target {
+.obj-card.drop-target,
+.multi-card.drop-target {
     outline: 2px dashed var(--red-hi);
     outline-offset: -2px;
+}
+
+/* a group and a single card exchange cells, so the group has to be a drop target too */
+.multi-card.drop-target {
+    outline-offset: 2px;
 }
 
 .obj-card .popup-out {
@@ -3292,4 +3423,258 @@ footer .license {
 .page-save[disabled] {
     opacity: .5;
     cursor: default;
+}
+
+/* ── the layout sidepanel: the cluster's pages as one project tree ────────
+   it slides in from the right over everything, so it costs the page no layout;
+   the rows are a project tree: a machine (accordion), its cards, a group's cards. */
+.sidepanel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    /* as wide as its content needs: a machine name, its count and two mini buttons.
+       340px spent ~30% of its width on nothing between the name and the buttons. */
+    width: 240px;
+    max-width: 92vw;
+    background: var(--panel);
+    border-right: 1px solid var(--line-hi);
+    box-shadow: 18px 0 40px rgba(0, 0, 0, .45);
+    transform: translateX(-102%);
+    visibility: hidden;
+    transition: transform .18s ease, visibility .18s;
+}
+
+.sidepanel.open {
+    transform: none;
+    visibility: visible;
+}
+
+.sidepanel-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .7rem .8rem .5rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.sidepanel-head h2 {
+    margin: 0;
+    color: var(--fg);
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* the count is one line: at the panel's width it fits, and a wrap here read as two */
+.sidepanel-count {
+    overflow: hidden;
+    margin-right: auto;
+    color: var(--faint);
+    font: 9.5px/1.4 var(--mono);
+    letter-spacing: -.01em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidepanel-tree {
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: .45rem .5rem .6rem;
+}
+
+.sidepanel-foot {
+    display: flex;
+    gap: .4rem;
+    padding: .5rem .6rem;
+    border-top: 1px solid var(--line);
+}
+
+.side-instance {
+    margin-bottom: .3rem;
+}
+
+.side-instance > summary {
+    display: flex;
+    align-items: baseline;
+    gap: .35rem;
+    padding: .12rem .25rem;
+    border-radius: 4px;
+    list-style: none;
+    cursor: pointer;
+    font: 11.5px/1.5 var(--mono);
+}
+
+.side-instance > summary::-webkit-details-marker {
+    display: none;
+}
+
+.side-instance > summary::before {
+    content: "\25B8";
+    width: .7rem;
+    color: var(--faint);
+    font-size: 9px;
+}
+
+.side-instance[open] > summary::before {
+    content: "\25BE";
+}
+
+.side-instance > summary:hover {
+    background: var(--panel-hi);
+}
+
+.side-name {
+    color: var(--fg);
+}
+
+/* a roster machine that is not open yet: dim, and a click connects it */
+.side-instance.side-closed .side-name,
+.side-instance.side-closed .side-count {
+    color: var(--faint);
+}
+
+.side-count {
+    margin-left: auto;
+    color: var(--faint);
+    font-size: 10px;
+}
+
+.side-cards {
+    display: flex;
+    flex-direction: column;
+    margin: .1rem 0 .2rem .8rem;
+    padding-left: .35rem;
+    border-left: 1px solid var(--line);
+}
+
+.side-card-line {
+    display: flex;
+    align-items: center;
+    gap: .2rem;
+}
+
+.side-card-name {
+    flex: 1 1 auto;
+    overflow: hidden;
+    padding: .08rem .25rem;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: var(--mred);
+    font: 11px/1.5 var(--mono);
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.side-card-name:hover {
+    background: var(--panel-hi);
+    color: var(--fg);
+}
+
+.side-mini {
+    flex: none;
+    width: 1.15rem;
+    height: 1.15rem;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: none;
+    color: var(--faint);
+    font: 11px/1 var(--mono);
+    cursor: pointer;
+}
+
+.side-mini:hover {
+    border-color: var(--line-hi);
+    color: var(--fg);
+}
+
+.side-group {
+    display: flex;
+    flex-direction: column;
+    margin-left: .7rem;
+    padding-left: .35rem;
+    border-left: 1px solid var(--line);
+}
+
+.side-add {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    margin: .15rem 0 .2rem;
+}
+
+.side-add-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: .2rem .35rem;
+    border: 1px solid var(--line-hi);
+    border-radius: 4px;
+    background: #070a0f;
+    color: var(--fg);
+    font: 11px/1.4 var(--mono);
+}
+
+.side-add-input:focus {
+    outline: none;
+    border-color: var(--mred);
+}
+
+.side-add-note {
+    color: var(--mred);
+    font: 9.5px/1.3 var(--mono);
+}
+
+.side-add-ok {
+    flex: none;
+    padding: .18rem .45rem;
+    border: 1px solid var(--line-hi);
+    border-radius: 4px;
+    background: var(--panel-hi);
+    color: var(--fg);
+    font: 10.5px/1.2 var(--mono);
+    cursor: pointer;
+}
+
+.side-add-row {
+    margin: .1rem 0 .25rem .2rem;
+    padding: .1rem .25rem;
+    border: 0;
+    background: none;
+    color: var(--faint);
+    font: 10px/1.5 var(--mono);
+    text-align: left;
+    cursor: pointer;
+}
+
+.side-add-row:hover {
+    color: var(--fg);
+}
+
+.side-empty {
+    padding: .5rem .3rem;
+    color: var(--faint);
+    font: 11px/1.5 var(--mono);
+}
+
+dialog.save-as.cluster {
+    width: min(720px, 94vw);
+}
+
+dialog.save-as.cluster textarea {
+    width: 100%;
+    padding: .5rem .6rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #070a0f;
+    color: var(--fg);
+    font: 11px/1.5 var(--mono);
+    resize: vertical;
 }

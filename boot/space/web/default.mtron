@@ -1,6 +1,7 @@
 splash_page::[
-  title => 'metatron',
+  title => 'metatron' ,
   layout => [
+    splash_card::[tid => </m/sys/ui/console>,          vid => </usr/marko/console>,   label => 'console',            view => panel, span => [col => 4, row => 2]],
     splash_card::[label => 'core', card => [
       splash_card::[tid => </m/mach/machine>,            vid => </.>,                   label => 'machine',            view => panel, span => [col => 4]],
       splash_card::[tid => </m/mach/component/network>,  vid => <~/network>,            label => 'current network',    view => panel, span => [col => 2, row => 1]],
@@ -13,6 +14,5 @@ splash_page::[
       splash_card::[tid => </m/web/ws/ws_server>,        vid => </network/web/ws>,      label => 'ws server',          view => panel, span => [col => 2, row => 1]]
     ]],
     splash_card::[tid => </m/db/tble/space/tblespace>, vid => </memory/space/usr/dr>, label => 'agent tables',       view => panel, span => [col => 4, row => 2]],
-    splash_card::[tid => </m/sys/ui/console>,          vid => </usr/marko/console>,   label => 'console',            view => panel, span => [col => 4, row => 2]]
   ]
 ]

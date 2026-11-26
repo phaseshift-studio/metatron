@@ -3,6 +3,7 @@ import { parse as parseValue } from '../sdk/obj_mtron_serializer.js';
 import * as MtronIO from '../sdk/mtron-io.js';
 import * as MtronObjPanels from '../ui/mtron-obj-panels.js';
 import { typesetMath } from '../ui/mathjax.js';
+import { forgetPage, hash as hashText, readPage, writePage } from './browser-pages.js';
 
 "use strict";
 
@@ -20,7 +21,7 @@ const httpBase = params.get("http") ||
 
 /* bin/wsplus appends the codecs it speaks to the endpoint; so does the console, so the uri in the
    page is the uri you would hand the CLI. a ?ws= that already names codecs keeps its own. */
-function codecUrl(base) {
+function codecUrl(base, inMime, outMime) {
     try {
         const url = new URL(base, location.href);
         /* a MIME type is a query value with a slash. the websocket server matches the codec
@@ -31,8 +32,8 @@ function codecUrl(base) {
             const pair = key + "=" + encodeURIComponent(value).replace(/%2F/gi, "/");
             url.search += (url.search ? "&" : "?") + pair;
         };
-        add("in", "application/x-mtron");
-        add("out", "application/x-mtron-ui");   // human form: pretty, indented, readable
+        add("in", inMime || "application/x-mtron");
+        add("out", outMime || "application/x-mtron-ui");   // human form: pretty, indented, readable
         return url.toString();
     } catch (ignored) {
         return base;
@@ -87,7 +88,7 @@ function withTimeout(ms) {
 
 function setDot(el, state) {
     if (!el) return;
-    el.classList.remove("busy", "up", "warn", "bad");
+    el.classList.remove("down", "busy", "up", "warn", "bad");
     if (state) el.classList.add(state);
 }
 
@@ -151,10 +152,24 @@ function applySpan(el, col, row) {
    a card is resized by dragging its corner grip to change the col/row span.
    both touch only the card's dataset and dom order, which pageCards() already
    reads back, so drag + resize persist through the existing save path. */
+const isGroupCard = (el) => !!(el && el.classList && el.classList.contains("multi-card"));
+
+/* exchange two cards' places. a comment marks the first one's spot, so adjacent
+   siblings and different parents both come out right. */
+function swapNodes(a, b) {
+    if (!a || !b || a === b || !a.parentNode || !b.parentNode) return;
+    const marker = document.createComment("swap");
+    a.parentNode.insertBefore(marker, a);
+    b.parentNode.insertBefore(a, b);
+    marker.parentNode.insertBefore(b, marker);
+    marker.remove();
+}
+
 function nearestObjCard(grid, root, x, y) {
     let best = null, bestD = Infinity, bestBefore = false;
     Array.from(grid.children).forEach((objCard) => {
-        if (objCard === root || !(objCard.dataset && objCard.dataset.tid)) return;
+        /* a GROUP has no tid of its own, and it is a drop target all the same */
+        if (objCard === root || !(isGroupCard(objCard) || (objCard.dataset && objCard.dataset.tid))) return;
         const r = objCard.getBoundingClientRect();
         const cx = r.left + r.width / 2;
         const cy = r.top + r.height / 2;
@@ -197,8 +212,16 @@ function makeDraggable(root) {
         const up = () => {
             if (target) {
                 target.classList.remove("drop-target");
-                if (before) grid.insertBefore(root, target);
-                else target.insertAdjacentElement("afterend", root);
+                /* A SINGLE CARD AND A GROUP SWAP PLACES: a leaf dropped on a group takes
+                   the group's cell and the group takes the leaf's. inserting beside it (the
+                   reorder below) only shifts the leaf, which cannot change what a cell IS. */
+                if (isGroupCard(root) !== isGroupCard(target)) {
+                    swapNodes(root, target);
+                } else if (before) {
+                    grid.insertBefore(root, target);
+                } else {
+                    target.insertAdjacentElement("afterend", root);
+                }
             }
             root.classList.remove("dragging");
             grip.removeEventListener("pointermove", move);
@@ -436,11 +459,16 @@ function createConsole(instance) {
     }
 
     function welcome() {
+        /* the console's whole preamble: what goes in, what comes out */
         out.textContent = "";
-        line("sys", "metatron console — one message is one expression, evaluated on this machine");
-        line("sys", "same endpoint as bin/wsplus:  " + instance.wsBase);
-        line("sys", "in application/x-mtron  ·  out application/x-mtron-ui (pretty)  ·  one frame in, one frame out");
-        line("sys", "try  *</memory/space>   or   !*boot/args");
+        line("sys", "in " + instance.inMime + "  ·  out " + instance.outMime);
+    }
+
+    /* the console's socket carries the pair of codecs showing in its head: a change
+       drops the socket, so the next expression reconnects with the new pair */
+    function consoleUrl() {
+        instance.wsUrl = codecUrl(instance.wsBase, instance.inMime, instance.outMime);
+        return instance.wsUrl;
     }
 
     function connect() {
@@ -452,7 +480,7 @@ function createConsole(instance) {
             });
         }
         return new Promise((resolve, reject) => {
-            const ws = new WebSocket(instance.wsUrl);
+            const ws = new WebSocket(consoleUrl());
             const timer = setTimeout(() => reject(new Error("connect timeout")), 4000);
             ws.onopen = () => {
                 clearTimeout(timer);
@@ -610,6 +638,34 @@ function createConsole(instance) {
             welcome();
         }
     });
+
+    /* ── the codecs the console speaks ──────────────────────────────────────
+       in is how a frame is read, out is how an answer is written. a change drops
+       the socket, so the next expression reconnects with the new pair. */
+    const wireMime = (el, field) => {
+        if (!el) return;
+        el.value = instance[field];
+        el.addEventListener("change", () => {
+            instance[field] = el.value;
+            instance.wsUrl = codecUrl(instance.wsBase, instance.inMime, instance.outMime);
+            if (instance.wsEp) {
+                instance.wsEp.textContent = instance.wsUrl;
+                instance.wsEp.title = instance.wsUrl;
+            }
+            if (REPL.socket) {
+                try {
+                    REPL.socket.close();
+                } catch (ignored) {
+                }
+                REPL.socket = null;
+            }
+            setDot(instance.dConsole, "down");
+            instance.mConsole.textContent = "codecs changed";
+            line("sys", "in " + instance.inMime + "  ·  out " + instance.outMime);
+        });
+    };
+    wireMime(instance.inMimeEl, "inMime");
+    wireMime(instance.outMimeEl, "outMime");
 
     setDot(instance.dConsole, "down");
     instance.mConsole.textContent = "not connected";
@@ -1699,6 +1755,11 @@ function createInstance(name, endpoint) {
         name: String(name || authorityOf(base)),
         wsBase: base,
         wsUrl: codecUrl(base),
+        /* the console's codecs: in reads a frame, out writes an answer */
+        inMime: "application/x-mtron",
+        outMime: "application/x-mtron-ui",
+        inMimeEl: main.querySelector("#in-mime"),
+        outMimeEl: main.querySelector("#out-mime"),
         readers: new Map(),
         /* the last sys_stat() this machine answered — the strip repaints from it —
            and why it could not answer, when it could not */
@@ -2131,7 +2192,15 @@ function createPage(instance) {
     function sync() {
         if (instance !== active) return;
         const barVid = $(".page-vid");
-        if (barVid) barVid.textContent = page.PAGE;
+        if (barVid) {
+            /* the bar marks an EDIT made here since the page loaded: that is knowable.
+               whether a restored copy differs from the machine's page is not, so the bar
+               stays quiet about it. save as… is what writes edits to a machine. */
+            barVid.textContent = page.PAGE + (page.localEdit ? "  ·  edited here · unsaved" : "");
+            barVid.title = page.localEdit
+                ? "edited in this browser · " + new Date(page.localEdit).toLocaleString() + " · save as… writes it to a machine"
+                : "";
+        }
         updateSaveButton();
     }
 
@@ -2194,27 +2263,80 @@ function createPage(instance) {
     }
 
     /* read one element as a leaf card or (a .multi-card) a group of cards */
-    function readCards(container) {
-        return Array.from(container.children).map((el) => {
-            if (el.classList && el.classList.contains("multi-card")) {
-                const body = el.querySelector(".multi-card-body");
-                return {
-                    label: el.dataset.label || null,
-                    col: Number(el.dataset.col) || 1,
-                    row: el.dataset.row != null ? (Number(el.dataset.row) || 1) : null,
-                    card: body ? readCards(body) : []
-                };
-            }
-            if (!(el.dataset && el.dataset.tid)) return null;
+    function readCard(el) {
+        if (!el || !el.classList) return null;
+        if (el.classList.contains("multi-card")) {
+            const body = el.querySelector(".multi-card-body");
             return {
-                tid: el.dataset.tid,
-                vid: el.dataset.vid || null,
                 label: el.dataset.label || null,
-                view: el.dataset.view || "panel",
                 col: Number(el.dataset.col) || 1,
-                row: el.dataset.row != null ? (Number(el.dataset.row) || 1) : null
+                row: el.dataset.row != null ? (Number(el.dataset.row) || 1) : null,
+                card: body ? readCards(body) : []
             };
-        }).filter((card) => card != null);
+        }
+        if (!(el.dataset && el.dataset.tid)) return null;
+        return {
+            tid: el.dataset.tid,
+            vid: el.dataset.vid || null,
+            label: el.dataset.label || null,
+            view: el.dataset.view || "panel",
+            col: Number(el.dataset.col) || 1,
+            row: el.dataset.row != null ? (Number(el.dataset.row) || 1) : null
+        };
+    }
+
+    function readCards(container) {
+        return Array.from(container.children).map(readCard).filter((card) => card != null);
+    }
+
+    /* the grid is the layout: a card with its element, in order (the sidepanel edits it) */
+    function pageLayout() {
+        if (!loadedGrid || loadedGrid.hidden) return [];
+        return [...loadedGrid.children].map((el) => ({card: readCard(el), el: el})).filter((entry) => entry.card);
+    }
+
+    /* a card READ from the grid carries col/row; a page REC carries span => [col,row].
+       a restore, an import and the sidepanel's [+] all mount the former, so it is
+       converted here — without this a spanned card came back one column wide. */
+    function asLayout(card) {
+        if (!card) return null;
+        const span = {col: Number(card.col) || 1, row: card.row == null ? null : Number(card.row) || 1};
+        if (Array.isArray(card.card)) {
+            return {
+                label: card.label || null,
+                span: span,
+                card: card.card.map(asLayout).filter(Boolean)
+            };
+        }
+        if (!card.tid) return null;
+        return {
+            tid: card.tid,
+            vid: card.vid || null,
+            label: card.label || null,
+            view: card.view || "panel",
+            span: span
+        };
+    }
+
+    /* mount one card, after a given element or at the end */
+    function mountCard(card, afterEl) {
+        if (!loadedGrid || !card) return null;
+        const el = mountLayoutCard(asLayout(card), loadedGrid);
+        if (!el) return null;
+        if (afterEl && afterEl.parentElement === loadedGrid) loadedGrid.insertBefore(el, afterEl.nextSibling);
+        return el;
+    }
+
+    function removeCard(el) {
+        if (el && el.parentElement) el.parentElement.removeChild(el);
+        return !!el;
+    }
+
+    function applyCards(cards) {
+        if (!loadedGrid) return 0;
+        loadedGrid.textContent = "";
+        (cards || []).map(asLayout).filter(Boolean).forEach((card) => mountLayoutCard(card, loadedGrid));
+        return cards ? cards.length : 0;
     }
 
     function pageCards() {
@@ -2310,6 +2432,11 @@ function createPage(instance) {
     }
 
     async function loadPage(source) {
+        /* a load mounts and restores: while it runs (and briefly after) a grid change is
+           the page arriving, not the user editing it */
+        page.ready = false;
+        page.loading = true;
+        clearTimeout(page.loadTimer);
         let vid = String(source == null ? "" : source).trim();
         if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
         try {
@@ -2335,12 +2462,13 @@ function createPage(instance) {
         let last = null;
         let config = null;
         let loaded = null;
+        let sourceText = null;
         for (const attempt of attempts) {
             try {
                 const raw = attempt.origin === "local"
                     ? await localRead("application/x-mtron", attempt.vid)
                     : await pageRead("application/x-mtron", attempt.vid);
-                const sourceText = String(raw == null ? "" : raw).trim();
+                sourceText = String(raw == null ? "" : raw).trim();
                 if (!sourceText || sourceText === "noobj" || /^fail::/.test(sourceText))
                     throw new Error(sourceText || "noobj");
                 const value = plain(MtronIO.read(sourceText));
@@ -2360,8 +2488,13 @@ function createPage(instance) {
             if (el !== loadedGrid) el.hidden = true;
         });
         loadedGrid.hidden = false;
+        /* the machine's page as it mounts: what a browser copy is compared to */
+        page.fileLayout = readCards(loadedGrid);
+        page.fileCards = JSON.stringify(page.fileLayout);
         page.PAGE = loaded.origin === "local" ? vid : loaded.vid;
         page.origin = loaded.origin;
+        page.sourceText = sourceText;
+        page.sourceHash = hashText(sourceText);
         /* the page mounted against THIS instance: make it the active one so the
            shell's chrome (and the console panel's #console-card) are this machine's */
         activate(instance);
@@ -2381,6 +2514,14 @@ function createPage(instance) {
         }
         page.cache.clear();
         if (page.view !== "panel") show(page.view);
+        /* the browser may hold this page's edited layout: it comes back here */
+        restoreBrowser().then(() => {
+            page.ready = true;
+            clearTimeout(page.loadTimer);
+            page.loadTimer = setTimeout(() => {
+                page.loading = false;
+            }, 800);
+        });
     }
 
     /* a leaf card or a group back to its splash_card::[…] spelling */
@@ -2464,6 +2605,82 @@ function createPage(instance) {
         });
     }
 
+    /* ── the browser's copy of this page ───────────────────────────────────
+       the grid IS the page, so every change to it (add, remove, drag, resize) is the
+       layout: it is written to IndexedDB, debounced, and the next visit restores it.
+       a copy records the machine page's source hash, so a page that CHANGED on the
+       machine wins over the copy (and the copy becomes that page's layout). */
+    const browserKey = () => String(instance.wsBase) + " " + String(page.PAGE || "");
+    let saveTimer = null;
+    function saveBrowser() {
+        /* an edit is a change AFTER the page settled: the mount and the restore are the
+           page arriving, and they must not mark the layout as edited here */
+        const fromLoad = page.loading || !page.ready;
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+            const cards = readCards(loadedGrid);
+            if (!cards.length) return;
+            writePage(browserKey(), {
+                cards: cards,
+                page: page.PAGE || null,
+                machine: instance.name,
+                sourceHash: page.sourceHash || null,
+                saved: Date.now()
+            }).then(() => {
+                if (!fromLoad && active === instance) {
+                    page.localEdit = Date.now();
+                    sync();
+                }
+            }).catch(() => {
+            });
+        }, 400);
+    }
+
+    async function restoreBrowser() {
+        let saved = null;
+        try {
+            saved = await readPage(browserKey());
+        } catch (ignored) {
+            return false;
+        }
+        if (!saved || !Array.isArray(saved.cards) || !saved.cards.length) return false;
+        if (saved.sourceHash && page.sourceHash && saved.sourceHash !== page.sourceHash) {
+            saveBrowser();
+            return false;
+        }
+        /* the copy may simply BE the machine's page (written from it): then there is
+           nothing to restore, and the bar must not claim the layout came from here */
+        if (page.fileCards && JSON.stringify(saved.cards) === page.fileCards) return false;
+        /* A COPY FROM A SHRUNKEN RENDER IS DISCARDED. a restore used to mount read cards
+           into the page's rec shape, which lost every LEAF span; a GROUP kept col 4 anyway
+           (mountMultiCard defaults to four), so the artefact looks like: leaves all one
+           column, groups fine. a copy in that shape, on a page whose own leaves span wider,
+           is that artefact — the page wins and the copy is rewritten from it. */
+        const leaves = (cards) => (cards || []).flatMap((card) => (Array.isArray(card.card) ? leaves(card.card) : [card]));
+        const leafCols = (cards) => leaves(cards).map((card) => Number(card.col) || 1);
+        const copyLeaves = leafCols(saved.cards);
+        const pageLeaves = leafCols(page.fileLayout);
+        if (copyLeaves.length && copyLeaves.every((col) => col === 1) && pageLeaves.some((col) => col > 1)) {
+            saveBrowser();
+            return false;
+        }
+        loadedGrid.textContent = "";
+        saved.cards.map(asLayout).filter(Boolean).forEach((card) => mountLayoutCard(card, loadedGrid));
+        page.restored = saved.saved || Date.now();
+        sync();
+        line("sys", "layout restored from this browser · " + new Date(page.restored).toLocaleString());
+        return true;
+    }
+
+    if (loadedGrid && typeof MutationObserver === "function") {
+        new MutationObserver(saveBrowser).observe(loadedGrid, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["data-col", "data-row", "data-tid", "data-vid"]
+        });
+    }
+
     Object.assign(page, {
         loadPage: loadPage,
         show: show,
@@ -2471,7 +2688,15 @@ function createPage(instance) {
         savePage: savePage,
         openSaveAs: openSaveAs,
         submitSaveAs: submitSaveAs,
-        readOnly: readOnly
+        readOnly: readOnly,
+        /* the layout is the grid: the sidepanel reads it, adds to it and removes from it */
+        cards: () => pageCards(),
+        layout: () => pageLayout(),
+        mountCard: mountCard,
+        removeCard: removeCard,
+        applyCards: applyCards,
+        /* the boot's fallback page has no machine page to hash against: still offer the copy */
+        restoreBrowser: restoreBrowser
     });
     return page;
 }
@@ -2566,5 +2791,358 @@ $$(".page-tabs .popup-tab").forEach((button) => button.addEventListener("click",
         active.page.loadPage(uri).catch((error) => {
             line("err", "page load: " + (error && error.message ? error.message : error));
         });
+    });
+})();
+
+/* ── the layout sidepanel: the cluster's pages as one project tree ────────
+   a row per open machine (an accordion), its cards beneath it and a group's cards
+   under the group. a card name opens that card's modal on its OWN machine; [+]
+   adds a card after a row and [−] removes one; export/import carry every machine's
+   page as one document. a machine still persists its own page through save as…,
+   which is the write path that exists. */
+(function wireLayoutPanel() {
+    /* THE CHROME MAY BE OLDER THAN THIS SCRIPT: a cached shell or a machine whose
+       image predates the panel has no #sidepanel, no layout button and no dialog, so
+       they are CREATED here when missing instead of the feature depending on markup
+       that a deployment may not carry yet. */
+    function buildChrome() {
+        const aside = document.createElement("aside");
+        aside.className = "sidepanel";
+        aside.id = "sidepanel";
+        aside.setAttribute("aria-label", "page layout");
+        const head = document.createElement("header");
+        head.className = "sidepanel-head";
+        const h2 = document.createElement("h2");
+        h2.textContent = "layout";
+        const count = document.createElement("span");
+        count.className = "sidepanel-count";
+        count.id = "sidepanel-count";
+        const shut = document.createElement("button");
+        shut.type = "button";
+        shut.className = "ghost";
+        shut.id = "sidepanel-close";
+        shut.title = "close the layout panel";
+        shut.textContent = "\u00d7";
+        head.appendChild(h2);
+        head.appendChild(count);
+        head.appendChild(shut);
+        const treeBox = document.createElement("div");
+        treeBox.className = "sidepanel-tree";
+        treeBox.id = "sidepanel-tree";
+        const foot = document.createElement("footer");
+        foot.className = "sidepanel-foot";
+        [["layout-export", "export", "every machine's page as one document"],
+         ["layout-import", "import", "load a document back into the cluster"],
+         ["layout-forget", "forget", "drop this browser's copy of the page"]].forEach(([id, label, title]) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "ghost";
+            button.id = id;
+            button.textContent = label;
+            button.title = title;
+            foot.appendChild(button);
+        });
+        aside.appendChild(head);
+        aside.appendChild(treeBox);
+        aside.appendChild(foot);
+        document.body.appendChild(aside);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "page-save";
+        button.id = "page-layout";
+        button.textContent = "layout";
+        button.title = "the page as a project tree";
+        const before = $("#page-open") || $("#page-save");
+        if (before && before.parentElement) before.parentElement.insertBefore(button, before);
+        else document.body.appendChild(button);
+        return aside;
+    }
+
+    if (!$("#sidepanel")) buildChrome();
+    const panel = $("#sidepanel");
+    const tree = $("#sidepanel-tree");
+    const toggle = $("#page-layout");
+    const closeBtn = $("#sidepanel-close");
+    if (!panel || !tree || !toggle) return;
+    const STORE = "metatron.layout.cluster";
+    const folded = new Set();
+
+    const span = (el, cls, value) => {
+        const out = document.createElement("span");
+        out.className = cls;
+        if (value != null) out.textContent = value;
+        el.appendChild(out);
+        return out;
+    };
+    const action = (label, cls, title, act) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = cls;
+        button.textContent = label;
+        if (title) button.title = title;
+        button.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            ev.preventDefault();
+            if (act) act();
+        });
+        return button;
+    };
+    const nameOf = (card) => card.label
+        || (card.tid ? String(card.tid).split("/").pop() : (Array.isArray(card.card) ? "group" : "card"));
+
+    function openCard(instance, card) {
+        if (!card || (!card.tid && !card.vid)) return;
+        const reveal = () => inspectReference({
+            tid: card.tid || null,
+            vid: card.vid || null,
+            raw: String(card.vid || card.tid || ""),
+            shortTid: nameOf(card)
+        });
+        if (active && active.name === instance.name) reveal();
+        else Promise.resolve(activateEndpoint(instance.wsBase)).then(reveal).catch(reveal);
+    }
+
+    /* one inline form: "tid" or "tid@vid" */
+    function addForm(instance, afterEl, anchor) {
+        const form = document.createElement("form");
+        form.className = "side-add";
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "side-add-input";
+        input.placeholder = "tid@vid  (or a tid this page knows)";
+        input.title = "a card is an object: give its type and address as tid@vid";
+        input.spellcheck = false;
+        input.autocapitalize = "off";
+        input.dataset.history = "layout.add";
+        const ok = action("add", "side-add-ok", "add this card", null);
+        ok.type = "submit";
+        const note = document.createElement("span");
+        note.className = "side-add-note";
+        form.appendChild(input);
+        form.appendChild(ok);
+        form.appendChild(action("×", "side-mini", "cancel", () => form.remove()));
+        form.appendChild(note);
+        anchor.appendChild(form);
+        input.focus();
+        form.addEventListener("submit", (ev) => {
+            ev.preventDefault();
+            const raw = input.value.trim();
+            if (!raw) return;
+            const at = raw.indexOf("@");
+            const tid = (at > 0 ? raw.slice(0, at) : raw).trim();
+            const vid = at > 0 ? raw.slice(at + 1).trim() || null : null;
+            if (!tid) return;
+            /* a card without a vid only mounts when the page already knows its tid (a
+               static card); otherwise there is no address for the machine to read */
+            const el = instance.page.mountCard({tid: tid, vid: vid, label: null, view: "panel", col: 1, row: null}, afterEl);
+            if (!el) {
+                note.textContent = vid ? "cannot mount " + tid : "needs a vid";
+                return;
+            }
+            render();
+        });
+    }
+
+    function cardRow(instance, card, el, depth) {
+        const row = document.createElement("div");
+        row.className = "side-card";
+        row.dataset.depth = String(depth || 0);
+        const line = document.createElement("div");
+        line.className = "side-card-line";
+        line.appendChild(action(nameOf(card), "side-card-name",
+            [card.tid, card.vid].filter(Boolean).join("  ") || nameOf(card), () => openCard(instance, card)));
+        line.appendChild(action("+", "side-mini", "add a card after this one", () => addForm(instance, el, row)));
+        line.appendChild(action("\u2212", "side-mini", "remove this card", () => {
+            instance.page.removeCard(el);
+            render();
+        }));
+        row.appendChild(line);
+        if (Array.isArray(card.card) && card.card.length) {
+            const kids = document.createElement("div");
+            kids.className = "side-group";
+            row.appendChild(kids);
+            const body = el ? el.querySelector(".multi-card-body") : null;
+            card.card.forEach((kid, index) => {
+                kids.appendChild(cardRow(instance, kid, body ? body.children[index] : null, depth + 1));
+            });
+        }
+        return row;
+    }
+
+    function render() {
+        tree.textContent = "";
+        /* the roster's machines are rows too: a machine that is not open yet says so and
+           opens on click (the server tab knows how to connect it) */
+        const tabs = [...document.querySelectorAll(".server-tab[data-name]")].map((tab) => tab.dataset.name);
+        const names = [...new Set([...INSTANCES.keys(), ...tabs])].sort();
+        let cards = 0;
+        names.forEach((name) => {
+            const instance = INSTANCES.get(name);
+            if (!instance) {
+                const closed = document.createElement("details");
+                closed.className = "side-instance side-closed";
+                const summary = document.createElement("summary");
+                summary.className = "side-instance-row";
+                span(summary, "side-name", name);
+                span(summary, "side-count", "not open");
+                closed.appendChild(summary);
+                summary.addEventListener("click", () => {
+                    const tab = [...document.querySelectorAll(".server-tab[data-name]")]
+                        .find((el) => el.dataset.name === name);
+                    if (tab) tab.click();
+                    /* the machine's page loads asynchronously: the tree follows it in */
+                    setTimeout(render, 1200);
+                });
+                tree.appendChild(closed);
+                return;
+            }
+            const row = document.createElement("details");
+            row.className = "side-instance";
+            row.open = !folded.has(name);
+            const summary = document.createElement("summary");
+            summary.className = "side-instance-row";
+            span(summary, "side-name", name);
+            const entries = instance.page.layout ? instance.page.layout() : [];
+            cards += entries.length;
+            span(summary, "side-count", String(entries.length));
+            row.appendChild(summary);
+            row.addEventListener("toggle", () => {
+                if (row.open) folded.delete(name);
+                else folded.add(name);
+            });
+            const list = document.createElement("div");
+            list.className = "side-cards";
+            row.appendChild(list);
+            entries.forEach((entry) => list.appendChild(cardRow(instance, entry.card, entry.el, 0)));
+            list.appendChild(action("+ add a card", "side-add-row", "add a card to this page",
+                () => addForm(instance, null, list)));
+            tree.appendChild(row);
+        });
+        if (!names.length) {
+            const empty = document.createElement("div");
+            empty.className = "side-empty";
+            empty.textContent = "no machine open";
+            tree.appendChild(empty);
+        }
+        const count = $("#sidepanel-count");
+        if (count) {
+            count.textContent = names.length + " machines · " + cards + " cards";
+            count.title = count.textContent;
+        }
+    }
+
+    /* the document is the browser's copy of the cluster: each machine persists its
+       own page through save as… */
+    function clusterDoc() {
+        const doc = {layout: "metatron-cluster-page", saved: new Date().toISOString(), machines: {}};
+        INSTANCES.forEach((instance, name) => {
+            doc.machines[name] = {
+                page: instance.page.PAGE || null,
+                cards: instance.page.cards ? instance.page.cards() : []
+            };
+        });
+        return doc;
+    }
+
+    const dialog = $("#cluster-dialog");
+    const area = $("#cluster-text");
+    const note = $("#cluster-note");
+    const ok = $("#cluster-ok");
+    const copy = $("#cluster-copy");
+    const error = $("#cluster-error");
+    let mode = "export";
+
+    function openCluster(next) {
+        mode = next;
+        const title = $("#cluster-title");
+        if (title) title.textContent = next === "export" ? "cluster layout" : "import cluster layout";
+        if (note) note.textContent = next === "export"
+            ? "every open machine's page, as one document. copy it, or keep it in this browser."
+            : "paste a cluster document; every machine present here takes its cards back.";
+        if (ok) ok.textContent = next === "export" ? "save" : "apply";
+        if (copy) copy.hidden = next !== "export";
+        if (error) error.hidden = true;
+        if (area) {
+            const saved = localStorage.getItem(STORE);
+            area.value = next === "export" ? JSON.stringify(clusterDoc(), null, 2) : (saved || "");
+        }
+        if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    const show = (open) => {
+        panel.classList.toggle("open", open);
+        if (open) render();
+    };
+
+    toggle.addEventListener("click", () => show(!panel.classList.contains("open")));
+    if (closeBtn) closeBtn.addEventListener("click", () => show(false));
+    const exportBtn = $("#layout-export");
+    const importBtn = $("#layout-import");
+    const forgetBtn = $("#layout-forget");
+    if (exportBtn) exportBtn.addEventListener("click", () => openCluster("export"));
+    if (importBtn) importBtn.addEventListener("click", () => openCluster("import"));
+    /* the browser copy is the one thing the user cannot see: let them drop it */
+    if (forgetBtn) forgetBtn.addEventListener("click", async () => {
+        if (!active) return;
+        const page = active.page;
+        try {
+            await forgetPage(String(active.wsBase) + " " + String(page.PAGE || ""));
+        } catch (ignored) {
+        }
+        page.localEdit = 0;
+        page.restored = 0;
+        render();
+        if (page.loadPage) page.loadPage(page.PAGE);
+        line("sys", "browser copy dropped · the machine's page is shown");
+    });
+    const cancel = $("#cluster-cancel");
+    if (cancel) cancel.addEventListener("click", () => {
+        if (dialog) dialog.close();
+    });
+    if (copy) copy.addEventListener("click", () => {
+        if (!area) return;
+        const done = () => {
+            if (note) note.textContent = "copied.";
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(area.value).then(done, done);
+        else {
+            area.select();
+            done();
+        }
+    });
+    const form = $("#cluster-form");
+    if (form) form.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        if (!area) return;
+        if (mode === "export") {
+            localStorage.setItem(STORE, area.value);
+            if (dialog) dialog.close();
+            return;
+        }
+        try {
+            const doc = JSON.parse(area.value);
+            const machines = doc.machines || {};
+            let applied = 0;
+            Object.keys(machines).forEach((name) => {
+                const instance = INSTANCES.get(name);
+                if (!instance || !instance.page.applyCards) return;
+                instance.page.applyCards(machines[name].cards || []);
+                applied += 1;
+            });
+            localStorage.setItem(STORE, area.value);
+            if (error) error.hidden = true;
+            if (dialog) dialog.close();
+            render();
+            line("sys", "cluster layout: " + applied + " machine(s) applied");
+        } catch (problem) {
+            if (error) {
+                error.hidden = false;
+                error.textContent = "not a cluster document: " + (problem && problem.message ? problem.message : problem);
+            }
+        }
+    });
+    /* a page may reload on its own (activate, save): keep the tree current */
+    document.addEventListener("metatron:frame", () => {
+        if (panel.classList.contains("open")) render();
     });
 })();

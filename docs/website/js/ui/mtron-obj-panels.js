@@ -1296,11 +1296,24 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
 
     register("/m/db/tble/space/tblespace", async function (env, api) {
         const box = node("div", "mpanel tblespace");
+        /* the space is read in the machine's own form (application/x-mtron) and taken
+           apart with the obj serializer, not a json codec: a read of a space answers a
+           STREAM of its instances, and a one-instance stream comes back as the instance
+           itself, so the pattern is a field of the rec we hold either way. */
         let data = "";
         try {
-            const space = await api.json();
-            const pattern = space && space.pattern ? String(space.pattern) : "";
-            data = pattern.replace(/\/#.*$/, "").replace(/\/+$/, "");
+            if (!env.vid) throw new Error("no address");
+            const text = String((await api.mtron("*<" + env.vid + ">")) || "").trim();
+            const value = parse(text);
+            const members = value && value.isObjs && value.isObjs() ? [...value.js] : (value ? [value] : []);
+            const patternKey = (rec) => rec && rec.isRec && rec.isRec()
+                && [...rec.js.keys()].find((key) => key.toString() === "pattern");
+            const space = members.find((rec) => patternKey(rec) !== undefined) || members[0] || null;
+            let pattern = null;
+            if (space && space.isRec && space.isRec()) {
+                for (const [key, field] of space.js) if (key.toString() === "pattern") pattern = field;
+            }
+            data = pattern ? String(pattern).replace(/\/#.*$/, "").replace(/\/+$/, "") : "";
         } catch (ignored) { }
         if (!data) {
             box.appendChild(node("div", "mpanel-empty", "no table path"));
@@ -1473,18 +1486,9 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
             let raw = null;
             try {
                 raw = await api.mtron(source);
-                let text = String(raw == null ? "" : raw).trim();
-                /* the reader may answer with a JSON-quoted string or a one-key
-                   JSON envelope — unwrap the string out of either */
-                try {
-                    const parsed = JSON.parse(text);
-                    if (typeof parsed === "string") {
-                        text = parsed;
-                    } else if (parsed && typeof parsed === "object") {
-                        const strings = Object.values(parsed).filter((v) => typeof v === "string");
-                        if (strings.length === 1) text = strings[0];
-                    }
-                } catch (ignored) { }
+                /* the x-mtron answer is already the machine's text: it is read, never
+                   unwrapped from another codec */
+                const text = String(raw == null ? "" : raw).trim();
                 if (!text) throw new Error("no answer");
                 result = parse(text);
             } catch (problem) {
@@ -2008,8 +2012,10 @@ function compilerPanel(env, api) {
     input.spellcheck = false;
     input.autocapitalize = "off";
     input.autocomplete = "off";
-    input.placeholder = "1.plus(10).mult(20)";
-    input.value = "1.plus(10).mult(20)";
+    /* the compiler's opening example: a chain with a reducer and an identity, so the
+       stages show a mapper, a combiner and an id in one compile */
+    input.placeholder = "1.plus(2).minus(2).mult(1).id()";
+    input.value = "1.plus(2).minus(2).mult(1).id()";
     const runBtn = node("button", "primary compiler-run", "compile");
     runBtn.type = "submit";
     const formBtn = node("button", "ghost compiler-form-btn", formLabel(FULL_FORM));
@@ -2067,7 +2073,15 @@ function compilerPanel(env, api) {
     function head(mark, label) {
         const h = node("div", "cnode-head");
         h.appendChild(node("span", "cnode-mark", mark));
-        h.appendChild(node("span", "cnode-label", label));
+        /* the rail is one line wide: a stage named by a uri (a rewrite rule) shows the
+           uri's NAME — its last segment — and the full uri is the hover title. the uri
+           class answers the name, so no path slicing here. */
+        const full = String(label == null ? "" : label);
+        const named = full.includes("/") ? f(full).name() : "";
+        const shown = named || full;
+        const span = node("span", "cnode-label", shown);
+        if (shown !== full) span.title = full;
+        h.appendChild(span);
         return h;
     }
     /* a stage's code, with the `?` that opens its explanation: every code::T in
@@ -2082,15 +2096,47 @@ function compilerPanel(env, api) {
         if (badge) wrap.appendChild(badge);
         return wrap;
     }
+    /* A STAGE'S NAME IS A LEFT RAIL, NOT A ROW: parser, resolver, selector and binder
+       each spent a whole line on a word, above the block they denote. the head and the
+       content share one row now (one child sits beside the head, several sit in the
+       bordered column), so the vertical space belongs to code and not to labels. */
     function branch(h, kids) {
-        const root = node("div", "cnode");
+        const root = node("div", "cnode cnode-inline");
         root.appendChild(h);
-        if (kids && kids.length) {
+        if (kids && kids.length === 1) {
+            root.appendChild(kids[0]);
+        } else if (kids && kids.length) {
             const wrap = node("div", "cnode-kids");
             kids.forEach((k) => wrap.appendChild(k));
             root.appendChild(wrap);
         }
         return root;
+    }
+
+    /* THE RAIL IS AS WIDE AS THE WIDEST NAME IN ITS COLUMN. a fixed rail spent the
+       difference between "parser" and a rewrite rule's name on every row: the selector's
+       code began 350px into the panel because three 160px rails were stacked above it. a
+       column measures its own rows once and hands them one width, so the codes still line
+       up and the blank rail is gone. */
+    function fitRails(root) {
+        const columns = [root, ...root.querySelectorAll(".cnode-kids")];
+        columns.forEach((column) => {
+            const rows = [...column.children].filter((el) => el.classList.contains("cnode-inline"));
+            let widest = 0;
+            rows.forEach((row) => {
+                const head = row.querySelector(":scope > .cnode-head");
+                if (!head) return;
+                const gap = parseFloat(getComputedStyle(head).gap || "0") || 0;
+                let width = 0;
+                [...head.children].forEach((part) => {
+                    /* a label is ellipsized by its rail, so its RECT lies about the text */
+                    width += part.classList.contains("cnode-label") ? part.scrollWidth : part.getBoundingClientRect().width;
+                });
+                width += gap * Math.max(0, head.children.length - 1);
+                widest = Math.max(widest, width);
+            });
+            if (widest) column.style.setProperty("--cnode-rail", Math.ceil(widest) + "px");
+        });
     }
 
     async function compile() {
@@ -2189,6 +2235,7 @@ function compilerPanel(env, api) {
             if (changedCount === 0) {
                 rwKids.appendChild(node("div", "cnode-empty", "no rewrite changed the resolved code"));
             }
+            fitRails(tree);
         } catch (error) {
             status.remove();
             tree.appendChild(code("fail:: " + (error && error.message ? error.message : String(error))));
