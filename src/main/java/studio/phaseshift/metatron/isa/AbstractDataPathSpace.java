@@ -68,9 +68,9 @@ public abstract class AbstractDataPathSpace<SJVM> extends AbstractSpace<SJVM> {
     }
 
     /**
-     * THE DATA PATH OF A ROUTED PATH, as this space's read takes it apart: its first segment the collection, whether
-     * the path is absolute or not. A space whose routed paths keep its own prefix (grphSpace) overrides it. A pushdown
-     * plan reads its source through it, so the plan and the read decompose a path alike.
+     * THE DATA PATH A PUSHDOWN PLAN READS A ROUTED PATH AS: its first segment the collection, whether the path is
+     * absolute or not, as tbleSpace's and dcmntSpace's reads take it apart (each through a parse of its own). grphSpace,
+     * whose routed paths keep its own prefix, overrides it with its read's rule, and its read calls it.
      */
     public DataPath dataPath(final fURI routed) {
         return DataPath.withoutDB(routed);
@@ -155,7 +155,7 @@ public abstract class AbstractDataPathSpace<SJVM> extends AbstractSpace<SJVM> {
      * Whether a read of {@code relativePath} belongs in the flat namespace:
      * reserved first segment, or an unknown collection.
      */
-    protected boolean isFlatRead(final fURI relativePath) {
+    public boolean isFlatRead(final fURI relativePath) {
         final List<String> segs = relativePath.segments();
         return (segs != null && !segs.isEmpty() && this.isReservedFlatName(segs.getFirst()))
                 || !this.isStructuredCollection(relativePath);

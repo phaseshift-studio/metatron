@@ -199,7 +199,7 @@ public class DBRewriteBuilder<S extends Space> {
     }
 
     /**
-     * THE DATA PATH OF A ROUTED SOURCE, AS ITS SPACE'S READ TAKES IT APART ({@link AbstractDataPathSpace#dataPath}). A
+     * THE DATA PATH OF A ROUTED SOURCE, AS ITS SPACE TAKES IT APART ({@link AbstractDataPathSpace#dataPath}). A
      * graph space's routed path keeps the space's prefix where no route strips it ({@code /g/person/+}), and
      * {@link DataPath#withoutDB} took that prefix for the collection. A table or document read takes a path's first
      * segment, absolute or not: a rule of the plans' own, an absolute path read as db/collection, had {@code mql_count}

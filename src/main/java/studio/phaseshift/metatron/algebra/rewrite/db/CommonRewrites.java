@@ -43,6 +43,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -199,15 +200,17 @@ public final class CommonRewrites {
 
     /**
      * A SUM THE PLANS' INT RANGE CANNOT HOLD IS A REAL, WHICH THE RANGE REFUSES, NEVER CUT (2026-11-25): longValue()
-     * answered the products' prices (2817.9) as 2817. The number's own type tells: a Double, a Float or a scaled
-     * BigDecimal is a real, a whole one too (0.5 + 1.5 is the walk's 2.0). It cannot tell a whole DECIMAL column's sum,
-     * which comes back unscaled as MySQL's sum of an INT column does, so that one still answers an int where the walk
-     * reads DECIMAL as a real.
+     * answered the products' prices (2817.9) as 2817. The number's own type tells: an integral one (or an unscaled
+     * BigDecimal) is an int, and any other a real, whole or not (0.5 + 1.5 is the walk's 2.0): a Double, a Float, a
+     * scaled BigDecimal, and MongoDB's Decimal128, which is a Number of none of those types. It cannot tell a whole
+     * DECIMAL column's sum, which comes back unscaled as MySQL's sum of an INT column does, so that one still answers an
+     * int where the walk reads DECIMAL as a real.
      */
     private static Obj sumOf(final Number sum) {
-        return sum instanceof Double || sum instanceof Float || (sum instanceof BigDecimal decimal && decimal.scale() > 0)
-                ? real(sum.doubleValue())
-                : jnt(sum.longValue());
+        return sum instanceof Long || sum instanceof Integer || sum instanceof Short || sum instanceof Byte
+                || (sum instanceof BigDecimal decimal && decimal.scale() <= 0)
+                ? jnt(sum.longValue())
+                : real(sum.doubleValue());
     }
 
     public static <S extends Space> Inst sumColumnRewrite(
@@ -251,15 +254,17 @@ public final class CommonRewrites {
             final BiFunction<S, DataPath, Double> meanFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
+        // the walk's mean: a real, or noobj for none (mInsts' mean declares real{?})
         return DBRewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
-                .rng(Tokens.REAL_TID)
+                .rng(Tokens.REAL_TID.maybe())
                 .match(FROM_INST_TID, MEAN_INST_TID)
                 .matchFromOrAt()
                 .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_mean", (space, dp, coeff) -> {
-                    final double mean = meanFunction.apply(space, dp);
-                    return real(mean);
+                    // a mean of nothing is noobj, as the walk's: a null answers it
+                    final Double mean = meanFunction.apply(space, dp);
+                    return null == mean ? noobj() : real(mean);
                 })
                 .build();
     }

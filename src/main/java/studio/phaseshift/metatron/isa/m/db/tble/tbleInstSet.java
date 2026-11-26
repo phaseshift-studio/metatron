@@ -84,8 +84,9 @@ public class tbleInstSet extends AbstractInstSet {
             // to split it into ["drdb:llm_message_user", "+"] — misidentifying the
             // collection as "drdb:llm_message_user" instead of "llm_message_user".
             final fURI resolved = space.redirect(ref.uriValue(), true);
-            // A TABLE READ GIVES NO ROW OF A SOURCE NO ROUTE MADE RELATIVE (2026-11-25): mounted at /rewrite_test/# with no
-            // route, a tble space reads nothing for /rewrite_test/+, so no plan may read the table for it
+            // A TABLE READ GIVES NO ROW OF AN ABSOLUTE WILDCARD (2026-11-25): mounted at /rewrite_test/# with no route, a
+            // tble space reads nothing for /rewrite_test/+ (an exact /rewrite_test/1 reads its row), and a plan reads only
+            // collection/+, so it declines a source no route made relative
             if (resolved.isAbsolute()) return false;
             final DataPath dp = DataPath.withoutDB(resolved);
             if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;

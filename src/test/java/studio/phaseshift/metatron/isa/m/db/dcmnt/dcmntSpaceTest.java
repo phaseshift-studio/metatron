@@ -1480,17 +1480,22 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     }
 
     /**
-     * A PLAN TAKES ITS SOURCE APART AS THE DOCUMENT READ DOES (2026-11-25), whose first segment is the collection,
-     * absolute or not. Routed to an absolute path, as dcmntSpace's own docs route {@code mongo:} to {@code /mongo/},
-     * {@code *amongo:rewrite_test/+} is read as collection {@code amongo}, which holds nothing. The count plan read it
-     * as db/collection and counted all of rewrite_test. The rows are {@code code % what the walk answers}.
+     * A PLAN TAKES ITS SOURCE APART AS THE DOCUMENT READ DOES, AND READS DOCUMENTS (2026-11-25). The read's first segment
+     * is the collection, absolute or not. Routed to an absolute path, as dcmntSpace's own docs route {@code mongo:} to
+     * {@code /mongo/}, {@code *amongo:rewrite_test/+} is read as collection {@code amongo}, which holds nothing, and
+     * the count plan read it as db/collection and counted all of rewrite_test. {@code *amongo:+} is collection
+     * {@code amongo} itself. After a flat write the read lists the flat entry, and mql_count counted the absent
+     * collection: 0. After a document write mql_count counts it, where the old parse counted collection {@code +}. The
+     * rows are {@code the write % code % what the walk answers}, and the plan is applied on its own as well (see
+     * {@code CommonRewritesTestContract.runRewriteTest}).
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
-            "*amongo:rewrite_test/+.count()           % 0",
-            "*amongo:rewrite_test/+.take(2).count()   % 0",
+            "                        % *amongo:rewrite_test/+.count()   % 0",
+            "amongo:x -> 1           % *amongo:+.count()                % 1",
+            "amongo:x -> [n=>1]      % *amongo:+.count()                % 1",
     })
-    public void testAnAbsoluteRouteReadsAsItsSpace(final String code, final String expected) throws Exception {
+    public void testAnAbsoluteRouteReadsAsItsSpace(final String write, final String code, final String expected) throws Exception {
         final dcmntSpace mounted = dcmntSpace.of(
                 rec(
                         uri(PATTERN), uri("amongo:#"),
@@ -1500,13 +1505,106 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
                 ).jvm(),
                 f("/memory/space/doc/absolute_route_test"));
         try {
+            if (null != write)
+                ObjmtronSerializer.parse(write).apply();
             checkCodeParseApply(LOG, code, expected);
             final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
             final Obj want = Machine.parse(expected);
             checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
         } finally {
+            ObjmtronSerializer.parse("amongo:x -> noobj").apply();
+            mounted.getDatabase().getCollection("amongo").drop();
             Machine.current().memory().removeSpace(mounted.vid());
             mounted.close();
+        }
+    }
+
+    /**
+     * A REAL SUM IS NOT CUT TO ITS INTEGER PART, as on tble ({@code AbstractTbleSpaceTest}, which explains it): a real
+     * is stored as a double, so {@code $sum} answers a double, which the sum plans' int range refuses. They answered its
+     * integer part. This asserts the refusal, not the ideal (the walk answers 1.5).
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*mongo:reals/+>>w.sum()",
+            "*mongo:reals/+/w.sum()",
+    })
+    public void testARealSumIsRefusedNotCut(final String code) {
+        ObjmtronSerializer.parse("mongo:reals/1 -> [w=>0.5]").apply();
+        ObjmtronSerializer.parse("mongo:reals/2 -> [w=>1.0]").apply();
+        try {
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            final Obj answer = MCode.of(plan.asCode().insts()).apply();
+            assertTrue(answer.isFail() && answer.toString().contains("does not match inst range"),
+                    "a real sum must fail the plan's int range, not answer " + answer + ": " + plan);
+        } finally {
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("reals").drop();
+            }
+        }
+    }
+
+    /**
+     * A SUM IS ITS FIELD'S (2026-11-25), as a mean is. mql_sum and mql_sum_column summed {@code "$" + field}, so a path
+     * past its field summed the field ({@code +/value/x} and {@code +>>value/x} added the values, 55), and mql_sum summed
+     * 1 per document for a source with no field (a count, 10). Both now sum the field the path names, an extension as
+     * Mongo's dotted path. A field no document holds sums to the seed, 0, and a source with no field is left to the walk,
+     * whose sum of documents is their join. The rows are {@code code % what the walk answers % the op the plan reads
+     * with}, and the plan is applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*mongo:rewrite_test/+/value.sum()      % 55       % mql_sum",
+            "*mongo:rewrite_test/+/value/x.sum()    % 0        % mql_sum",
+            "*mongo:rewrite_test/+/nothing.sum()    % 0        % mql_sum",
+            "*mongo:rewrite_test/+>>value.sum()     % 55       % mql_sum_column",
+            "*mongo:rewrite_test/+>>value/x.sum()   % 0        % mql_sum_column",
+            "*mongo:rewrite_test/+.sum()            % [id=>{1,2,3,4,5,6,7,8,9,10},value=>{1,2,3,4,5,6,7,8,9,10},name=>{'item1','item2','item3','item4','item5','item6','item7','item8','item9','item10'},active=>{{5}true,{5}false}] % from",
+    })
+    public void testASumIsItsField(final String code, final String expected, final String reads) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+        final Obj want = Machine.parse(expected);
+        checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+    }
+
+    /**
+     * A MEAN IS ITS FIELD'S (2026-11-25). mql_mean averaged the literal 1 ({@code $avg: 1}), so every collection with a
+     * document had mean 1.0. It now averages the field the path names, an extension as Mongo's dotted path. A field no
+     * document holds, and a collection with no document, are the mean of nothing: noobj, as the walk answers. A source
+     * with no field, or a wildcard field, is left to the walk, whose mean of documents fails ({@code <ERROR>}: the plan
+     * holds no mql_ op). A string field is not covered: $avg skips what is no number and answers noobj, where the walk
+     * fails. The rows are {@code code % what the walk answers}, and the plan is applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*mongo:rewrite_test/+/value.mean()     % 5.5",
+            "*mongo:rewrite_test/+/nothing.mean()   % noobj",
+            "*mongo:rewrite_test/+/value/x.mean()   % noobj",
+            "*mongo:empty_means/+/value.mean()      % noobj",
+            "*mongo:rewrite_test/+.mean()           % <ERROR>",
+            "*mongo:rewrite_test/+/+.mean()         % <ERROR>",
+    })
+    public void testAMeanIsItsFields(final String code, final String expected) {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            client.getDatabase(DB_NAME).getCollection("empty_means").drop();
+            client.getDatabase(DB_NAME).createCollection("empty_means");
+        }
+        try {
+            checkCodeParseApply(LOG, code, expected);
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            if ("<ERROR>".equals(expected.trim()))
+                assertTrue(plan.asCode().insts().stream().noneMatch(inst -> inst.tid().name().startsWith("mql_")),
+                        "a mean with no single field is left to the walk: " + plan);
+            else {
+                final Obj want = Machine.parse(expected);
+                checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+            }
+        } finally {
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("empty_means").drop();
+            }
         }
     }
 

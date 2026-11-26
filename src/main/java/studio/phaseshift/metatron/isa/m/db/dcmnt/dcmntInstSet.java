@@ -154,7 +154,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                     final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     return collection.countDocuments();
-                                }
+                                },
+                                dcmntInstSet::readsDocuments
                         ),
 
                         // Optimize: *collection.sum() → MongoDB aggregation $sum
@@ -164,11 +165,11 @@ public class dcmntInstSet extends AbstractInstSet {
                                 (space, dp) -> {
                                     final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    // MongoDB aggregation: $sum the field when a column is selected, else count documents.
-                                    final Object sumExpr = dp.hasField() ? "$" + dp.field() : 1;
+                                    // the field the path names, its extension as Mongo's dotted path (summablePath declines a path
+                                    // with no field): "$" + field alone summed value for */+/value/x
                                     final Document result = collection.aggregate(Arrays.asList(
                                             new Document("$group", new Document(ID_FIELD_STRING, null)
-                                                    .append("total", new Document("$sum", sumExpr)))
+                                                    .append("total", new Document("$sum", "$" + dp.fieldPathStr())))
                                     )).first();
                                     if (result != null && result.containsKey("total")) {
                                         return result.get("total", Number.class);
@@ -184,11 +185,10 @@ public class dcmntInstSet extends AbstractInstSet {
                                 DCMNT_ISA_REWRITE_TID.extend("mql_sum_column"),
                                 (space, dp) -> {
                                     final String collectionName = dp.collection();
-                                    final String columnName = dp.field();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     final Document result = collection.aggregate(Arrays.asList(
                                             new Document("$group", new Document(ID_FIELD_STRING, null)
-                                                    .append("total", new Document("$sum", "$" + columnName)))
+                                                    .append("total", new Document("$sum", "$" + dp.fieldPathStr())))
                                     )).first();
                                     if (result != null && result.containsKey("total")) {
                                         return result.get("total", Number.class);
@@ -205,16 +205,16 @@ public class dcmntInstSet extends AbstractInstSet {
                                 (space, dp) -> {
                                     final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    // MongoDB aggregation pipeline: [{$group: {_id: null, average: {$avg: 1}}}]
+                                    // THE MEAN OF THE FIELD THE PATH NAMES (2026-11-25): {$avg: 1} averaged the literal 1, so
+                                    // *mongo:rewrite_test/+/value.mean() answered 1.0 for 5.5. No document (an empty collection) and
+                                    // no number to average ($avg answers null) are the mean of nothing, noobj, as the walk answers
                                     final Document result = collection.aggregate(Arrays.asList(
                                             new Document("$group", new Document(ID_FIELD_STRING, null)
-                                                    .append("average", new Document("$avg", 1)))
+                                                    .append("average", new Document("$avg", "$" + dp.fieldPathStr())))
                                     )).first();
-                                    if (result != null && result.containsKey("average")) {
-                                        return result.getDouble("average");
-                                    }
-                                    return 0.0;
-                                }
+                                    return null == result ? null : result.getDouble("average");
+                                },
+                                dcmntInstSet::summablePath
                         ),
 
                         // Optimize: *collection.take(n) → MongoDB find().limit(n)
@@ -225,7 +225,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                     final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     return readDocumentsAsObjs(collection, space, (int) limit);
-                                }
+                                },
+                                dcmntInstSet::readsDocuments
                         ),
 
                         // Optimize: *collection.isa([field=>value]) → MongoDB find(filter)
@@ -242,7 +243,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                     return readFilteredDocumentsAsObjs(collection, space, filter);
                                 },
                                 MQLRewriteUtils.PREDICATE_JOINER,
-                                MQLRewriteUtils.CONDITION_FORMATTER
+                                MQLRewriteUtils.CONDITION_FORMATTER,
+                                dcmntInstSet::readsDocuments
                         ),
 
                         // Optimize: mql_where.count() → MongoDB countDocuments(filter)
@@ -310,7 +312,8 @@ public class dcmntInstSet extends AbstractInstSet {
 
                                     return objs(IteratorUtil.stream(collection.find().projection(projection).iterator())
                                             .map(doc -> space.getSerializer().read(doc.toBsonDocument())));
-                                }
+                                },
+                                dcmntInstSet::readsDocuments
                         )
                 )));
         docWrap(this,
@@ -397,18 +400,31 @@ public class dcmntInstSet extends AbstractInstSet {
     }
 
     /**
-     * Guard for the native {@code sum} aggregations: MongoDB can only sum a
-     * concrete field.  A wildcard field (a {@code collection/entry/+} walk over
-     * a sub-document's values) is not representable as {@code $sum}, and the
-     * rewrite used to emit {@code $sum: "$+"} — which silently aggregates to 0.
-     * Declining the rewrite lets the generic in-memory sum handle those paths.
+     * Guard for the native {@code sum} and {@code mean} aggregations: MongoDB aggregates a concrete field of the documents
+     * the source reads. A source with no field reads whole documents, which MongoDB does not add as the walk does (the
+     * walk's sum of documents is their join, and their mean fails): {@code $sum: 1} counted them, and {@code $avg: 1}
+     * answered 1.0 for any collection. A wildcard field (a {@code collection/entry/+} walk over a sub-document's values)
+     * is not representable either, and {@code $sum: "$+"} silently aggregated to 0. The field is the path's, or, for
+     * sum_column, the shift's after it. Declining lets the walk answer those paths.
      */
     private static boolean summablePath(final dcmntSpace space, final List<Inst> matches) {
         final Obj ref = matches.getFirst().arg(0);
-        if (!ref.isUri())
+        if (!ref.isUri() || !readsDocuments(space, matches))
             return false;
         final DataPath dp = DataPath.withoutDB(space.redirect(ref.uriValue(), true));
-        return !dp.fieldIsWildcard();
+        final boolean shifted = matches.stream().anyMatch(inst -> inst.tid().basePath().equals(RSHIFT_INST_TID.basePath()));
+        return (shifted || dp.hasField()) && !dp.fieldIsWildcard();
+    }
+
+    /**
+     * A PLAN READS DOCUMENTS (2026-11-25), so it declines a source the space reads flat (its isFlatRead): the kv_store
+     * collection, or a collection the database does not hold and no schema declares. Under an absolute route
+     * ({@code amongo:} to {@code /amongo/}), {@code *amongo:+} after a flat write reads that entry, and mql_count
+     * counted the absent collection amongo: 0.
+     */
+    private static boolean readsDocuments(final dcmntSpace space, final List<Inst> matches) {
+        final Obj ref = matches.getFirst().arg(0);
+        return !ref.isUri() || !space.isFlatRead(space.redirect(ref.uriValue(), true));
     }
 
     /**
