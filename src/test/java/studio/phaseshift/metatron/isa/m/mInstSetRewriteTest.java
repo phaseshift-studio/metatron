@@ -177,6 +177,11 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
             "derivation_contraction  % [1,2,3].plus([2].neg())             % start([1,2,3]).plus([2].neg())",
             "derivation_contraction  % nat::6.plus(3.neg())                % start(nat::6).minus(3)",
             "derivation_contraction  % {'a','b'}.map(1).sum()              % start({'a','b'}).count()",
+            // ... and a literal in an equation is that value: a code tests as any value of its coefficient, so count's
+            // map(1) never takes a map of a code, even one that answers 1 for every obj, nor another literal
+            "derivation_contraction  % {1,2,3}.map(plus(2).mult(3)).sum()  % start({1,2,3}).map(plus(2).mult(3)).sum()",
+            "derivation_contraction  % {1,2,3}.map(mult(0).plus(1)).sum()  % start({1,2,3}).map(mult(0).plus(1)).sum()",
+            "derivation_contraction  % {1,2,3}.map(2).sum()                % start({1,2,3}).map(2).sum()",
             "derivation_contraction  % cmplx::[1.0,2.0].mult(cmplx::[1.0,1.0].inv())  % start(cmplx::[1.0,2.0]).div(cmplx::[1.0,1.0])",
             // rules no plan ever named: the pool is the table
             "else_after_count        % {1,2,3}.count().else(0)             % start({1,2,3}).count()",

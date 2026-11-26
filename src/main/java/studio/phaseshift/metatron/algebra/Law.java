@@ -1372,8 +1372,20 @@ public enum Law {
                 if (pattern.isEmpty() || !pattern.stream().allMatch(element -> element.tid().b().isZeroable()
                         || scanned.insts().stream().anyMatch(inst -> inst.tid().basePath().test(element.tid().basePath()))))
                     continue;
+                // A LITERAL IN A RULE IS THAT VALUE (2026-11-25): the matcher type-tests an argument, and a call tests as any
+                // value of its coefficient, since it computes later. So count = map(1).sum(), run backward, took
+                // map(plus(2).mult(3)).sum() for map(1).sum(), and {1,2,3} answered 3, not 36. In an unspanned rule, a
+                // number, a str, a bool or bytes holds only an equal argument in its place; a type is a hole and a code a
+                // pattern, and the matcher binds both as before
+                final boolean unspanned = pattern.stream().allMatch(element -> element.tid().b().isOne());
                 final List<Inst> next = Call.Helper.update(scanned.insts(), rec(equation.first(), equation.second()), (start, length) ->
                         scanned.insts().subList(start, start + length).stream().allMatch(inst -> inst.tid().b().isOne() && inst.tid().d().isOne())
+                                && (!unspanned || IntStream.range(0, length).allMatch(k -> !pattern.get(k).args().isLst()
+                                || IntStream.range(0, (int) pattern.get(k).args().count()).allMatch(slot -> {
+                                    final Obj literal = pattern.get(k).arg(slot);
+                                    return literal.isType() || !literal.isMono() || literal.isUri()
+                                            || literal.equals(scanned.insts().get(start + k).arg(slot));
+                                })))
                                 && admits.apply(scanned, start, length));
                 out = next.equals(scanned.insts()) ? scanned : code(next);
             }
