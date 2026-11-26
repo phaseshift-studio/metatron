@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Objs;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -146,16 +147,10 @@ public final class CommonRewrites {
                     // and the real collection lands in "field", blocking the rewrite.
                     final fURI rawUri = ref.uriValue();
                     final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(rawUri);
-                    final fURI resolvedUri = space != null ? space.redirect(rawUri, true) : rawUri;
-                    // When the redirect did not strip the space prefix (no route
-                    // matched — e.g. a wildcard collection like /g/+), the URI is
-                    // still absolute and its first segment is the space prefix, so
-                    // `of` decomposes it as db/collection.  Once routed it is
-                    // relative and `withoutDB` is the right call.
-                    final DataPath dp = resolvedUri.isAbsolute() ? DataPath.of(resolvedUri) : DataPath.withoutDB(resolvedUri);
+                    final DataPath dp = DBRewriteBuilder.sourcePath(space, space != null ? space.redirect(rawUri, true) : rawUri);
                     // An empty field segment (from asBranch() trailing "/")
                     // is a branch marker, not a real field — allow it.
-                    return !dp.collectionIsWildcard()
+                    return DBRewriteBuilder.readsEveryEntry(dp)
                             && !dp.hasExtension()
                             && (dp.field() == null || dp.field().isEmpty());
                 })
@@ -198,8 +193,21 @@ public final class CommonRewrites {
                 .match(FROM_INST_TID, SUM_INST_TID)
                 .matchFromOrAt()
                 .matchSpacePredicate(matchSpacePredicate)
-                .optimize("from_sum", (space, dp, coeff) -> jnt(sumFunction.apply(space, dp).longValue()))
+                .optimize("from_sum", (space, dp, coeff) -> sumOf(sumFunction.apply(space, dp)))
                 .build();
+    }
+
+    /**
+     * A SUM THE PLANS' INT RANGE CANNOT HOLD IS A REAL, WHICH THE RANGE REFUSES, NEVER CUT (2026-11-25): longValue()
+     * answered the products' prices (2817.9) as 2817. The number's own type tells: a Double, a Float or a scaled
+     * BigDecimal is a real, a whole one too (0.5 + 1.5 is the walk's 2.0). It cannot tell a whole DECIMAL column's sum,
+     * which comes back unscaled as MySQL's sum of an INT column does, so that one still answers an int where the walk
+     * reads DECIMAL as a real.
+     */
+    private static Obj sumOf(final Number sum) {
+        return sum instanceof Double || sum instanceof Float || (sum instanceof BigDecimal decimal && decimal.scale() > 0)
+                ? real(sum.doubleValue())
+                : jnt(sum.longValue());
     }
 
     public static <S extends Space> Inst sumColumnRewrite(
@@ -214,7 +222,7 @@ public final class CommonRewrites {
                 .match(FROM_INST_TID, RSHIFT_INST_TID, SUM_INST_TID)
                 .matchFromOrAt()
                 .matchSpacePredicate(matchSpacePredicate)
-                .optimize("from_rshift_sum", (space, dp, coeff) -> jnt(sumFunction.apply(space, dp).longValue()))
+                .optimize("from_rshift_sum", (space, dp, coeff) -> sumOf(sumFunction.apply(space, dp)))
                 .build();
     }
 
@@ -374,7 +382,7 @@ public final class CommonRewrites {
                     }
 
                     final fURI expandedfURI = space.redirect(oldfURI, true);
-                    final DataPath dp = DataPath.withoutDB(expandedfURI);
+                    final DataPath dp = sourcePath(space, expandedfURI);
 
                     // Extract limit value from take() instruction
                     final long limitValue = takeInst.arg(0).asInt().jvm();
@@ -551,7 +559,7 @@ public final class CommonRewrites {
                 }
 
                 final fURI expandedfURI = space.redirect(oldfURI, true);
-                final DataPath dp = DataPath.withoutDB(expandedfURI);
+                final DataPath dp = sourcePath(space, expandedfURI);
 
                 LOG.debug("evaluating native select operation on %s with fields %s in space %s",
                         expandedfURI, fields, space);
@@ -803,7 +811,7 @@ public final class CommonRewrites {
                 }
 
                 final fURI expandedfURI = space.redirect(oldfURI, true);
-                final DataPath dp = DataPath.withoutDB(expandedfURI);
+                final DataPath dp = sourcePath(space, expandedfURI);
 
                 LOG.debug("evaluating native where operation on %s with clause '%s' in space %s",
                         expandedfURI, filterClause, space);
@@ -1078,7 +1086,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.withoutDB(space.redirect(furi, true));
+                final DataPath dp = sourcePath(space, space.redirect(furi, true));
 
                 LOG.debug("evaluating native where+count on %s with clause '%s' in space %s",
                         furi, filterClause, space);
@@ -1225,7 +1233,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.withoutDB(space.redirect(furi, true));
+                final DataPath dp = sourcePath(space, space.redirect(furi, true));
 
                 LOG.debug("evaluating native where+limit on %s with clause '%s' and limit %d in space %s",
                         furi, filterClause, limitValue, space);
@@ -1349,7 +1357,7 @@ public final class CommonRewrites {
                 }
 
                 final fURI expandedfURI = space.redirect(oldfURI, true);
-                final DataPath dp = DataPath.withoutDB(expandedfURI);
+                final DataPath dp = sourcePath(space, expandedfURI);
                 final long skipValue = skipInst.arg(0).asInt().jvm();
 
                 LOG.debug("evaluating native skip operation on %s with skip %d in space %s",
@@ -1485,7 +1493,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.withoutDB(space.redirect(furi, true));
+                final DataPath dp = sourcePath(space, space.redirect(furi, true));
 
                 LOG.debug("evaluating native offset+limit on %s with skip %d, limit %d in space %s",
                         furi, skipValue, limitValue, space);
@@ -2044,7 +2052,7 @@ public final class CommonRewrites {
                 }
 
                 final fURI expandedfURI = space.redirect(oldfURI, true);
-                final DataPath dp = DataPath.withoutDB(expandedfURI);
+                final DataPath dp = sourcePath(space, expandedfURI);
 
                 LOG.debug("evaluating native order on %s by %s in space %s", expandedfURI, columns, space);
 
@@ -2150,7 +2158,7 @@ public final class CommonRewrites {
                 }
 
                 final fURI expandedfURI = space.redirect(oldfURI, true);
-                final DataPath dp = DataPath.withoutDB(expandedfURI);
+                final DataPath dp = sourcePath(space, expandedfURI);
 
                 LOG.debug("evaluating native dedup on %s by %s in space %s", expandedfURI, columns, space);
 

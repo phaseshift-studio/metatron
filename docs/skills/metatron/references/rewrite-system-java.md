@@ -212,7 +212,10 @@ RewriteBuilder.forDatabase(tbleSpace.class)
 
 1. `Rewriter.search().match().rewrite()` finds a matching instruction sequence
 2. The rewrite function checks `spaceType.isInstance(space)` — wrong space type → skip
-3. `matchPredicate` and `matchSpacePredicate` guards run — fail → return original unchanged
+3. `matchPredicate` and `matchSpacePredicate` guards run — fail → return original unchanged. A plan that reads a
+   source (`matchFromOrAt()`, and `CommonRewrites.countRewrite`'s match) stands in only for one that reads every entry
+   of one collection, `collection/+`: `table/1`, `table` and `table/#` are left to the walk. The kv pushdowns, which
+   read the path below a table as a key prefix, do not ask.
 4. Native lambda executes against the database, receiving the coefficient for cardinality tracking
 5. The matched sequence is replaced with a single native instruction
 

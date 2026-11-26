@@ -1453,6 +1453,57 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     }
 
     /**
+     * A PLAN READS EVERY DOCUMENT OF ITS COLLECTION, so it stands in only for a source that does, as on tble
+     * ({@code AbstractTbleSpaceTest}, which explains it): a source naming one document was pushed down as all ten. The
+     * rows are {@code code % what the walk answers}.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*mongo:rewrite_test/1.count()                     % 1",
+            "*mongo:rewrite_test/2.take(5)>>value.sup()        % 2",
+            "*mongo:rewrite_test/1>>value.sum()                % 1",
+            "*mongo:rewrite_test/4>>value                      % 4",
+            "*mongo:rewrite_test/2.isa([value=>?>0]).count()   % 1",
+    })
+    public void testAnEntrySourceAnswersAsTheWalk(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        final Obj want = Machine.parse(expected);
+        checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+    }
+
+    /**
+     * A PLAN TAKES ITS SOURCE APART AS THE DOCUMENT READ DOES (2026-11-25), whose first segment is the collection,
+     * absolute or not. Routed to an absolute path, as dcmntSpace's own docs route {@code mongo:} to {@code /mongo/},
+     * {@code *amongo:rewrite_test/+} is read as collection {@code amongo}, which holds nothing. The count plan read it
+     * as db/collection and counted all of rewrite_test. The rows are {@code code % what the walk answers}.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*amongo:rewrite_test/+.count()           % 0",
+            "*amongo:rewrite_test/+.take(2).count()   % 0",
+    })
+    public void testAnAbsoluteRouteReadsAsItsSpace(final String code, final String expected) throws Exception {
+        final dcmntSpace mounted = dcmntSpace.of(
+                rec(
+                        uri(PATTERN), uri("amongo:#"),
+                        uri(HOST), uri(connectionString + "/" + DB_NAME),
+                        uri(ROUTE), rec(uri("amongo:"), uri("/amongo/")),
+                        uri(COLLECTION), lst()
+                ).jvm(),
+                f("/memory/space/doc/absolute_route_test"));
+        try {
+            checkCodeParseApply(LOG, code, expected);
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            final Obj want = Machine.parse(expected);
+            checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+        } finally {
+            Machine.current().memory().removeSpace(mounted.vid());
+            mounted.close();
+        }
+    }
+
+    /**
      * Parameterized test for all rewrite optimizations.
      * Tests count, limit, has, where, where+count, aggregations, and compositions.
      * Test data (rewrite_test collection with 10 docs) is created in @BeforeEach.

@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractDataPathSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
@@ -152,7 +153,9 @@ public class DBRewriteBuilder<S extends Space> {
      * with {@code ALL} so the rewrite fires for both {@code *} and {@code @}
      * source instructions.  A FROM/AT guard is merged into the
      * {@link #matchPredicate} — if the first matched instruction is neither
-     * {@code FROM_INST_TID} nor {@code AT_INST_TID}, the rewrite is skipped.
+     * {@code FROM_INST_TID} nor {@code AT_INST_TID}, the rewrite is skipped,
+     * and so it is when its source does not read every entry of one
+     * collection ({@link #readsEveryEntry}).
      *
      * <p>Safe to call after {@link #match(fURI...)} — replaces the first
      * element of the match pattern.  Idempotent: subsequent calls are no-ops.
@@ -171,11 +174,40 @@ public class DBRewriteBuilder<S extends Space> {
             final Inst first = matches.getFirst().asInst();
             if (!first.tid().basePath().equals(FROM_INST_TID) && !first.tid().basePath().equals(AT_INST_TID))
                 return false;
+            if (first.arg(0).isUri()) {
+                final fURI source = first.arg(0).uriValue();
+                final Space space = Machine.current().memory().getSpaceFor(source);
+                if (!readsEveryEntry(sourcePath(space, null == space ? source : space.redirect(source, true))))
+                    return false;
+            }
             if (existing != null && !existing.test(matches))
                 return false;
             return true;
         };
         return this;
+    }
+
+    /**
+     * A PLAN READS EVERY ENTRY OF ONE COLLECTION (2026-11-25), so it stands in only for a source that does:
+     * {@code collection/+}. A source naming one entry ({@code table/1}), the collection itself (its type) or every level
+     * below it ({@code table/#}) was pushed down as every row: {@code *db:rewrite_test/1.count()} answered 10 and
+     * {@code >>value.sum()} 55 for one row of value 1. The kv pushdowns, which read the path below a table as a key
+     * prefix, never ask.
+     */
+    static boolean readsEveryEntry(final DataPath source) {
+        return source.hasCollection() && !source.collectionIsWildcard() && fURI.Singleton.WILD_ONE.name().equals(source.entry());
+    }
+
+    /**
+     * THE DATA PATH OF A ROUTED SOURCE, AS ITS SPACE'S READ TAKES IT APART ({@link AbstractDataPathSpace#dataPath}). A
+     * graph space's routed path keeps the space's prefix where no route strips it ({@code /g/person/+}), and
+     * {@link DataPath#withoutDB} took that prefix for the collection. A table or document read takes a path's first
+     * segment, absolute or not: a rule of the plans' own, an absolute path read as db/collection, had {@code mql_count}
+     * count collection {@code movie} for {@code *moviedb:movie/+} routed to {@code /moviedb/}, whose read takes
+     * collection {@code moviedb}, and {@code sql_count} count table {@code users} for {@code /rewrite_test/users/+}.
+     */
+    static DataPath sourcePath(final Space space, final fURI routed) {
+        return space instanceof AbstractDataPathSpace<?> data ? data.dataPath(routed) : DataPath.withoutDB(routed);
     }
 
     /**
@@ -336,10 +368,7 @@ public class DBRewriteBuilder<S extends Space> {
      * Create the optimized instruction that executes the native database operation.
      */
     protected Inst createOptimizedInst(final S typedSpace, final fURI expandedfURI, final C<?, ?> coeff) {
-        // A SOURCE NO ROUTE STRIPPED IS STILL ABSOLUTE (2026-11-25), its first segment the space's prefix, so it is read
-        // as db/collection, as countRewrite's match reads it. withoutDB took /grt/item/+'s prefix for the collection, and
-        // gremlin_count counted label grt
-        final DataPath dp = expandedfURI.isAbsolute() ? DataPath.of(expandedfURI) : DataPath.withoutDB(expandedfURI);
+        final DataPath dp = sourcePath(typedSpace, expandedfURI);
         return instC(
                 this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                 lst(uri(expandedfURI)),

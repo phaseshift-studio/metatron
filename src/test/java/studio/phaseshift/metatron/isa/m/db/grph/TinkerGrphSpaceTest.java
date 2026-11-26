@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.db.grph.space.EdgeRec;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.Arrays;
@@ -167,6 +168,33 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
     }, delimiter = '%')
     public void testRelationTraversals(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A PLAN READS EVERY ELEMENT OF ITS COLLECTION, so it stands in only for a source that does ({@code V/+},
+     * {@code person/+}), as on tble ({@code AbstractTbleSpaceTest}, which explains it): a source naming one element
+     * was pushed down as its whole collection, and the space itself, which names no collection, threw. The rows are
+     * {@code code % what the walk answers}, and the plan is applied on its own as well (see
+     * {@code CommonRewritesTestContract.runRewriteTest}).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/1.count()                         % 1",
+            "*/g/V/2.take(5)>>age.sup()              % 27",
+            "*/g/V/2.skip(0).count()                 % 1",
+            "*/g/V/1>>age.sum()                      % 29",
+            "*/g/V/1.isa([age=>?>0]).count()         % 1",
+            "*/g/V/1.order(select(name))>-.count()   % 1",
+            "*/g/V/4.dedup(select(name)).count()     % 1",
+            "*/g/person/1.count()                    % 1",
+            "*/g/E/7.count()                         % 1",
+            "*/g.count()                             % 0",
+    }, delimiter = '%')
+    public void testAnEntrySourceAnswersAsTheWalk(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        final Obj want = Machine.parse(expected);
+        checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
     }
 
     /**

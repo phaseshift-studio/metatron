@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.BufferedInputStream;
 import java.sql.*;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 
@@ -83,6 +84,9 @@ public class tbleInstSet extends AbstractInstSet {
             // to split it into ["drdb:llm_message_user", "+"] — misidentifying the
             // collection as "drdb:llm_message_user" instead of "llm_message_user".
             final fURI resolved = space.redirect(ref.uriValue(), true);
+            // A TABLE READ GIVES NO ROW OF A SOURCE NO ROUTE MADE RELATIVE (2026-11-25): mounted at /rewrite_test/# with no
+            // route, a tble space reads nothing for /rewrite_test/+, so no plan may read the table for it
+            if (resolved.isAbsolute()) return false;
             final DataPath dp = DataPath.withoutDB(resolved);
             if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
             // The existing-table schema is discovered lazily (ensureTables);
@@ -94,6 +98,22 @@ public class tbleInstSet extends AbstractInstSet {
                 return false;
             }
             return space.existingTableSchema != null && space.existingTableSchema.getTableNames().contains(dp.collection().toLowerCase());
+        };
+
+        // THE NUMBER THE DATABASE ANSWERS (2026-11-25), for sql_sum and sql_sum_column alike: getLong cut a REAL column's
+        // sum on sqlite, whose driver does not type SUM(price) DOUBLE, and a double : long conditional widened every sum
+        final BiFunction<tbleSpace, DataPath, Number> columnSum = (space, dp) -> {
+            if (!dp.hasField()) return 0L;
+            final String query = "SELECT SUM(" + dp.field() + ") FROM " + dp.collection();
+            LOG.debug("sql_sum query %s", query);
+            try (final Statement stmt = space.sjvm().createStatement();
+                 final ResultSet rs = stmt.executeQuery(query)) {
+                return rs.next() && rs.getObject(1) instanceof Number sum ? sum : 0L;
+            } catch (final SQLException e) {
+                if (e.getErrorCode() == 1054)
+                    return 0L;
+                throw MTronException.of(e);
+            }
         };
 
         final BiPredicate<tbleSpace, List<Inst>> kvGuard = (space, matches) -> {
@@ -167,49 +187,13 @@ public class tbleInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.sumRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_sum").rng(INT_TID),
-                                (space, dp) -> {
-                                    final String tableName = dp.collection();
-                                    if (!dp.hasField()) return 0L;
-                                    final String columnName = dp.field();
-                                    final String query = "SELECT SUM(" + columnName + ") FROM " + tableName;
-                                    LOG.debug("sql_sum query %s", query);
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery(query)) {
-                                        return rs.next() ?
-                                                (rs.getMetaData().getColumnType(1) == JDBCType.DOUBLE.getVendorTypeNumber() ?
-                                                        rs.getDouble(1) :
-                                                        rs.getLong(1)) :
-                                                0L;
-                                    } catch (SQLException e) {
-                                        if (e.getErrorCode() == 1054)
-                                            return 0L;
-                                        throw MTronException.of(e);
-                                    }
-                                },
+                                columnSum,
                                 tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(column) to sum entries in a table column"),
                         docWrap(CommonRewrites.sumColumnRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_sum_column").rng(INT_TID),
-                                (space, dp) -> {
-                                    final String tableName = dp.collection();
-                                    if (!dp.hasField()) return 0L;
-                                    final String columnName = dp.field();
-                                    final String query = "SELECT SUM(" + columnName + ") FROM " + tableName;
-                                    LOG.debug("sql_sum query %s", query);
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery(query)) {
-                                        return rs.next() ?
-                                                (rs.getMetaData().getColumnType(1) == JDBCType.DOUBLE.getVendorTypeNumber() ?
-                                                        rs.getDouble(1) :
-                                                        rs.getLong(1)) :
-                                                0L;
-                                    } catch (SQLException e) {
-                                        if (e.getErrorCode() == 1054)
-                                            return 0L;
-                                        throw MTronException.of(e);
-                                    }
-                                },
+                                columnSum,
                                 tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(column) to sum entries in a table column"),
                         // Optimize: *table.mean() → SELECT AVG(*)

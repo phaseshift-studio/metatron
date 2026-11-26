@@ -56,6 +56,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -771,6 +772,10 @@ public class grphInstSet extends AbstractInstSet {
 
     @Override
     public void setup() {
+        // A PLAN READS ELEMENTS (2026-11-25), so it declines a source the space reads flat: kv_store, and a collection no
+        // element carries. After two flat writes, */g/kv_scratch/+.count() walks 2 and its label count answered 0
+        final BiPredicate<grphSpace, List<Inst>> elementGuard = (space, matches) -> !matches.getFirst().arg(0).isUri()
+                || !space.readsFlat(space.redirect(matches.getFirst().arg(0).uriValue(), true));
         this.jvm().putAll(mutableMap(
                 uri(CONSTQ), lst(ObjTP3Serializer.single(), MODERN_SCHEMA),
                 uri(TYPE), lst(
@@ -915,16 +920,8 @@ public class grphInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.countRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_count"),
-                                // A LABEL COUNTS AS THE SPACE READS IT (2026-11-25): its vertices, else its edges. Every
-                                // collection but V counted every edge, so */g/lair/+.count() answered the graph's 6 for 1
-                                (space, dp) -> switch (dp.collection()) {
-                                    case "V" -> space.sjvm().V().count().next();
-                                    case "E" -> space.sjvm().E().count().next();
-                                    default -> {
-                                        final long vertices = space.sjvm().V().hasLabel(dp.collection()).count().next();
-                                        yield 0 < vertices ? vertices : space.sjvm().E().hasLabel(dp.collection()).count().next();
-                                    }
-                                }
+                                (space, dp) -> space.elements(dp.collection()).count().next(),
+                                elementGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's count()-reducer for vrtx, edge and label collections"),
                         docWrap(CommonRewrites.sumColumnRewrite(
                                 grphSpace.class,
@@ -933,73 +930,70 @@ public class grphInstSet extends AbstractInstSet {
                                     final String field = dp.field();
                                     if (field == null || field.isEmpty())
                                         return 0L;
-                                    return space.sjvm().V().values(field).sum().next();
+                                    // nothing to sum is the sum's seed, as sql_sum_column's SUM over no row answers
+                                    return space.elements(dp.collection()).values(field).sum().tryNext().orElse(0L);
                                 },
-                                null
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's sum()-reducer over a vertex property"),
+                                elementGuard
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's sum()-reducer over an element property"),
                         docWrap(CommonRewrites.skipRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_skip"),
-                                (space, dp, skip) -> {
-                                    final Iterator<? extends Element> elements = "V".equals(dp.collection())
-                                            ? space.sjvm().V().skip(skip)
-                                            : space.sjvm().E().skip(skip);
-                                    return objs(IteratorUtil.stream(elements).map(e -> (e instanceof Vertex v) ? new VertexRec(v, space) : new EdgeRec((Edge) e, space)));
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's skip()-barrier for vrtx/edge collections"),
+                                (space, dp, skip) -> objs(IteratorUtil.stream(space.elements(dp.collection()).skip(skip))
+                                        .map(space::elementRec)),
+                                elementGuard
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's skip()-barrier for vrtx, edge and label collections"),
                         docWrap(CommonRewrites.offsetLimitRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_skip"),
                                 GRPH_REWRITE_TID.extend("gremlin_skip_limit"),
-                                (space, dp, skip, limit) -> {
-                                    final Iterator<? extends Element> elements = "V".equals(dp.collection())
-                                            ? space.sjvm().V().skip(skip).limit(limit)
-                                            : space.sjvm().E().skip(skip).limit(limit);
-                                    return objs(IteratorUtil.stream(elements).map(e -> (e instanceof Vertex v) ? new VertexRec(v, space) : new EdgeRec((Edge) e, space)));
-                                }
+                                (space, dp, skip, limit) -> objs(IteratorUtil.stream(space.elements(dp.collection()).skip(skip).limit(limit))
+                                        .map(space::elementRec))
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "fuses skip+limit into a single gremlin skip().limit()"),
                         docWrap(CommonRewrites.orderRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_order"),
                                 // ONE SORTED LST, as order() answers and sql_order does: the >- after it splits the lst into
-                                // its vertices. A stream of vertices let >- split each vertex into its properties instead
+                                // its elements. A stream of vertices let >- split each vertex into its properties instead
                                 (space, dp, columns) -> {
-                                    final GraphTraversalSource g = space.sjvm();
-                                    return lst(IteratorUtil.stream(null == columns || columns.isEmpty() ? g.V().order() : g.V().order().by(columns.get(0)))
-                                            .map(v -> (Obj) new VertexRec(v, space))
+                                    final Iterator<? extends Element> ordered = null == columns || columns.isEmpty()
+                                            ? space.elements(dp.collection()).order()
+                                            : space.elements(dp.collection()).order().by(columns.get(0));
+                                    return lst(IteratorUtil.stream(ordered)
+                                            .map(e -> (Obj) space.elementRec(e))
                                             .toList());
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's order()-by for vrtx collections"),
+                                },
+                                elementGuard
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's order()-by for vrtx, edge and label collections"),
                         docWrap(CommonRewrites.dedupRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_dedup"),
                                 (space, dp, columns) -> {
-                                    final GraphTraversalSource g = space.sjvm();
-                                    if (columns == null || columns.isEmpty())
-                                        return objs(IteratorUtil.stream(g.V().dedup()).map(v -> new VertexRec((Vertex) v, space)));
-                                    return objs(IteratorUtil.stream(g.V().dedup().by(columns.get(0))).map(v -> new VertexRec((Vertex) v, space)));
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's dedup()-by for vrtx collections"),
+                                    final Iterator<? extends Element> deduped = null == columns || columns.isEmpty()
+                                            ? space.elements(dp.collection()).dedup()
+                                            : space.elements(dp.collection()).dedup().by(columns.get(0));
+                                    return objs(IteratorUtil.stream(deduped)
+                                            .map(space::elementRec));
+                                },
+                                elementGuard
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's dedup()-by for vrtx, edge and label collections"),
                         docWrap(CommonRewrites.limitRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_limit"),
-                                (space, dp, limit) -> {
-                                    final Iterator<? extends Element> elements = "V".equals(dp.collection())
-                                            ? space.sjvm().V().limit(limit)
-                                            : space.sjvm().E().limit(limit);
-                                    return objs(IteratorUtil.stream(elements).map(e -> (e instanceof Vertex v) ? new VertexRec(v, space) : new EdgeRec((Edge) e, space)));
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's limit()-barrier for vrtx/edge collections"),
+                                (space, dp, limit) -> objs(IteratorUtil.stream(space.elements(dp.collection()).limit(limit))
+                                        .map(space::elementRec)),
+                                elementGuard
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's limit()-barrier for vrtx, edge and label collections"),
 
-                        // Optimize: from(V/+).isa([field=>value]) → g.V().has(field, predicate)
+                        // Optimize: from(<collection>/+).isa([field=>value]) → has(field, predicate) over the collection's elements
                         docWrap(CommonRewrites.whereRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_where").dom(GRPH_SPACE_TID).rng(REC_TID.maybeSome()),
                                 (space, dp, filterClause) -> objs(IteratorUtil.stream(whereTraversal(space, dp, filterClause))
-                                        .map(v -> new VertexRec(v, space))),
+                                        .map(space::elementRec)),
                                 GremlinRewriteUtils.PREDICATE_JOINER,
-                                GremlinRewriteUtils.CONDITION_FORMATTER
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has()-filtering for vrtx collections"),
+                                GremlinRewriteUtils.CONDITION_FORMATTER,
+                                elementGuard
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has()-filtering for vrtx, edge and label collections"),
 
                         // THE SHARED FUSIONS, as tble's and dcmnt's: each matches the native where by its address, never a
                         // name that merely contains it (gremlin_where_limit.count() is not a filtered count), mints a source
@@ -1010,14 +1004,14 @@ public class grphInstSet extends AbstractInstSet {
                                 GRPH_REWRITE_TID.extend("gremlin_where"),
                                 GRPH_REWRITE_TID.extend("gremlin_where_count"),
                                 (space, dp, filterClause) -> whereTraversal(space, dp, filterClause).count().next()
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has().count() filtering-reduction for vrtx collections"),
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has().count() filtering-reduction for vrtx, edge and label collections"),
                         docWrap(CommonRewrites.whereLimitRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_where"),
                                 GRPH_REWRITE_TID.extend("gremlin_where_limit"),
                                 (space, dp, filterClause, limit) -> objs(IteratorUtil.stream(whereTraversal(space, dp, filterClause).limit(limit))
-                                        .map(v -> new VertexRec(v, space)))
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has().limit() filtering-barrier for vrtx collections"),
+                                        .map(space::elementRec))
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has().limit() filtering-barrier for vrtx, edge and label collections"),
                         // ONE SERVER-SIDE TRAVERSAL PER RUN: a maximal chain of instructions that has a Gremlin step
                         // in GREMLIN_THEORY becomes a single gremlin(...) call (this subsumes the old outE+inV→out /
                         // inE+outV→in pair rules, and keeps the pair's label AND the run's coefficient).
@@ -1031,18 +1025,16 @@ public class grphInstSet extends AbstractInstSet {
     }
 
     /**
-     * THE TRAVERSAL A PUSHED-DOWN WHERE STARTS FROM: {@code g.V().has(field, predicate)} for the clause the where rewrite
-     * formatted. The where op, its count and its limit read it, so each refuses an edge collection and an unreadable
+     * THE TRAVERSAL A PUSHED-DOWN WHERE STARTS FROM: {@code has(field, predicate)} over the collection's elements, for the
+     * clause the where rewrite formatted. The where op, its count and its limit read it, so each refuses an unreadable
      * clause alike.
      */
-    private static GraphTraversal<Vertex, Vertex> whereTraversal(final grphSpace space, final DataPath dp, final String filterClause) {
-        if (!"V".equals(dp.collection()))
-            throw MTronException.of("where-rewrite only supports the vertex (V) collection: %s", dp.collection());
+    private static GraphTraversal<? extends Element, ? extends Element> whereTraversal(final grphSpace space, final DataPath dp, final String filterClause) {
         final org.apache.tinkerpop.gremlin.process.traversal.P<?> pred = parseGremlinPredicate(filterClause);
         final String field = extractPredicateField(filterClause);
         if (pred == null || field == null)
             throw MTronException.of("unable to parse where-predicate: %s", filterClause);
-        return space.sjvm().V().has(field, pred);
+        return space.elements(dp.collection()).has(field, pred);
     }
 
     /**

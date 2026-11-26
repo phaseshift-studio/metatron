@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa;
 
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
@@ -64,6 +65,15 @@ public abstract class AbstractDataPathSpace<SJVM> extends AbstractSpace<SJVM> {
      * wrapped for round-trip fidelity.
      */
     public record FlatEntry(String key, Obj value) {
+    }
+
+    /**
+     * THE DATA PATH OF A ROUTED PATH, as this space's read takes it apart: its first segment the collection, whether
+     * the path is absolute or not. A space whose routed paths keep its own prefix (grphSpace) overrides it. A pushdown
+     * plan reads its source through it, so the plan and the read decompose a path alike.
+     */
+    public DataPath dataPath(final fURI routed) {
+        return DataPath.withoutDB(routed);
     }
 
     // =======================================================================

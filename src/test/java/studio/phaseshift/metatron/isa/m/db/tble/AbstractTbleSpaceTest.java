@@ -2835,6 +2835,131 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     /**
+     * A PLAN READS EVERY ROW OF ITS TABLE, so it stands in only for a source that does ({@code table/+}). A source
+     * naming one row, the table itself (its type) or every level below it ({@code table/#}) was pushed down as every
+     * row: {@code *db:rewrite_test/1.count()}'s plan answered 10, {@code >>value.sum()} on that row 55, and
+     * {@code .take(5)} read rows 1 to 5. The rows are {@code code % what the walk answers}, and the plan is applied on
+     * its own as well: the evaluation can run the memoized walk (see {@code CommonRewritesTestContract.runRewriteTest}).
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:rewrite_test/1.count()                         % 1",
+            "@db:rewrite_test/1.count()                         % 1",
+            "*db:rewrite_test/2.take(5)>>value.sup()            % 2",
+            "*db:rewrite_test/3.skip(0).count()                 % 1",
+            "*db:rewrite_test/1>>value.sum()                    % 1",
+            "*db:rewrite_test/4>>value                          % 4",
+            "*db:rewrite_test/1/value.sum()                     % 1",
+            "*db:rewrite_test/2/value.mean()                    % 2.0",
+            "*db:rewrite_test/2.isa([value=>?>0]).count()       % 1",
+            "*db:rewrite_test/5.order(select(value))>-.count()  % 1",
+            "*db:rewrite_test/6.dedup(select(name)).count()     % 1",
+            "*db:rewrite_test.count()                           % 1",
+            "*db:rewrite_test/#.count()                         % 30",
+    })
+    public void testAnEntrySourceAnswersAsTheWalk(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        final Obj want = Machine.parse(expected);
+        checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+    }
+
+    /**
+     * A REAL SUM IS NOT CUT TO ITS INTEGER PART (2026-11-25). The sum plans declare an int range, and answered a sum's
+     * {@code longValue()}: {@code sql_sum_column} answered the products' prices with their integer part. A real sum is
+     * now answered as a real, whole or not (the users' salaries may sum to a whole number), which the int range refuses. This asserts the refusal, not the ideal: the walk
+     * answers the real, and when a plan can answer one these rows are expected to fail, the signal to move them to
+     * {@link #testAnEntrySourceAnswersAsTheWalk}'s form. The plan is applied on its own, as the evaluation can run the
+     * memoized walk (see {@code CommonRewritesTestContract.runRewriteTest}).
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:products/+>>price.sum()",
+            "*db:products/+/price.sum()",
+            "*db:users/+>>salary.sum()",
+    })
+    public void testARealSumIsRefusedNotCut(final String code) {
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        final Obj answer = MCode.of(plan.asCode().insts()).apply();
+        assertTrue(answer.isFail() && answer.toString().contains("does not match inst range"),
+                "a real sum must fail the plan's int range, not answer " + answer + ": " + plan);
+    }
+
+    /**
+     * A DECIMAL COLUMN'S SUM IS A REAL (2026-11-25): the walk reads a DECIMAL value as a real, and the drivers answer its
+     * sum as a scaled BigDecimal (sqlite as a double), which the plans' int range refuses as it does a DOUBLE's. The
+     * plans answered its integer part. The table is made by SQL, so a space mounted after it finds it. This asserts the
+     * refusal, not the ideal (see {@link #testARealSumIsRefusedNotCut}).
+     */
+    @Test
+    public void testADecimalSumIsRefusedNotCut() throws Exception {
+        try (final Connection conn = staticDbConfig.getConnection();
+             final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DROP TABLE IF EXISTS dec_test");
+            stmt.executeUpdate("CREATE TABLE dec_test (id INTEGER PRIMARY KEY, amount DECIMAL(10,2))");
+            stmt.executeUpdate("INSERT INTO dec_test (id, amount) VALUES (1, 1.25), (2, 2.50)");
+        }
+        final tbleSpace mounted = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("dec:#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(ROUTE), rec(uri("dec:"), uri("")),
+                        uri(TABLE), lst()
+                ).jvm(),
+                f("/memory/space/tble/decimal_test"));
+        try {
+            for (final String code : List.of("*dec:dec_test/+>>amount.sum()", "*dec:dec_test/+/amount.sum()")) {
+                final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+                final Obj answer = MCode.of(plan.asCode().insts()).apply();
+                assertTrue(answer.isFail() && answer.toString().contains("does not match inst range"),
+                        "a DECIMAL sum must fail the plan's int range, not answer " + answer + ": " + plan);
+            }
+        } finally {
+            mounted.sql("DROP TABLE IF EXISTS dec_test");
+            Machine.current().memory().removeSpace(mounted.vid());
+            mounted.close();
+        }
+    }
+
+    /**
+     * A TABLE SPACE READS NO ROW OF AN ABSOLUTE WILDCARD, SO NO PLAN MAY (2026-11-25). Mounted at a table's name with no
+     * route, a tble space answers nothing for {@code /rewrite_test/+}, while {@code /rewrite_test/1} reads its row. The
+     * take, skip and where plans took the source apart with {@code DataPath.withoutDB} and read the whole table
+     * ({@code .take(5).count()} answered 5), and the count read {@code /rewrite_test/users/+} as db/collection and counted
+     * table users. The table guard now declines a source no route made relative. The rows are
+     * {@code code % what the walk answers}, and the plan is applied on its own as well (see
+     * {@code CommonRewritesTestContract.runRewriteTest}).
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*/rewrite_test/+.count()                     % 0",
+            "*/rewrite_test/+.take(5).count()             % 0",
+            "*/rewrite_test/+.skip(2).count()             % 0",
+            "*/rewrite_test/+.isa([value=>?>5]).count()   % 0",
+            "*/rewrite_test/users/+.count()               % 0",
+    })
+    public void testAnUnroutedWildcardReadsNothing(final String code, final String expected) throws Exception {
+        final tbleSpace mounted = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("/rewrite_test/#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE), lst()
+                ).jvm(),
+                f("/memory/space/tble/unrouted_test"));
+        try {
+            checkCodeParseApply(LOG, code, expected);
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            final Obj want = Machine.parse(expected);
+            checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+        } finally {
+            Machine.current().memory().removeSpace(mounted.vid());
+            mounted.close();
+        }
+    }
+
+    /**
      * The ORDER fusions are GATED on purpose — see the gate comment in {@code CommonRewrites} and
      * t-mw19gny3-hhgle5: the fused op returns its rows coefficient-shaped, so a chained {@code count()} counts
      * members (5 rows answered 15). Declining keeps the mtron path, which is CORRECT but not fused, so the

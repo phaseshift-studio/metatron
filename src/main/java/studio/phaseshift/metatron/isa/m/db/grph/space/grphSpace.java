@@ -23,6 +23,7 @@
  import org.apache.tinkerpop.gremlin.driver.Cluster;
  import org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection;
  import org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource;
+ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
  import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
  import org.apache.tinkerpop.gremlin.structure.*;
  import org.apache.tinkerpop.gremlin.structure.io.binary.TypeSerializerRegistry;
@@ -519,15 +520,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
                  if (routed.hasScheme() && !routed.test(this.pattern())) {
                      return new IdObj(routed, Machine.current().memory().read(routed)).iterator();
                  }
-                 // Flat key-value namespace (reserved kv_store label, or unknown collection).
-                 // Only for paths under this space's prefix; absolute cross-space paths
-                 // (e.g. /g/S → /m/db/grph/schema/... route) fall through to the fallback.
-                 if (!routed.isAbsolute() || routed.hasPrefix(this.pattern().retractPattern())) {
-                     final fURI rel = this.relative(routed);
-                     if (this.isFlatRead(rel))
-                         return this.readFlat(rel, pattern);
-                 }
-                 final DataPath dp = routed.segments().get(0).equals(this.pattern().segments().get(0)) ? DataPath.of(routed) : DataPath.withoutDB(routed);
+                 if (this.readsFlat(routed))
+                     return this.readFlat(this.relative(routed), pattern);
+                 final DataPath dp = this.dataPath(routed);
                  // the field a read reaches into, with its extension when it has one: extend(null) threw, so */g/V/1/name failed
                  final fURI field = !dp.hasField() ? null : dp.hasExtension() ? f(dp.field()).extend(dp.extension()) : f(dp.field());
                  if (!dp.hasCollection()) return IteratorUtil.of();
@@ -735,6 +730,45 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
          // V:person) is NOT re-parsed as a scheme separator.  removePrefix's
          // string form drops it, turning "V:person" into scheme "V" + "person".
          return f(routed.toString().substring(prefix.toString().length()));
+     }
+
+     /**
+      * Whether a read of a routed path is the flat key-value namespace's: the reserved kv_store label, or a collection
+      * no element carries. Only a path under this space's prefix can be; an absolute cross-space path (a /g/S route to
+      * the schema) is read where it points. A pushdown plan reads elements, so it declines such a source.
+      */
+     public boolean readsFlat(final fURI routed) {
+         return (!routed.isAbsolute() || routed.hasPrefix(this.pattern().retractPattern())) && this.isFlatRead(this.relative(routed));
+     }
+
+     /**
+      * A routed path that kept this space's prefix ({@code /g/person/+}, which no route strips) reads as db/collection;
+      * any other ({@code V/1}) has its collection first.
+      */
+     @Override
+     public DataPath dataPath(final fURI routed) {
+         return routed.segments().get(0).equals(this.pattern().segments().get(0)) ? DataPath.of(routed) : DataPath.withoutDB(routed);
+     }
+
+     /**
+      * THE ELEMENTS A COLLECTION NAMES, as the read lists them (2026-11-25): V's vertices, E's edges, and a label's own
+      * vertices, else its edges. Every pushdown plan over a collection starts here: skip, limit and their pair took E()
+      * for every collection but V, sum, order and dedup read every vertex, and where refused all but V. A collection the
+      * space reads flat ({@link #readsFlat}) names no elements, and the plans decline it.
+      */
+     public GraphTraversal<? extends Element, ? extends Element> elements(final String collection) {
+         return switch (collection) {
+             case "V" -> this.sjvm.V();
+             case "E" -> this.sjvm.E();
+             default -> this.isVertexLabel(collection) ? this.sjvm.V().hasLabel(collection) : this.sjvm.E().hasLabel(collection);
+         };
+     }
+
+     /**
+      * The rec an element reads as, as the read answers it: a vertex's or an edge's.
+      */
+     public ElementRec<?> elementRec(final Element element) {
+         return element instanceof Vertex vertex ? new VertexRec(vertex, this) : new EdgeRec((Edge) element, this);
      }
 
      @Override

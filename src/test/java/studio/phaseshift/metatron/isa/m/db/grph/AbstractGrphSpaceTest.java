@@ -48,6 +48,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
@@ -158,14 +159,79 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     /**
-     * A LABEL IS A COLLECTION TOO (2026-11-25). The contract's prefix is the V collection, and gremlin_count counted every
-     * edge for any other one, so the rewrite space's item vertices and the modern dataset's knows edges are counted too.
+     * A LABEL IS A COLLECTION TOO (2026-11-25). The contract's prefix is the V collection, and the plans read V for it and
+     * E, or every vertex, for any other one: gremlin_count counted every edge, skip and limit took edges, sum, order and
+     * dedup read every vertex, and where refused all but V. So the rewrite space's item vertices (no edges) and the modern
+     * dataset's person, software, knows and created labels are read through each plan too.
      */
     @Override
-    public Stream<Arguments> generateCountTestCases() {
-        return Stream.concat(CommonRewritesTestContract.super.generateCountTestCases(), Stream.of(
-                Arguments.of("count: a vertex label", "*" + REWRITE_TEST_SPACE_URI.extend("item") + "/+.count()", jnt(10)),
-                Arguments.of("count: an edge label", "*" + this.baseURI.extend("knows") + "/+.count()", jnt(2))));
+    public Stream<Arguments> generateAllRewriteTestCases() {
+        final String item = "*" + REWRITE_TEST_SPACE_URI.extend("item");
+        final String g = "*" + this.baseURI;
+        return Stream.concat(CommonRewritesTestContract.super.generateAllRewriteTestCases(), Stream.of(
+                Arguments.of("count: a vertex label", item + "/+.count()", jnt(10)),
+                Arguments.of("count: an edge label", g + "/knows/+.count()", jnt(2)),
+                Arguments.of("limit: a vertex label", item + "/+.take(5).count()", jnt(5)),
+                Arguments.of("limit: an edge label", g + "/knows/+.take(5).count()", jnt(2)),
+                Arguments.of("skip: a vertex label", item + "/+.skip(3).count()", jnt(7)),
+                Arguments.of("skip: an edge label", g + "/created/+.skip(1).count()", jnt(3)),
+                Arguments.of("skip+limit: a vertex label", g + "/person/+.skip(1).take(10).count()", jnt(3)),
+                Arguments.of("skip+limit: an edge label", g + "/created/+.skip(1).take(5).count()", jnt(3)),
+                Arguments.of("isa: a vertex label", g + "/person/+.isa([age=>?>30])>>age.sum()", jnt(67)),
+                Arguments.of("isa+count: a vertex label", item + "/+.isa([value=>?>5]).count()", jnt(5)),
+                Arguments.of("isa+count: an edge label", g + "/created/+.isa([weight=>?>0.5]).count()", jnt(1)),
+                Arguments.of("isa+limit: a vertex label", g + "/person/+.isa([age=>?>26]).take(3).count()", jnt(3)),
+                Arguments.of("order: a vertex label", g + "/person/+.order(select(name))>-.count()", jnt(4)),
+                Arguments.of("order: an edge label", g + "/knows/+.order(select(weight))>-.count()", jnt(2)),
+                Arguments.of("dedup: a vertex label", g + "/person/+.dedup(select(name)).count()", jnt(4)),
+                Arguments.of("sum: a vertex label", g + "/person/+>>age.sum()", jnt(123)),
+                Arguments.of("sum: a label without the property", g + "/software/+>>age.sum()", jnt(0))));
+    }
+
+    /**
+     * A REAL SUM IS NOT CUT TO ITS INTEGER PART, as on tble ({@code AbstractTbleSpaceTest}, which explains it): an edge
+     * label's weights are reals, and the label-aware gremlin_sum answered the knows weights' 1.5 as 1. This asserts the
+     * int range's refusal, not the ideal (the walk answers 1.5): main's gremlin_sum failed too, on the empty traversal
+     * of every vertex's weight, which is no refusal.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*/g/knows/+>>weight.sum()",
+            "*/g/E/+>>weight.sum()",
+    })
+    public void testARealSumIsRefusedNotCut(final String code) {
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        final Obj answer = MCode.of(plan.asCode().insts()).apply();
+        assertTrue(answer.isFail() && answer.toString().contains("does not match inst range"),
+                "a real sum must fail the plan's int range, not answer " + answer + ": " + plan);
+    }
+
+    /**
+     * A PLAN READS ELEMENTS, so it declines a source the space reads flat (2026-11-25): the reserved kv_store label, and
+     * a collection no element carries. After two flat writes the walk counts both, and gremlin_count read the collection
+     * as a label and answered 0, while the label-blind skip and limit read edges. Read as a label, kv_store is every flat
+     * entry's vertex, whose properties are its key and value, so the sum, where and order rows read none of n (the walk
+     * cannot dedup(select(...)) a flat read, so dedup has no row). The rows are
+     * {@code the writes % code % what the walk answers}, and the plan is applied on its own as well (see
+     * {@code CommonRewritesTestContract.runRewriteTest}).
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "/g/kv_scratch/a -> 1; /g/kv_scratch/b -> 2                        % */g/kv_scratch/+.count()          % 2",
+            "/g/kv_scratch/a -> 1; /g/kv_scratch/b -> 2                        % */g/kv_scratch/+.take(5).count()  % 2",
+            "/g/kv_scratch/a -> 1; /g/kv_scratch/b -> 2                        % */g/kv_scratch/+.skip(1).count()  % 1",
+            "/g/kv_store/x -> 1; /g/kv_store/y -> 2; /g/kv_scratch/a -> 3     % */g/kv_store/+.count()            % 2",
+            "/g/kv_store/x -> [n=>1]; /g/kv_store/y -> [n=>2]; /g/kv_scratch/a -> 3  % */g/kv_store/+>>n.sum()                    % 3",
+            "/g/kv_store/x -> [n=>1]; /g/kv_store/y -> [n=>2]; /g/kv_scratch/a -> 3  % */g/kv_store/+.isa([n=>?>1]).count()       % 1",
+            "/g/kv_store/x -> [n=>1]; /g/kv_store/y -> [n=>2]; /g/kv_scratch/a -> 3  % */g/kv_store/+.order(select(n))>-.count()  % 2",
+    })
+    public void testAFlatCollectionAnswersAsTheWalk(final String writes, final String code, final String expected) {
+        for (final String write : writes.split(";"))
+            ObjmtronSerializer.parse(write.trim()).apply();
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        final Obj want = Machine.parse(expected);
+        checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
     }
 
     // ========================================================================
