@@ -169,9 +169,6 @@ public class BootHelperTest extends AbstractMetatronTest {
         final Inst helper = ObjmtronSerializer.parse("|inst?#{?}<=#{?}" + parameters + "{ _ }").apply().asInst();
         final Inst call = mParser.parse("<fs:boot/space/fixture.mtron>" + arguments).<Call>as().insts().getFirst();
         final Function<String, List<fURI>> names = cell -> null == cell ? List.of() : Arrays.stream(cell.split(",")).map(name -> f(name.trim())).toList();
-        // the rows name their parameters and arguments, or give none, as the boot test asserts of every helper and call
-        assertTrue((helper.args().isEmpty() || helper.args().isRec()) && (call.args().isEmpty() || call.args().isRec()),
-                "a row declares and calls by name: " + parameters + " " + arguments);
         assertAll(() -> assertEquals(names.apply(leftOut), leftOut(call, helper), "a call of " + parameters + " with " + arguments + " leaves out"),
                 () -> assertEquals(names.apply(undeclared), undeclared(call, helper), "a call of " + parameters + " with " + arguments + " passes undeclared"));
     }
@@ -208,8 +205,9 @@ public class BootHelperTest extends AbstractMetatronTest {
 
     /**
      * the names an argument list gives, in order and coefficients aside: the parser keeps a key's coefficient in its
-     * uri ({?}port is port{?}). both tests refuse an ordered list before they ask (an ordered list's keys are its
-     * indices), and the empty one has no keys
+     * uri ({?}port is port{?}). an ordered list's keys are its indices, which are not uris, so this throws on one: the
+     * boot test refuses an ordered call or declaration before it asks, the binder rows declare and call by name or not
+     * at all, and the empty lst has no keys
      */
     private static Set<fURI> names(final Poly<?, ?> arguments) {
         return arguments.keys().map(key -> key.uriValue().cLess()).collect(Collectors.toCollection(LinkedHashSet::new));
