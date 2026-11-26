@@ -55,7 +55,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public interface Uri extends Mono, Comparable<Uri> {
 
     Uri ONE = uri();
-    Uri ZERO = uri().c(0L).asUri();
+    // THE ZERO OF THE URI RING, {1}noobj, the uri of a hole (Marko, 2026-11-25: "<noobj> might have to be a sentinel",
+    // "{1}noobj"), as lst::T's is [noobj]: no address runs through a hole, so it adds nothing to a sum and is what a sum
+    // answers when its terms cancel (plus), and it absorbs an extension on either side (mult). At point 1 it is no
+    // noobj ({0} is, and stays the stream's zero), so a rec names it and it flows as an operand
+    Uri ZERO = uri(f("noobj"));
 
     // Uri with coefficient {0}: noobj typed as a Uri, for a method that answers a Uri or nothing.
     // its payload is the zero address itself (the MUri constructor reads its payload)
@@ -126,7 +130,19 @@ public interface Uri extends Mono, Comparable<Uri> {
         return ZERO;
     }
 
+    /**
+     * THE ADDITIVE INVERSE: each term at its point negated, in the value itself ({@code /a/b} at -1), because the sum
+     * ({@link #plus}) counts the argument's terms by their points while this uri's own coefficient floats, so a term
+     * and its negation cancel on either side. The uri of a hole is its own negation, as zero is.
+     */
+    default Uri neg() {
+        return Helper.throughHole(this.uriValue()) ? ZERO
+                : this.jvm(fURI.Helper.sum(this.uriValue().branches().map(term -> term.d(term.d().neg())))).asUri();
+    }
+
     default Uri mult(final Uri rhs) {
+        if (Helper.throughHole(this.uriValue()) || Helper.throughHole(rhs.uriValue()))
+            return ZERO;
         return this.equals(ONE) ? rhs : rhs.equals(ONE) ? this : this.jvm(this.uriValue().extend(rhs.uriValue())).c(c -> c.mult(rhs.c())).asUri();
     }
 
@@ -135,11 +151,18 @@ public interface Uri extends Mono, Comparable<Uri> {
      * count lives in the value's points: {@code /a + /a} is {@code </a{2}>}, {@code /a/b{2} + /a/c} is
      * {@code </a/{{2}b,c}>}, and split ({@code -<}) hands each term back. The argument counts as often as its
      * coefficient says, while this uri's own coefficient floats (Stream Ring Theory, Thm 6): {@code {2}/a/b + /a/c} is
-     * {@code {2}</a/{b,c}>}, two of the sum (Marko 2026-11-08, option A).
+     * {@code {2}</a/{b,c}>}, two of the sum (Marko 2026-11-08, option A). The uri of a hole ({@link #ZERO}) adds
+     * nothing, so either operand answers the other as it is, and terms that cancel answer it: {@code /a/b + {-1}/a/b}
+     * is the sentinel {@code {1}noobj}, where the canonical sum's zero address would be noobj, nothing on the stream.
      */
     default Uri plus(final Uri rhs) {
+        if (Helper.throughHole(this.uriValue()))
+            return rhs;
+        if (Helper.throughHole(rhs.uriValue()))
+            return this;
         final fURI counted = rhs.uriValue().d(rhs.uriValue().d().mult(rhs.c()));
-        return this.jvm(fURI.Helper.sum(Stream.of(this.uriValue(), counted))).asUri();
+        final fURI sum = fURI.Helper.sum(Stream.of(this.uriValue(), counted));
+        return sum.d().isZero() ? ZERO : this.jvm(sum).asUri();
     }
 
     @Override
@@ -394,6 +417,14 @@ public interface Uri extends Mono, Comparable<Uri> {
 
         private Helper() {
             // do nothing
+        }
+
+        /**
+         * Whether a uri runs through the hole: a path with the zero's segment ({@code noobj}) in it, which no address
+         * runs through, as a lst through a hole holds no word. A zero address ({@code {0}}) is noobj, not a hole.
+         */
+        static boolean throughHole(final fURI uri) {
+            return !uri.d().isZero() && uri.path().contains(ZERO.uriValue().path().getFirst());
         }
 
         public static Rec uriToRec(final Uri u) {

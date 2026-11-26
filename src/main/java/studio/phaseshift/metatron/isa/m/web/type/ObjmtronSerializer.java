@@ -313,7 +313,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 // a bare uri can no longer hold an '@' (it is the vid separator — see mParser), so a value
                 // that really carries one is written wrapped, which keeps the postfix unambiguous
                 uriString.contains("@") ||
-                uriString.contains(".");
+                uriString.contains(".") ||
+                // the bare word noobj is the stream's zero (noobj{0}), so the uri of a hole, {1}noobj, is <noobj>
+                "noobj".equals(uriString);
     }
 
     private static String wrapUri(final fURI furi) {

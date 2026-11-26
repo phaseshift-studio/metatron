@@ -354,7 +354,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI path(final String path) {
-        return this.path(Arrays.stream(path.split("/")).toList());
+        return this.path(fURI.Helper.split(path));
     }
 
     @Override
@@ -645,7 +645,7 @@ public abstract class AbstractfURI implements fURI {
         if (segment.isEmpty() && this.path().getFirst().isEmpty())
             return this;
         final List<String> newPath = new ArrayList<>();
-        final List<String> prefix = Arrays.asList(segment.split("/"));
+        final List<String> prefix = fURI.Helper.split(segment);
         // an authority's path is absolute, an empty one's too (file:///a prepended with x is file:///x/a)
         if ((segment.startsWith("/") && !this.pathString().startsWith("/")) || null != this.host())
             newPath.add("");
@@ -663,7 +663,7 @@ public abstract class AbstractfURI implements fURI {
         if (segment.isEmpty() && !this.path().isEmpty() && this.path().getLast().isEmpty())
             return this.asBranch();
         final List<String> newPath = new ArrayList<>(this.path());
-        final List<String> prefix = new ArrayList<>(List.of(segment.split("/")));
+        final List<String> prefix = new ArrayList<>(fURI.Helper.split(segment));
         if (!newPath.isEmpty() && newPath.getLast().isEmpty())
             newPath.removeLast();
         if (!newPath.isEmpty() && (!prefix.isEmpty() && prefix.getFirst().isEmpty()))
@@ -787,7 +787,7 @@ public abstract class AbstractfURI implements fURI {
         if (segment.isEmpty() && !this.path().isEmpty() && this.path().getFirst().isEmpty())
             return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path().subList(1, this.path().size()), this.d(), this.poly(), this.qMap(), this.templates());
         if (this.hasPrefix(segment))
-            return this.pretract(segment.split("/").length);
+            return this.pretract(fURI.Helper.split(segment).size());
         return this;
     }
 
@@ -849,7 +849,7 @@ public abstract class AbstractfURI implements fURI {
     @Override
     public fURI retract(final String segment) {
         if (this.hasPrefix(segment))
-            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path().subList(0, this.path().size() - segment.split("/").length), this.d(), this.poly(), this.qMap(), this.templates());
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path().subList(0, this.path().size() - fURI.Helper.split(segment).size()), this.d(), this.poly(), this.qMap(), this.templates());
         return this;
     }
 

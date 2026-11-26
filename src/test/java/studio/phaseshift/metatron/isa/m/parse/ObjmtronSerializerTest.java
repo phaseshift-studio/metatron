@@ -111,6 +111,8 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
             "ws://user@host:8555/mtron         % <ws://user@host:8555/mtron>",
             "user@domain.com                   % <user@domain.com>",
             "ws://user@domain.com:8555/mtron   % <ws://user@domain.com:8555/mtron>",
+            // the uri of a hole, the uri ring's zero: bare, noobj is the stream's zero, noobj{0}
+            "noobj                             % <noobj>",
     }, delimiter = '%')
     void testAUriIsWrittenWithAnUnambiguousSpelling(final String value, final String expected) {
         final Obj written = ObjmtronSerializer.parse(expected).apply();

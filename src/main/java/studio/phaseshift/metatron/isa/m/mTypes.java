@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.List;
@@ -36,7 +37,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.uri0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -220,23 +220,25 @@ public final class mTypes {
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(STR_TID).rng(STR_TID)).tryToInst(),
                                 uri(ID), str("")),
                         MONOID_THEORY_TID, null))));
-        // uri: a monoid under extension (mult), identity the empty uri <>; branch (plus) is a commutative
-        // semigroup with no identity — a/b + <> = {a/b,<>}, never a/b, so there is no zero object, only a one.
+        // uri: the PATH RING. PLUS is the sum, a branch of addresses ({a/b,c/d}), MULT is extension (a/b·c/d is
+        // a/b/c/d), the empty uri <> is the one, and the zero is {1}noobj, the uri of a hole (Uri.ZERO): it adds nothing
+        // to a sum, a sum whose terms cancel answers it, and it absorbs an extension. It cannot be noobj, a zero
+        // address: a rec drops a noobj value (this declaration would lose it) and a noobj operand flows nothing
         declare(URI_TYPE, rec(mutableMap(
                 uri("ring"), rec(mutableMap(
                                 uri(ADD), auto_from_(PLUS_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
                                 uri(MUL), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
-                                uri(Tokens.ZERO), uri0(),
+                                uri(Tokens.ZERO), Uri.ZERO,
                                 uri(Tokens.ONE), uri()),
                         RING_THEORY_TID, null),
                 uri("add_group"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
-                                uri(ID), uri0(),
+                                uri(ID), Uri.ZERO,
                                 uri(INV), auto_from_(NEG_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst()),
                         GROUP_THEORY_TID, null),
                 uri("add_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
-                                uri(ID), uri0()),
+                                uri(ID), Uri.ZERO),
                         MONOID_THEORY_TID, null),
                 uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),

@@ -1310,6 +1310,9 @@ public class fURITest extends AbstractMetatronTest {
             "mtron://www.com:8999/b/c/d  | a/b/c   |  mtron://www.com:8999/a/b/c/b/c/d",
             "mtron://www.com/b/c/d       | /a/b/c  |  mtron://www.com//a/b/c/b/c/d",
             "mtron://www.com/b/c/d{2}    | /a/b/c  |  mtron://www.com//a/b/c/b/c/d{2}",
+            // a branch is one segment: the '/' inside its braces is the branch's (fURI.Helper.split)
+            "/c/d                        | {a/b,x}   |  {a/b,x}/c/d",
+            "/c/d                        | /{a/b,x}  |  /{a/b,x}/c/d",
     },
             delimiter = '|')
     public void testPrepend(final String base, final String prepend, final String expected) {
@@ -1366,12 +1369,51 @@ public class fURITest extends AbstractMetatronTest {
             "mtron://www.com:8999/b/c/d  | a/b/c   |  mtron://www.com:8999/b/c/d/a/b/c",
             "mtron://www.com/b/c/d       | /a/b/c  |  mtron://www.com/b/c/d/a/b/c",
             "mtron://www.com/b/c/d{2}    | /a/b/c  |  mtron://www.com/b/c/d/a/b/c{2}",
+            // a branch is one segment: the '/' inside its braces is the branch's (fURI.Helper.split)
+            "/a/b                        | {c/d,e/f}   |  /a/b/{c/d,e/f}",
+            "/a/b                        | /{c/d,e/f}  |  /a/b/{c/d,e/f}",
+            "a                           | {b/c,d}/e   |  a/{b/c,d}/e",
+            "/a                          | {b/c,d/e}/  |  /a/{b/c,d/e}/",
     }, delimiter = '|', emptyValue = "''")
     public void testExtend(String base, final String prepend, final String expected) {
         LOG.debug("testing {{b}}%s{{X}} extend {{b}}%s{{X}} [expected: %s]", f(base), f(prepend), f(expected));
         base = base.equals("X") ? "" : base;
         assertEquals(f(expected), f(base).extend(prepend));
         checkEquals(f(base).extend(prepend), f(expected));
+    }
+
+    /**
+     * A BRANCH IS ONE SEGMENT OF A PATH'S TEXT: fURI.Helper.split cuts only at the slashes outside braces, as the parser
+     * does, so the operations that take a path as text (extend, prepend, path, pretract, retract) keep a branch of
+     * sub-paths whole, and on a path with no braces it is {@code String.split("/")} itself. String.split made
+     * {@code {c/d,e/f}} the segments {@code {c}, {d,e}, {f}}, so {@code /a/b} extended by a branch was unequal to the
+     * same uri parsed, and a product of uris unequal to the sum it distributes to (UriTest)
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/{b/c,d}/e       % [a, {b/c,d}, e]",
+            "/{a/b,c/d}        % [, {a/b,c/d}]",
+            "{a/b,c}/          % [{a/b,c}]",
+            "{a/b,{c/d,e}}/f   % [{a/b,{c/d,e}}, f]",
+            "{a/b,c}           % [{a/b,c}]",
+            "a/b               % [a, b]",
+            "/a/b/             % [, a, b]",
+            "a//b              % [a, , b]",
+            "/                 % []",
+    }, delimiter = '%')
+    public void testABranchIsOneSegmentOfAPathsText(final String path, final String segments) {
+        assertEquals(segments, fURI.Helper.split(path).toString());
+        if (path.indexOf('{') < 0)
+            assertEquals(List.of(path.split("/")), fURI.Helper.split(path));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/q    % x/{b/c,d}     % x/{b/c,d}",
+            "/q    % /{a/b,c}/x    % /{a/b,c}/x",
+    }, delimiter = '%')
+    public void testAPathSetFromTextKeepsABranchWhole(final String furi, final String path, final String expected) {
+        assertEquals(f(expected), f(furi).path(path));
     }
 
     @ParameterizedTest

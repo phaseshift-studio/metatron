@@ -1129,6 +1129,35 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         }
 
         /**
+         * A PATH'S TEXT CUT INTO ITS SEGMENTS, as {@code String.split("/")} cuts it, but only at a {@code /} outside braces:
+         * the {@code /} inside a branch ({@code {a/b,c/d}}, a sum of sub-paths) is the branch's, so the branch stays one
+         * segment, as the parser keeps it. A naive split made {@code {a/b,c/d}} the segments {@code {a}, {b,c}, {d}}.
+         * Otherwise it is {@code split}'s exactly: no {@code /} answers the text itself, and trailing empty segments drop.
+         */
+        public static List<String> split(final String path) {
+            if (path.indexOf('{') < 0)
+                return List.of(path.split("/"));
+            final List<String> segments = new ArrayList<>();
+            int depth = 0;
+            int start = 0;
+            for (int i = 0; i < path.length(); i++) {
+                final char ch = path.charAt(i);
+                if ('{' == ch)
+                    depth++;
+                else if ('}' == ch)
+                    depth = Math.max(0, depth - 1);
+                else if ('/' == ch && 0 == depth) {
+                    segments.add(path.substring(start, i));
+                    start = i + 1;
+                }
+            }
+            segments.add(path.substring(start));
+            while (!segments.isEmpty() && segments.getLast().isEmpty())
+                segments.removeLast();
+            return segments;
+        }
+
+        /**
          * THE POLY RULE — the poly component of a fURI types PARAMETER POSITIONS, never a keyed map. The legal
          * readings, and why each is what it is:
          * <ul>

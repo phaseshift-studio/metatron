@@ -151,6 +151,35 @@ public class UriTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * THE URI RING'S ZERO IS {@code {1}noobj}, the uri of a hole (Marko, 2026-11-25; Uri.ZERO), as lst::T's is
+     * {@code [noobj]}: it adds nothing on either side, a sum whose terms cancel answers it, it absorbs an extension on
+     * either side, and it is its own negation. It is no noobj, so it flows as a left operand, where a zero address
+     * ({@code {0}<>}) flows nothing. A negation counts against a term's own point, so a term and its negation cancel in
+     * either order, and minus is the sum with the negated argument. A product distributes over a sum, extension keeping
+     * a branch one segment
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<a/b>.zero()                                % <noobj>",
+            "<noobj>.plus(<a/b>)                         % <a/b>",
+            "<a/b>.plus(<noobj>)                         % <a/b>",
+            "<a/b>.mult(<noobj>)                         % <noobj>",
+            "<noobj>.mult(<a/b>)                         % <noobj>",
+            "<a/b>.plus(<a/b>.neg())                     % <noobj>",
+            "<a/b>.neg().plus(<a/b>)                     % <noobj>",
+            "<a/b>.minus(<a/b>)                          % <noobj>",
+            "<noobj>.minus(<a/b>)                        % <a/b>.neg()",
+            "<a/b>.plus(<c/d>).minus(<c/d>)              % <a/b>",
+            "<a/b>.neg().neg()                           % <a/b>",
+            "<noobj>.neg()                               % <noobj>",
+            "<a/b>.mult(<c/d>.plus(<a/b>))               % <a/b/{a/b,c/d}>",
+            "<a/b>.mult(<c/d>).plus(<a/b>.mult(<a/b>))   % <a/b/{a/b,c/d}>",
+    }, delimiter = '%')
+    public void testTheZeroIsTheUriOfAHole(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "a/b/c.-</                        % [a,b,c]",

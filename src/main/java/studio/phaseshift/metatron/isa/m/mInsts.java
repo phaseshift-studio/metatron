@@ -626,11 +626,21 @@ public final class mInsts {
                         .body((lhs, inst) -> uri(lhs.uriValue().name()))
                         .law(Law.pure, Law.idempotent)
                         .create(),
-                InstBuilder.build().tid(MINUS_INST_TID, "remove the argument uri text from the lhs uri")
-                        .dom(URI_TID, "the lhs uri").rng(URI_TID, "the uri with the argument text removed")
-                        .argLst(T(URI_TID), "the uri text to remove")
-                        .body((lhs, inst) -> uri(lhs.uriValue().toString().replace(inst.arg(0).uriValue().toString(), "")))
-                        .law(Law.pure, Law.monoidic, Law.commutative)
+                InstBuilder.build().tid(NEG_INST_TID, "the additive inverse of the uri")
+                        .dom(URI_TID, "the uri to negate").rng(URI_TID, "the negated uri").argLst()
+                        .body((lhs, inst) -> lhs.asUri().neg())
+                        .converse(NEG_INST_TID.dom(URI_TID).rng(URI_TID))
+                        .law(Law.involution, Law.pure)
+                        .create(),
+                // THE RING'S DIFFERENCE, the lhs plus the negated argument, so a uri minus itself is the uri zero. It
+                // replaced a removal of the argument's text from the lhs's, which no ring law holds of
+                InstBuilder.build().tid(MINUS_INST_TID, "subtract the argument uri from the lhs uri")
+                        .dom(URI_TID, "the lhs uri").rng(URI_TID, "the lhs plus the negated argument")
+                        .argLst(T(URI_TID), "the uri to subtract from the lhs")
+                        .body((lhs, inst) -> lhs.asUri().plus(inst.arg(0).asUri().neg()))
+                        .converse(PLUS_INST_TID.dom(URI_TID).rng(URI_TID).args(URI_TID))
+                        .derivation(minus_(T(ALL, f("b"), null, null)), plus_(map_(T(ALL, f("b"), null, null)).neg_()))
+                        .law(Law.action, Law.pure)
                         .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "union the path of the lhs uri with the path of the argument uri")
                         .dom(URI_TID, "a uri").rng(URI_TID.maybe(), "the branch union")
@@ -654,8 +664,9 @@ public final class mInsts {
                         .law(Law.pure, Law.idempotent, Law.unit)
                         .create(),
                 InstBuilder.build().tid(ZERO_INST_TID, "the zero of the uri ring")
-                        .dom(URI_TID, "the lhs rec").rng(URI_TID, "the zero uri").argLst()
+                        .dom(URI_TID, "a uri").rng(URI_TID, "the uri zero").argLst()
                         .body((lhs, inst) -> lhs.asUri().zero())
+                        .desc("a zero function: the uri zero ({1}noobj, the uri of a hole)")
                         .law(Law.unit, Law.idempotent, Law.pure)
                         .create(),
                 InstBuilder.build().tid(SUM_INST_TID, "add a uri stream into a single uri")
