@@ -42,7 +42,9 @@ import java.util.function.DoubleSupplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_ANALYZER_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -288,9 +290,12 @@ public class BasicAnalyzer extends MRec implements Analyzer {
      * starts the thread where its caller stands. The pending flag is cleared before the analysis is read, so a change
      * landing during the publication schedules the next one: the last change of a burst is never left unpublished.
      * <p>
-     * The thread is a metatron one, listed under {@code /sys/thread/executor} while it waits out its step. Making one
-     * writes it at its vid, here, on the thread that recorded the change: if that fails, the change goes unpublished
-     * and the recording goes on, and the next change schedules again.
+     * The thread is a metatron one, listed under {@code /sys/thread/executor} while it waits out its step, and it is the
+     * ANALYZER'S: its source is the analyzer's address, never the thread that recorded the change. That thread is an
+     * evaluation most often (the processor counts each run where it runs), and naming it would list the publication among
+     * the threads the evaluation started (a timeout's alarms are told by their source). Making one writes it at its vid,
+     * here, on the thread that recorded the change: if that fails, the change goes unpublished and the recording goes
+     * on, and the next change schedules again.
      */
     private Analyzer changed() {
         // an observer's work is counted above and announced never (OBSERVING): the loop it would close is the
@@ -302,12 +307,13 @@ public class BasicAnalyzer extends MRec implements Analyzer {
             this.pending.set(false);
             return this;
         }
-        final fURI address = machine.vid().resolve().extend(this.component).extend(ANALYZER).extend(ANALYSIS);
+        final fURI analyzer = machine.vid().resolve().extend(this.component).extend(ANALYZER);
+        final fURI address = analyzer.extend(ANALYSIS);
         // THE PUBLICATION IS AN OBSERVATION: its thread is started marked, so it reads its subscriptions and starts each
         // delivery marked, and whatever a delivery runs is the observer's work
         OBSERVING.set(true);
         try {
-            QCollection.docWrap(VirtualThread.virtual(instLambda(_ -> {
+            QCollection.docWrap(new VirtualThread(mutableMap(uri(CODE), instLambda(_ -> {
                 try {
                     // the step is any int the type admits: a negative one is no wait, not a sleep that throws
                     CommonUtil.sleepThread(Math.max(0L, this.at(uri(STEP)).orElse(jnt(DEFAULT_STEP)).intValue()));
@@ -323,7 +329,8 @@ public class BasicAnalyzer extends MRec implements Analyzer {
                     this.logger().debug("unable to publish %s: %s", address, e.getMessage());
                 }
                 return noobj();
-            })), "metatron-analyzer-" + this.component).applyAsync();
+            }), uri(SOURCE), auto_from_(analyzer).tryToInst()), MACH_VIRTUAL_THREAD_TID, null),
+                    "metatron-analyzer-" + this.component).applyAsync();
         } catch (final Exception e) {
             // ... and so is one that breaks the recording, or stops every publication after it
             this.pending.set(false);

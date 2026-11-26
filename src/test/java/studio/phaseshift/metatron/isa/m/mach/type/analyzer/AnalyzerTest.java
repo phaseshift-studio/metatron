@@ -41,6 +41,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -55,6 +56,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -422,6 +424,44 @@ public class AnalyzerTest extends AbstractMetatronTest {
             assertInstanceOf(VirtualThread.class, Machine.read(publication), "a virtual thread");
             assertTrue(awaitsStopped(publication, PUBLISHED_MS),
                     () -> "listed as ended once it has published: " + listedThreads(STOP));
+        } finally {
+            machine.pop();
+        }
+    }
+
+    /**
+     * A PUBLICATION IS ITS ANALYZER'S THREAD, never the thread that recorded the change. The change here is recorded on a
+     * metatron thread, which is where an evaluation runs (the processor counts each run there): the publication names
+     * the analyzer's address as its source, an address that reads back as the analyzer, and the recording thread is the
+     * source of no thread, so the threads a thread is the source of are the ones it started itself.
+     */
+    @Test
+    void shouldSourceAPublicationAtItsAnalyzerNotAtTheThreadThatRecorded() throws Exception {
+        final Machine machine = Machine.current().push(f("analyzer_source"));
+        try {
+            final AtomicReference<AbstractThread> heardOn = new AtomicReference<>();
+            Machine.write(f("~/network/analyzer/analysis").addQ(SUBQ), instLambda((pub, inst) -> {
+                heardOn.compareAndSet(null, BootLoader.CURRENT_THREAD.get());
+                return noobj();
+            }));
+            final int ended = listedThreads(STOP).size();
+            final VirtualThread recorder = VirtualThread.virtual(instLambda(_ -> {
+                machine.network().analyzer().incr(f(WIRE).extend(f(SENT)), 1L);
+                return noobj();
+            }));
+            recorder.applyAsync().get(5, TimeUnit.SECONDS);
+            await(() -> null != heardOn.get(), "the subscriber to hear the change");
+            final AbstractThread publication = assertInstanceOf(AbstractThread.class,
+                    Machine.read(heardOn.get().sourceVid().orElseThrow()), "the delivery's source is the publication");
+            final fURI analyzer = machine.vid().extend(f("network/analyzer")).resolve();
+            assertEquals(Optional.of(analyzer), publication.sourceVid(), "the publication is its analyzer's thread");
+            assertInstanceOf(Analyzer.class, Machine.read(analyzer), "whose address reads back as the analyzer");
+            final List<fURI> stopped = listedThreads(STOP);
+            assertEquals(List.of(), Stream.concat(listedThreads(RUN).stream(), stopped.subList(ended, stopped.size()).stream())
+                            .filter(vid -> Machine.read(vid) instanceof AbstractThread thread
+                                    && thread.sourceVid().filter(recorder.vid()::equals).isPresent())
+                            .toList(),
+                    "and the thread that recorded the change is the source of none");
         } finally {
             machine.pop();
         }
