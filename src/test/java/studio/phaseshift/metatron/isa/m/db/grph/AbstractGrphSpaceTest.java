@@ -290,6 +290,26 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
         }
     }
 
+    /**
+     * A NEGATIVE COUNT IS THE WALK'S (2026-11-26, DBRewriteBuilder.build), as on tble ({@code AbstractTbleSpaceTest},
+     * which explains it): the walk's take and skip of a negative count count from the end, and gremlin_limit and
+     * gremlin_skip handed the count to the traversal as it was. The rows are
+     * {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*/grt/V/+.take(-1).count()                    % 1  % from",
+            "*/grt/V/+.skip(-1).count()                    % 9  % from",
+            "*/grt/V/+.isa([value=>?>5]).take(-1).count()  % 1  % gremlin_where",
+            "*/grt/V/+.skip(2).take(-1).count()            % 1  % gremlin_skip",
+    })
+    public void testANegativeCountIsTheWalks(final String code, final String expected, final String reads) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+        checkEquality(LOG, Machine.parse(expected), MCode.of(plan.asCode().insts()).apply(), true);
+    }
+
     // ========================================================================
     //  AbstractDataPathSpaceTest — flat namespace wiring
     // ========================================================================

@@ -1565,6 +1565,27 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     }
 
     /**
+     * A NEGATIVE COUNT IS THE WALK'S (2026-11-26, DBRewriteBuilder.build), as on tble ({@code AbstractTbleSpaceTest},
+     * which explains it): the walk's take of a negative count counts from the end, so {@code take(-1)} answers the last
+     * document and {@code take(-2)} the last two, and mql_limit and mql_where_limit handed the count to MongoDB as it was.
+     * MongoDB reads a negative limit as one batch from the start. The rows are
+     * {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*mongo:rewrite_test/+.take(-1).count()                     % 1   % from",
+            "*mongo:rewrite_test/+.take(-1)>>value                      % 10  % from",
+            "*mongo:rewrite_test/+.take(-2)>>value.sum()                % 19  % from",
+            "*mongo:rewrite_test/+.isa([value=>?>5]).take(-1)>>value    % 10  % mql_where",
+    })
+    public void testANegativeCountIsTheWalks(final String code, final String expected, final String reads) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+        checkEquality(LOG, Machine.parse(expected), MCode.of(plan.asCode().insts()).apply(), true);
+    }
+
+    /**
      * A PLAN TAKES ITS SOURCE APART AS THE DOCUMENT READ DOES, AND READS DOCUMENTS (2026-11-25). The read's first segment
      * is the collection, absolute or not. Routed to an absolute path, as dcmntSpace's own docs route {@code mongo:} to
      * {@code /mongo/}, {@code *amongo:rewrite_test/+} is read as collection {@code amongo}, which holds nothing, and

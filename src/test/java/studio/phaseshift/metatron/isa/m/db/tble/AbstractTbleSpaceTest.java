@@ -2867,6 +2867,27 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     /**
+     * A NEGATIVE COUNT IS THE WALK'S (2026-11-26, DBRewriteBuilder.build): the walk's take and skip of a negative count
+     * count from the end ({@code take(-1)} answers the last row, {@code skip(-1)} all but it), and the limit and offset
+     * plans handed the count to the store as it was. A match holding one is left to the walk, so a plan before it still
+     * reads. The rows are {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on
+     * its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:rewrite_test/+.take(-1).count()                            % 1  % from",
+            "*db:rewrite_test/+.skip(-1).count()                            % 9  % from",
+            "*db:rewrite_test/+.isa([value=>?>5]).take(-1).count()          % 1  % sql_where",
+            "*db:rewrite_test/+.skip(2).take(-1).count()                    % 1  % sql_offset",
+    })
+    public void testANegativeCountIsTheWalks(final String code, final String expected, final String reads) {
+        checkCodeParseApply(LOG, code, expected);
+        final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+        checkEquality(LOG, Machine.parse(expected), MCode.of(plan.asCode().insts()).apply(), true);
+    }
+
+    /**
      * A REAL SUM IS A REAL (2026-11-26). The sum plans declared an int range: they answered a sum's {@code longValue()}
      * ({@code sql_sum_column} answered the products' prices with their integer part), and from 2026-11-25 the range
      * refused the real. They declare the generic range {@code A} over their nullary domain {@code #{0}} now (Marko: a
