@@ -1163,13 +1163,15 @@ public class mInstSet extends AbstractInstSet {
                         // would count 2 where each member counts 1
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("branch_factor"), code -> {
                             final fURI op = TheoryHelper.additiveWitness(T(CODE_TID));
-                            // a chain that holds no occurrence of the op has nothing to factor, so it is never typed for one
-                            // (the typing is a resolver probe of the whole chain, and almost no chain branches)
-                            final List<Inst> insts = code.insts();
-                            if (null == op || insts.stream().noneMatch(inst -> op.basePath().equals(inst.tid().basePath())))
+                            if (null == op)
                                 return code;
+                            final List<Inst> insts = code.insts();
                             final Predicate<Obj> factorable = m -> m.isCode() && m.c().isOne() && 1 < m.asCode().insts().size();
-                            // the rewriter runs before resolution, so a head's form and purity are read for the carrier flowing into its branch
+                            // the rewriter runs before resolution, so a head's form and purity are read for the carrier flowing into its branch.
+                            // EVERY CHAIN IS PROBED, ONE WITHOUT THE OP TOO (2026-11-25): the probe memoizes a chain that resolves whole by
+                            // its identity (Resolver.Helper.RESOLVE_CACHE), and the compile runs that walk after a later rule rewrites the
+                            // code in place (DBRewriteBuilder's selfJVM, split_merge_*, pred_extract). Skipping the probe ran those rules'
+                            // outputs instead, and the gremlin_count and mql_limit plans answer differently from the walk
                             final List<Type> carriers = Rewriter.Helper.carriers(code);
                             boolean changed = false;
                             final List<Inst> out = new ArrayList<>(insts.size() + 1);
