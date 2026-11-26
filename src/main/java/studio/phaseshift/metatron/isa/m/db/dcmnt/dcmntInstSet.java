@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.db.dcmnt;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import org.bson.BsonTimestamp;
@@ -205,11 +206,10 @@ public class dcmntInstSet extends AbstractInstSet {
                         CommonRewrites.limitRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_limit"),
-                                (space, dp, limit) -> {
-                                    final String collectionName = dp.collection();
-                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    return readDocumentsAsObjs(collection, space, (int) limit);
-                                },
+                                // MongoDB's find().limit(0) means "no limit" (returns everything), unlike SQL LIMIT 0
+                                // (returns nothing), so the zero case is guarded
+                                (space, dp, limit) -> 0 == limit ? noobj() : readDocuments(space, dp.collection(),
+                                        space.getDatabase().getCollection(dp.collection()).find().limit((int) limit)),
                                 dcmntInstSet::readsDocuments
                         ),
 
@@ -218,13 +218,12 @@ public class dcmntInstSet extends AbstractInstSet {
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where"),
                                 (space, dp, predicateStr) -> {
-                                    final String collectionName = dp.collection();
-                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     final Bson filter = parseMongoFilter(predicateStr);
                                     if (filter == null) {
                                         throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
                                     }
-                                    return readFilteredDocumentsAsObjs(collection, space, filter);
+                                    return readDocuments(space, dp.collection(),
+                                            space.getDatabase().getCollection(dp.collection()).find(filter));
                                 },
                                 MQLRewriteUtils.PREDICATE_JOINER,
                                 MQLRewriteUtils.CONDITION_FORMATTER,
@@ -253,26 +252,14 @@ public class dcmntInstSet extends AbstractInstSet {
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where"),
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where_limit"),
                                 (space, dp, predicateStr, limit) -> {
-                                    final String collectionName = dp.collection();
-                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     final Bson filter = parseMongoFilter(predicateStr);
                                     if (filter == null) {
                                         throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
                                     }
-                                    // MongoDB's limit(0) means "no limit", as readDocumentsAsObjs guards for the
-                                    // unfiltered take(0): the filtered one returned every match
-                                    if (limit == 0)
-                                        return noobj();
-                                    final Type collectionType = SchemaSpace.Helper.type(space, collectionName);
-                                    return objs(IteratorUtil.stream(collection.find(filter).limit((int) limit).iterator()).map(doc -> {
-                                        final Object docId = doc.get(ID_FIELD_STRING);
-                                        final String idStr = docId instanceof org.bson.types.ObjectId oid
-                                                ? oid.toHexString() : docId.toString();
-                                        return typeDocument(
-                                                space.getSerializer().read(doc.toBsonDocument())
-                                                        .selfVID(documentVID(space, collectionName, idStr)),
-                                                collectionType);
-                                    }));
+                                    // MongoDB's limit(0) means "no limit", as mql_limit guards for the unfiltered
+                                    // take(0): the filtered one returned every match
+                                    return 0 == limit ? noobj() : readDocuments(space, dp.collection(),
+                                            space.getDatabase().getCollection(dp.collection()).find(filter).limit((int) limit));
                                 }
                         ),
 
@@ -289,13 +276,14 @@ public class dcmntInstSet extends AbstractInstSet {
                                     for (final String col : columns) {
                                         projection.append(col, 1);
                                     }
-                                    // Exclude _id unless explicitly requested
+                                    // Exclude _id unless requested: a requested _id is read only to be stripped, as
+                                    // the walk strips it from every document it reads
                                     if (!columns.contains(ID_FIELD_STRING)) {
                                         projection.append(ID_FIELD_STRING, 0);
                                     }
 
                                     return objs(IteratorUtil.stream(collection.find().projection(projection).iterator())
-                                            .map(doc -> space.getSerializer().read(doc.toBsonDocument())));
+                                            .map(space::processDocument));
                                 },
                                 dcmntInstSet::readsDocuments
                         )
@@ -324,50 +312,30 @@ public class dcmntInstSet extends AbstractInstSet {
      * collection has no type.
      */
     private static Obj typeDocument(final Obj document, final Type collectionType) {
-        // Only type a document the collection type actually accepts: Mongo's own
-        // `_id` is part of the document body (unlike a SQL primary key), so a
-        // closed collection type rejects it.  Stamping a non-instance would make
+        // Only type a document the collection type actually accepts: a value stored
+        // at an entry (dcmntSpace wraps it) is no document, and a document another
+        // client wrote need not fit the type.  Stamping a non-instance would make
         // the native rewrites fail their result-type check.
         return collectionType == null || !document.test(collectionType)
                 ? document : document.tid(collectionType.vid());
     }
 
     /**
-     * Read documents from a collection with an optional limit, returning as Objs.
+     * THE DOCUMENTS A FIND ANSWERS, EACH READ AS THE WALK READS IT (2026-11-26): through
+     * {@link dcmntSpace#processDocument}, so its {@code _id} is stripped, a value stored at an entry is unwrapped and a
+     * reference is read as one, at the vid the walk gives it, typed to its collection. The plans read the raw document:
+     * their documents kept the {@code _id} the walk strips, a stored value read as the document that wraps it, and a
+     * document holding a reference failed, as the driver decodes one as a {@code DBRef} that {@code toBsonDocument}
+     * has no codec for.
      */
-    private static Obj readDocumentsAsObjs(final MongoCollection<Document> collection,
-                                           final dcmntSpace space,
-                                           final int limit) {
-        // MongoDB's find().limit(0) means "no limit" (returns everything), unlike SQL
-        // LIMIT 0 (returns nothing) — so guard the zero case explicitly.
-        if (limit == 0)
-            return noobj();
-        final String collectionName = collection.getNamespace().getCollectionName();
+    private static Obj readDocuments(final dcmntSpace space, final String collectionName,
+                                     final FindIterable<Document> found) {
         final Type collectionType = SchemaSpace.Helper.type(space, collectionName);
-        return objs(IteratorUtil.stream(collection.find().limit(limit).iterator()).map(doc -> {
+        return objs(IteratorUtil.stream(found.iterator()).map(doc -> {
             final Object docId = doc.get(ID_FIELD_STRING);
             final String idStr = docId instanceof org.bson.types.ObjectId oid
                     ? oid.toHexString() : docId.toString();
-            return typeDocument(
-                    space.getSerializer().read(doc.toBsonDocument()).selfVID(documentVID(space, collectionName, idStr)),
-                    collectionType);
-        }));
-    }
-
-    /**
-     * Read filtered documents from a collection, returning as Objs.
-     */
-    private static Obj readFilteredDocumentsAsObjs(final MongoCollection<Document> collection,
-                                                   final dcmntSpace space,
-                                                   final Bson filter) {
-        final String collectionName = collection.getNamespace().getCollectionName();
-        final Type collectionType = SchemaSpace.Helper.type(space, collectionName);
-        return objs(IteratorUtil.stream(collection.find(filter).iterator()).map(doc -> {
-            final Object docId = doc.get(ID_FIELD_STRING);
-            final String idStr = docId instanceof org.bson.types.ObjectId oid
-                    ? oid.toHexString() : docId.toString();
-            return typeDocument(
-                    space.getSerializer().read(doc.toBsonDocument()).selfVID(documentVID(space, collectionName, idStr)),
+            return typeDocument(space.processDocument(doc).selfVID(documentVID(space, collectionName, idStr)),
                     collectionType);
         }));
     }

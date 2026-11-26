@@ -103,15 +103,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <pre>{@code
  * // Read a document by ID
  * Obj user = space.read(f("mongo:users/507f1f77bcf86cd799439011"));
- * // Returns: [_id=>'507f1f77...', name=>'John', email=>'john@example.com']
+ * // Returns: [name=>'John', email=>'john@example.com'] (the _id is in the read's address, not the document)
  *
  * // Access with lazy reference resolution
  * Obj order = space.read(f("mongo:orders/123"));
- * // Returns: [_id=>'123', customerId=>!*mongo:customers/456, items=>[...]]
+ * // Returns: [customerId=>!*mongo:customers/456, items=>[...]]
  *
  * // Traverse reference
  * Obj customer = order.asRec().at(uri("customerId"));
- * // Resolves to: [_id=>'456', name=>'Acme Corp', ...]
+ * // Resolves to: [name=>'Acme Corp', ...]
  * }</pre>
  *
  * <h2>Schema Access</h2>
@@ -699,8 +699,11 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
      * {@link ObjBSONSerializer#readRec} which transparently handles the hidden
      * {@code __mtron_tid} field — restoring the nominal TID (e.g. {@code chicken::T})
      * that was written alongside the document fields for round-trip fidelity.
+     * <p>
+     * The read of every document: the walk's, and dcmntInstSet's native plans', so a plan
+     * answers the documents the walk answers.
      */
-    protected Obj processDocument(final Document doc) {
+    public Obj processDocument(final Document doc) {
         final Document normalized = (Document) normalizeDBRefs(doc);
         final BsonDocument bsonDoc = normalized.toBsonDocument();
         if (bsonDoc.containsKey(MTRON_VALUE_FIELD)) {

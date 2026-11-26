@@ -427,7 +427,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
                 f("/memory/space/doc/test_pushdown")
         ) {
             @Override
-            protected Obj processDocument(final Document doc) {
+            public Obj processDocument(final Document doc) {
                 processDocumentCalled.set(true);
                 return super.processDocument(doc);
             }
@@ -1485,6 +1485,55 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
         final Obj want = Machine.parse(expected);
         checkEquality(LOG, want.isCall() ? want.apply() : want, MCode.of(plan.asCode().insts()).apply(), true);
+    }
+
+    /**
+     * A PLAN READS A DOCUMENT AS THE WALK DOES (2026-11-26), through dcmntSpace.processDocument: Mongo's {@code _id} is
+     * stripped (the entry's address carries it), a value stored at an entry is unwrapped, and a reference is read as
+     * one. mql_limit, mql_where, mql_where_limit and mql_select read the raw document, so {@code >><_id>} answered the
+     * ids where the walk answers noobj, wrapped/x read as the rec that stores its 5, and arenas/1 failed (the driver
+     * decodes a reference as a DBRef, which toBsonDocument has no codec for). The root type (rec, by default) refuses an
+     * int at a collection's entry, so an int reaches a collection as wrapped/x's 5 does: written while wrapped is no
+     * collection, it waits in the flat namespace, and wrapped/y's write makes wrapped one and moves it in, wrapped
+     * (AbstractDataPathSpace.migrateFlatToStructured). arenas/1 refers to locations/1. The rows are
+     * {@code code % what the walk answers % the op the plan reads with}, and the plan is applied on its own as well.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', quoteCharacter = '^', value = {
+            "*mongo:rewrite_test/+.take(2)>><_id>                       % noobj        % mql_limit",
+            "*mongo:rewrite_test/+.isa([value=>?>8])>><_id>             % noobj        % mql_where",
+            "*mongo:rewrite_test/+.isa([value=>?>5]).take(2)>><_id>     % noobj        % mql_where_limit",
+            "*mongo:rewrite_test/+>><_id>                               % noobj        % mql_select",
+            "*mongo:rewrite_test/+>>{<_id>,name}.count()                % 10           % mql_select",
+            "*mongo:wrapped/+.take(20).isa(int::T).count()              % 1            % mql_limit",
+            "*mongo:wrapped/+>><__mtron_v>                              % noobj        % mql_select",
+            "*mongo:arenas/+.take(1)>>name                              % 'main_stage' % mql_limit",
+            "*mongo:arenas/+.isa([name=>'main_stage'])>>venue>>name     % 'downtown'   % mql_where",
+            "*mongo:arenas/+.isa([name=>'main_stage']).take(1)>>name    % 'main_stage' % mql_where_limit",
+            "*mongo:arenas/+>>venue>>name                               % 'downtown'   % mql_select",
+    })
+    public void testAPlanReadsADocumentAsTheWalk(final String code, final String expected, final String reads) {
+        ObjmtronSerializer.parse("mongo:wrapped/x -> 5").apply();
+        ObjmtronSerializer.parse("mongo:wrapped/y -> [n=>1]").apply();
+        Machine.write(f("mongo:locations/1"), rec(uri(NAME), str("downtown")));
+        Machine.write(f("mongo:arenas/1"), rec(
+                uri(NAME), str("main_stage"),
+                uri("venue"), auto_from_(f("mongo:locations/1")).tryToInst()));
+        try {
+            checkCodeParseApply(LOG, code, expected);
+            final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+            assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
+            checkEquality(LOG, Machine.parse(expected), MCode.of(plan.asCode().insts()).apply(), true);
+        } finally {
+            // dropped as the auto_from tests drop theirs; @BeforeEach rebuilds rewrite_test
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("arenas").drop();
+                client.getDatabase(DB_NAME).getCollection("locations").drop();
+                client.getDatabase(DB_NAME).getCollection("wrapped").drop();
+            }
+            // and the flat entry, should the migration have left it
+            ObjmtronSerializer.parse("mongo:wrapped/x -> noobj").apply();
+        }
     }
 
     /**
