@@ -687,12 +687,14 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "*<$$/+>            % collection",
-            "*<$$/+/+>.take(1)  % entry",
-            "*<$$/+/+>.take(2)  % entry",
+            "*<$$/+>            % collection % evaluation",
+            "*<$$/+/+>.take(1)  % entry % evaluation",
+            "*<$$/+/+>.take(1)  % entry % plan",
+            "*<$$/+/+>.take(2)  % entry % evaluation",
+            "*<$$/+/+>.take(2)  % entry % plan",
     }, delimiter = '%')
-    public void testDataPathSegmentTypes(final String code, final String segmentType) {
-        super.testDataPathSegmentTypes(code, segmentType);
+    public void testDataPathSegmentTypes(final String code, final String segmentType, final String answer) {
+        super.testDataPathSegmentTypes(code, segmentType, answer);
     }
 
     // ========================================================================

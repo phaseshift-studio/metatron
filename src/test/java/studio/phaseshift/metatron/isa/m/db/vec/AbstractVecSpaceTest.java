@@ -148,10 +148,10 @@ public abstract class AbstractVecSpaceTest extends AbstractDataPathTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "*<vctr:+>               % collection",
+            "*<vctr:+>               % collection % evaluation",
     }, delimiter = '%')
-    public void testDataPathSegmentTypes(final String code, final String segmentType) {
-        super.testDataPathSegmentTypes(code, segmentType);
+    public void testDataPathSegmentTypes(final String code, final String segmentType, final String answer) {
+        super.testDataPathSegmentTypes(code, segmentType, answer);
     }
 
     // =========================================================================

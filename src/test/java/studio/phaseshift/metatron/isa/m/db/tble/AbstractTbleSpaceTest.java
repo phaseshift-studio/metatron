@@ -180,12 +180,14 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     @ParameterizedTest
     @Training.SkipTraining
     @CsvSource(value = {
-            "*<$$/instset/+>       % collection",    // wildcard collection → every result is a Type
-            "*<db:users/+>.take(1) % entry",         // specific collection + wildcard entry → first is instance
-            "*<db:users/+>.take(2) % entry",         // second entry also an instance (not just first)
+            "*<$$/instset/+>       % collection % evaluation",    // wildcard collection → every result is a Type
+            "*<db:users/+>.take(1) % entry % evaluation",         // specific collection + wildcard entry → first is instance
+            "*<db:users/+>.take(1) % entry % plan",
+            "*<db:users/+>.take(2) % entry % evaluation",         // second entry also an instance (not just first)
+            "*<db:users/+>.take(2) % entry % plan",
     }, delimiter = '%')
-    public void testDataPathSegmentTypes(final String code, final String segmentType) {
-        super.testDataPathSegmentTypes(code.replace("$$", SPACE_VID.toString()), segmentType);
+    public void testDataPathSegmentTypes(final String code, final String segmentType, final String answer) {
+        super.testDataPathSegmentTypes(code.replace("$$", SPACE_VID.toString()), segmentType, answer);
     }
 
     @Override

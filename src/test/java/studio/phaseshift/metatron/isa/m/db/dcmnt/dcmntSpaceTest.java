@@ -138,12 +138,19 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "*<mongo:+>               % collection",    // wildcard collection → every result is a Type
-            "*<mongo:users/+>.take(1) % entry",         // specific collection + wildcard entry → first is instance
-            "*<mongo:users/+>.take(2) % entry",         // second entry also an instance (not just first)
+            "*<mongo:+>               % collection % evaluation",    // wildcard collection → every result is a Type
+            "*<mongo:users/+>.take(1) % entry % evaluation",         // specific collection + wildcard entry → first is instance
+            "*<mongo:users/+>.take(1) % entry % plan",
+            "*<mongo:users/+>.take(2) % entry % evaluation",         // second entry also an instance (not just first)
+            "*<mongo:users/+>.take(2) % entry % plan",
+            // the filtered reads, typed as mql_where and mql_where_limit type them
+            "*<mongo:users/+>.isa([active=>true])         % entry % evaluation",
+            "*<mongo:users/+>.isa([active=>true])         % entry % plan",
+            "*<mongo:users/+>.isa([active=>true]).take(1) % entry % evaluation",
+            "*<mongo:users/+>.isa([active=>true]).take(1) % entry % plan",
     }, delimiter = '%')
-    public void testDataPathSegmentTypes(final String code, final String segmentType) {
-        super.testDataPathSegmentTypes(code, segmentType);
+    public void testDataPathSegmentTypes(final String code, final String segmentType, final String answer) {
+        super.testDataPathSegmentTypes(code, segmentType, answer);
     }
 
     @Override
