@@ -183,7 +183,7 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
     @ParameterizedTest
     @CsvSource(value = {
             "*/g/V/1.count()                         % 1",
-            "*/g/V/2.take(5)>>age.sup()              % 27",
+            "*/g/V/2.take(5).count()                 % 1",
             "*/g/V/2.skip(0).count()                 % 1",
             "*/g/V/1>>age.sum()                      % 29",
             "*/g/V/1.isa([age=>?>0]).count()         % 1",

@@ -353,10 +353,9 @@ public class DBRewriteBuilder<S extends Space> {
                     i.tid().basePath().equals(FROM_INST_TID.basePath()) || i.tid().basePath().equals(AT_INST_TID.basePath()))) {
                 return code;
             }
-            // A NEGATIVE COUNT IS THE WALK'S (2026-11-26): a take or a skip of a negative count counts from the end and
-            // lays its coefficients out ([1,2,3]>-.take(-2) answers {3,2}, skip(-1) answers {2,1}, and
-            // take(-1).take(-1) answers {-1}3), which no store's limit or offset says, so a match holding one is left
-            // as it is
+            // A NEGATIVE COUNT IS THE WALK'S (2026-11-26): a take or a skip of a negative count counts from the end
+            // ([1,2,3]>-.take(-2) answers {3,2}, and skip(-1) answers {2,1}), which no store's limit or offset says, so
+            // a match holding one is left as it is
             final Function<Map<Inst, Inst>, List<Inst>> rewrite = this.createRewriteFunction();
             return code.selfJVM(RewriterBuilder.search(code.codeValue())
                     .match(this.matchPattern.stream()

@@ -2870,7 +2870,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     @CsvSource(delimiter = '%', value = {
             "*db:rewrite_test/1.count()                         % 1",
             "@db:rewrite_test/1.count()                         % 1",
-            "*db:rewrite_test/2.take(5)>>value.sup()            % 2",
+            "*db:rewrite_test/2.take(5).count()                 % 1",
             "*db:rewrite_test/3.skip(0).count()                 % 1",
             "*db:rewrite_test/1>>value.sum()                    % 1",
             "*db:rewrite_test/4>>value                          % 4",

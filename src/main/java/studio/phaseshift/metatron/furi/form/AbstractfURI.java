@@ -379,7 +379,15 @@ public abstract class AbstractfURI implements fURI {
         // x = 0, and div has no quotient to answer ({1}/{1,2} is {1,0}), so one() threw on a {1,n} span, the read
         // that resolves a spanned call failed, and {1,2,3}.{1,2}count() was left to run one obj at a time
         final cInt rest = this.d(cInt.ONE()).c();
-        if (!rest.isZeroable() && (rest.isExact() || count.isRange() || count.isZero()) && rest.mult(count.div(rest)).equals(count))
+        // ...and A RANGE DIVIDES A RANGE ONLY IN ORDER: div pairs the bounds (after flipping a negative span, as div
+        // does), so {1,2}/{1,3} is {1,0} and threw; a take hands a spanned type such a range of copies
+        // ({1,3}int::T.take(2) keeps {1,2})
+        final boolean flip = null != rest.max() && rest.max() < 0L;
+        final cInt k = flip ? count.neg() : count;
+        final cInt r = flip ? rest.neg() : rest;
+        final boolean crosses = null != k.min() && null != k.max() && null != r.min() && null != r.max() && k.min() >= 0L
+                && r.min() > 0L && k.min() / r.min() > k.max() / r.max();
+        if (!rest.isZeroable() && !crosses && (rest.isExact() || count.isRange() || count.isZero()) && rest.mult(count.div(rest)).equals(count))
             return this.d(count.div(rest));
         return this.hasBranches() ? this.d(count) : this.b(cInt.ONE()).d(count);
     }

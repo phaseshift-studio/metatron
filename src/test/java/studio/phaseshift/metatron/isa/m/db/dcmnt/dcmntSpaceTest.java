@@ -1476,7 +1476,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
             "*mongo:rewrite_test/1.count()                     % 1",
-            "*mongo:rewrite_test/2.take(5)>>value.sup()        % 2",
+            "*mongo:rewrite_test/2.take(5).count()             % 1",
             "*mongo:rewrite_test/1>>value.sum()                % 1",
             "*mongo:rewrite_test/4>>value                      % 4",
             "*mongo:rewrite_test/2.isa([value=>?>0]).count()   % 1",

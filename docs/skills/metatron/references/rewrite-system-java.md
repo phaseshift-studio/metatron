@@ -223,8 +223,8 @@ RewriteBuilder.forDatabase(tbleSpace.class)
    the branch `>>{value,id}`, which the fold leaves out). The space vets the rest: a path below the field is a
    document's dotted path, though not an index (`tags/0`, `tags/-1`), and no column's. The kv pushdowns, which read the path below a table as a key prefix, do not ask.
    Before any of these, `build()` leaves a match holding a `take` or a `skip` of a negative count as it is, for every
-   plan, the kv ones too: the walk counts it from the end and lays its coefficients out (`[1,2,3]>-.take(-2)` answers
-   `{3,2}`), which no store's limit or offset says.
+   plan, the kv ones too: the walk counts it from the end (`[1,2,3]>-.take(-2)` answers `{3,2}`), which no store's
+   limit or offset says.
 4. Native lambda executes against the database, receiving the coefficient for cardinality tracking
 5. The matched sequence is replaced with a single native instruction
 

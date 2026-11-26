@@ -162,9 +162,29 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return this.d(cInt.of(exact));
     }
 
+    /**
+     * UP TO THE COUNT (Marko, 2026-11-26: take(n) is "up to n", and take(-1) is no negative coefficient): the head
+     * keeps at most |c| of this obj's copies and the tail keeps the rest, so {@code 1.take(5)} is 1 and
+     * {@code 1.skip(5)} is nothing. Copies of one obj are the same obj from either end, so a negative count takes as
+     * many as a positive one, and a count with no most takes every copy. The copies and the count are read bound for
+     * bound: {@code {2,7}a.take(5)} is {@code {2,5}a}, with {@code {0,2}a} left, and a count of {@code {0,3}} (what a
+     * stream has left once it took a range of copies) takes {@code {?}a} of one {@code a}. A copy keeps its sign, so
+     * each bound of the head is held to [-|c|,|c|].
+     */
     default Pair<Obj, Obj> take(final cInt c) {
-        // a take covering every multiplicity there is leaves nothing: x - x is 0, which interval subtraction can't see
-        return Pair.with(this.c(c), this.c(c.contains(this.c()) ? cInt.ZERO() : this.c().minus(c)));
+        final cInt n = c.abs();
+        if (null == n.max())
+            return Pair.with(this, noobj());
+        final long least = n.min();
+        final long most = n.max();
+        final Long a = this.c().min();
+        final Long b = this.c().max();
+        // the low bound of the copies takes the count's least and the high bound its most (an anti-copy's the other way)
+        final cInt head = cInt.of(null == a ? -most : a >= 0L ? Math.min(a, least) : Math.max(-most, a),
+                null == b ? most : b >= 0L ? Math.min(b, most) : Math.max(-least, b));
+        final cInt tail = cInt.of(null == a ? null : a >= 0L ? Math.max(0L, a - most) : Math.min(0L, a + least),
+                null == b ? null : b >= 0L ? Math.max(0L, b - least) : Math.min(0L, b + most));
+        return Pair.with(head.isZero() ? noobj() : this.c(head), tail.isZero() ? noobj() : this.c(tail));
     }
 
     default Obj take() {
@@ -2027,18 +2047,18 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .create(),
                     InstBuilder.build()
                             .tid(SKIP_INST_TID)
-                            .dom(ALL.maybeSome(), "any objs")
-                            .rng(ALL.maybeSome(), "the objs after skipping")
+                            .dom(A.maybeSome(), "any objs")
+                            .rng(A.maybeSome(), "the objs after skipping")
                             .argLst(INT_TYPE, "the number of objs to skip")
-                            .desc("skips the first n objs")
+                            .desc("skips up to n objs: the first n, or the last -n when n is negative")
                             .body((lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1()) // tail
                             .create(),
                     InstBuilder.build()
                             .tid(TAKE_INST_TID)
-                            .dom(ALL.maybeSome(), "any objs")
-                            .rng(ALL.maybeSome(), "the objs before skipping")
+                            .dom(A.maybeSome(), "any objs")
+                            .rng(A.maybeSome(), "the objs before skipping")
                             .argLst(INT_TYPE, "the number of objs to take")
-                            .desc("takes the first n objs")
+                            .desc("takes up to n objs: the first n, or the last -n when n is negative")
                             .body((lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()) // head
                             .create(),
                     // Mutation box: detach the anchor (no auto-write during compute),

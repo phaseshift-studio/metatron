@@ -236,6 +236,72 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * TAKE IS UP TO ITS COUNT, ONE OBJ AS A STREAM (Marko, 2026-11-26: {@code take?int{0,5}<=int{*}(5)} is "up to 5",
+     * and {@code take(-1)} is no negative coefficient). The count is of positions, never a coefficient: a single obj
+     * gave the count its coefficient, so {@code 1.take(5)} was {@code {5}1}, and {@code 1.skip(5)} ({@code {-4}1}) and
+     * {@code [1,2,3]>-.take(-1).take(-1)} ({@code {-1}3}) failed take's range. Copies of one obj are the same obj from
+     * either end, so a negative count takes as many of them as a positive one. A range of copies is taken bound for
+     * bound, and what a stream has left after one is a range too, so the member after it is maybe taken ({@code {?}}).
+     * Take and skip are {@code A{*}<=A{*}}, so the element type flows on from one to the next: the skip after a take
+     * reads {@code int{*}}, where it read {@code #{*}}. A one-obj instruction after them resolves at runtime, as after
+     * any stream that may be empty ({@code Inst.Helper.appliesPerObject}), so a stream of two types still maps.
+     */
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '~', value = {
+            "1.take(5)                                                                      % 1",
+            "1.take(5).count()                                                              % 1",
+            "1.skip(5)                                                                      % noobj",
+            "1.take(0)                                                                      % noobj",
+            "1.skip(0)                                                                      % 1",
+            "{3}1.take(2)                                                                   % {2}1",
+            "{3}1.skip(2)                                                                   % 1",
+            "{3}1.take(7)                                                                   % {3}1",
+            "{3}1.skip(3)                                                                   % noobj",
+            "{3}1.skip(7)                                                                   % noobj",
+            "{1,2}.take(1).take(5)                                                          % 1",
+            "1.range(0,3)                                                                   % 1",
+            // from the end
+            "3.take(-1)                                                                     % 3",
+            "3.skip(-1)                                                                     % noobj",
+            "{3}1.take(-1)                                                                  % 1",
+            "{3}1.skip(-1)                                                                  % {2}1",
+            "{3}1.take(-7)                                                                  % {3}1",
+            "[1,2,3]>-.take(-1).take(-1)                                                    % 3",
+            "[1,2,3]>-.skip(-2).skip(-1)                                                    % noobj",
+            "[1,2,3]>-.take(-2)                                                             % {3,2}",
+            "[1,2,3]>-.skip(-1)                                                             % {2,1}",
+            // a range of copies
+            "{2,7}1.take(5)                                                                 % {2,5}1",
+            "{2,7}1.skip(5)                                                                 % {0,2}1",
+            "{2,7}1.take(1)                                                                 % 1",
+            "{2,7}1.skip(1)                                                                 % {1,6}1",
+            "{2,7}1.take(9)                                                                 % {2,7}1",
+            "{2,7}1.skip(9)                                                                 % noobj",
+            "{int{2,7}::1,2}.take(5)                                                        % {{2,5}1,{?}2}",
+            "{int{2,7}::1,2}.skip(5)                                                        % {{0,2}1,{?}2}",
+            // a span: a value's span curls up its copies, and a type's range of copies is no longer divided by its span
+            // (fURI.c threw on {1,2}/{1,3}; fURITest.testCountWrite pins the copies, as a type keeps its own vid)
+            "{3}5{3}.take(4)                                                                % {4}5",
+            "{3}5{3}.skip(4)                                                                % {5}5",
+            "{1,3}int::T.take(2).count()                                                    % 2",
+            "{1,3}int::T.skip(2).count()                                                    % 1",
+            // a stream of two types
+            "{2,'ab'}.take(2)                                                               % {2,'ab'}",
+            "{2,'ab'}.skip(1)                                                               % 'ab'",
+            "{2,'ab'}.take(-1)                                                              % 'ab'",
+            "{2,'ab'}.take(2).count()                                                       % 2",
+            "{2,'ab'}.take(2).plus(_)                                                       % {4,'abab'}",
+            "{2,'ab'}.skip(1).plus(_)                                                       % 'abab'",
+            // the element type flows through
+            "{1,2,3}.take(2).skip(1).explain()>>format.has('skip +int[{][*][}]::T').count() % 1",
+            "{1,2,3}.skip(1).take(1).explain()>>format.has('take +int[{][*][}]::T').count() % 1",
+            "{1,2,3}.range(0,2).explain()>>format.has('take +int[{][*][}]::T +int[{][*][}]::T').count() % 1",
+    }, delimiter = '%')
+    public void testTakeIsUpToItsCount(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     @TestData(value = {"1@take/a", "2@take/b", "3@take/c"})
     @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest

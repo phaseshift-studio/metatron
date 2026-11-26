@@ -173,34 +173,15 @@ public class LazyObjs implements Objs {
         }
     }
 
+    /**
+     * TAKEN AS THE DRAINED STREAM IS ({@link MObjs#take}), so a lazy stream keeps take's one law: up to the count,
+     * from either end. Its own loop took the whole count from its first member ({@code {1,2,3}} take 2 was
+     * {@code {2}1}) and nothing of a negative count, and under the one-obj rule it would iterate the cache it removes
+     * from. The take drains this stream, as the loop did.
+     */
     @Override
     public Tuple.Pair<Obj, Obj> take(final cInt c) {
-        this.drainToCache();
-        cInt takenC = cInt.ZERO();
-        final List<Obj> taken = new ArrayList<>();
-        final Iterator<Map.Entry<Obj, cInt>> seq = this.cache.sequencedEntrySet().iterator();
-        while (takenC.lt(c)) {
-            final Tuple.Pair<Obj, Obj> split;
-            if (this.jvm != null && !this.jvm.isEmpty())
-                split = multObjsC(this.jvm.removeFirst()).take(c.minus(takenC));
-            else {
-                final Map.Entry<Obj, cInt> entry = seq.next();
-                final Obj obj = entry.getKey().c(entry.getValue());
-                this.cache.remove(entry.getKey());
-                split = multObjsC(obj).take(c.minus(takenC));
-            }
-            takenC = takenC.plus(split.get0().c());
-            taken.add(split.get0());
-            if (!split.get1().isNoObj()) {
-                this.cache.merge(split.get1().c(cInt.ONE()), this.objsC == null ? split.get1().c() : split.get1().c().div(this.objsC), cInt::plus);
-            }
-        }
-        final int size = taken.size();
-        if (size == 0)
-            return Tuple.Pair.with(noobj(), this);
-        if (size == 1)
-            return Tuple.Pair.with(taken.getFirst(), this);
-        return Tuple.Pair.with(objs(taken), this);
+        return objs(this.stream().toList()).take(c);
     }
 
     @Override

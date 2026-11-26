@@ -288,18 +288,18 @@ public class MObjs implements Objs, AutoCloseable {
         cInt total = cInt.ZERO();
         this.internalC = cInt.ZERO();
         for (Obj entry : (isNegative ? this.jvm.reversed() : this.jvm)) {
+            // what the take has left: a range once it took a range of copies, and never less than none
             final cInt toTake = abs.minus(total);
-            final cInt entryC = entry.c();
-            if (toTake.gt(abs.zero())) {
-                if (entryC.lte(toTake)) {
-                    retrieved.add(entry);
-                    total = total.plus(entryC);
-                } else {
-                    final cInt t = entryC.minus(toTake);
-                    this.internalC = this.internalC.plus(t);
-                    remaining.add(entry.c(t));
-                    retrieved.add(entry.c(toTake));
-                    total = total.plus(toTake);
+            if (null == toTake.max() || toTake.max() > 0L) {
+                // a member is taken as one obj is (Obj.take), so a range of copies is never set to the count
+                final Tuple.Pair<Obj, Obj> split = entry.take(cInt.of(null == toTake.min() ? 0L : Math.max(0L, toTake.min()), toTake.max()));
+                if (!split.get0().isNoObj()) {
+                    retrieved.add(split.get0());
+                    total = total.plus(split.get0().c());
+                }
+                if (!split.get1().isNoObj()) {
+                    this.internalC = this.internalC.plus(split.get1().c());
+                    remaining.add(split.get1());
                 }
             } else {
                 this.internalC = this.internalC.plus(entry.c());

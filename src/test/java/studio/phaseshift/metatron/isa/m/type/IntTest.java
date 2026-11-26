@@ -143,32 +143,35 @@ public class IntTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    @Training.SkipTraining(reason = "asserts the (retrieved, remaining) PAIR of a Java-side take(coefficient); the mtron take() counts objs instead of splitting by coefficient, so no single expression yields the expected column")
+    @Training.SkipTraining(reason = "asserts the (retrieved, remaining) PAIR of a Java-side take(count), whose count may be a range; the mtron take() and skip() each answer one side, so no single expression yields the expected column")
     @ParameterizedTest
     @CsvSource(value = {
+            // UP TO THE COUNT (Marko, 2026-11-26): the head keeps at most |count| copies, the tail the rest, and a count
+            // with no most keeps all. A count's sign is never a coefficient's: taking 11 of 10 copies was {11} and {-1},
+            // and taking -5 of them {-5} and {15}. A copy keeps its sign, so anti-copies are taken the same way
             "int{10}::1         %int{5}       %int{5}::1          %int{5}::1",
             "int{10}::1         %int{3}       %int{3}::1          %int{7}::1",
             "int{4,10}::1       %int{3}       %int{3}::1          %int{1,7}::1",
             "int{10}::1         %int{10}      %int{10}::1         %int{0}::1",
             "int{10}::1         %int{10}      %int{10}::1         %noobj",
-            "int{10}::1         %int{11}      %int{11}::1         %int{-1}::1",
+            "int{10}::1         %int{11}      %int{10}::1         %noobj",
             "int{0}::1          %int{0}       %int{0}::1          %int{0}::1",
-            "int{0}::1          %int{10}      %int{10}::1         %int{-10}::1",
-            "int{0}::1          %int{-10}      %int{-10}::1         %int{10}::1",
+            "int{0}::1          %int{10}      %noobj              %noobj",
+            "int{0}::1          %int{-10}     %noobj              %noobj",
             "int{10}::1         %int{0}       %int{0}::1          %int{10}::1",
-            "int{10}::1         %int{-5}      %int{-5}::1         %int{15}::1",
+            "int{10}::1         %int{-5}      %int{5}::1          %int{5}::1",
             "int{-10}::1        %int{-5}      %int{-5}::1         %int{-5}::1",
             "int{10,}::1        %int{10,}     %int{10,}::1        %int{0}::1",
-            "int{10,}::1        %int{1,}      %int{1,}::1         %noobj",
+            "int{10,}::1        %int{1,}      %int{10,}::1        %noobj",
             "noobj,             %int{10}      %noobj              %noobj",
             "int{,10}::1        %int{,10}     %int{,10}::1        %noobj",
-            "int{,10}::1        %int{1}       %int::1             %int{,9}::1",
+            "int{,10}::1        %int{1}       %int{-1,1}::1       %int{,9}::1",
             "int{1,10}::1       %int{1}       %int::1             %int{0,9}::1",
-            "int{-10,-1}::1     %int{1}       %int::1             %int{-11,-2}::1",
+            "int{-10,-1}::1     %int{1}       %int{-1}::1         %int{-9,0}::1",
             "int{-10,-1}::1     %int{-1}      %int{-1}::1         %int{-9,0}::1",
-            "int{-10,-10}::1    %int{10}      %int{10}::1         %int{-20,-20}::1",
+            "int{-10,-10}::1    %int{10}      %int{-10}::1        %noobj",
             "int{-10,-8}::1     %int{-5}      %int{-5}::1         %int{-5,-3}::1",
-            "int{-10,8}::1      %int{-5}      %int{-5}::1         %int{-5,13}::1",
+            "int{-10,8}::1      %int{-5}      %int{-5,5}::1       %int{-5,3}::1",
             "int{-10}::1        %int{-10}     %int{-10}::1        %noobj",
     }, delimiter = '%')
     public void testTake(final String current, final String remove, final String retrieved, final String remaining) {

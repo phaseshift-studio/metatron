@@ -2458,6 +2458,12 @@ public class fURITest extends AbstractMetatronTest {
             "<{-3,-1}/a/b>       % 1    % /a/b",
             "<{+}/a/b>           % 1    % /a/b",
             "<{2,3}/a/b>         % 1    % /a/b",
+            // a range divides a range only in order: div pairs the bounds, and {1,2}/{1,3} is {1,0}, which threw (a take
+            // hands a spanned type such a range of copies). A negative span is flipped first, as div flips it
+            "<{1,3}/a/b>         % 1,2  % /a/b{1,2}",
+            "<{1,3}/a/b>         % 0,1  % /a/b{?}",
+            "<{-3,-1}/a/b>       % -2,-1 % /a/b{-2,-1}",
+            "<{1,3}/a/b{2}>      % 2,5  % /a/b{2,5}",
             // ... while a count a range does divide keeps it, the zero count included (x = 0)
             "<{2,3}/a/b>         % 4,9  % {2,3}/a/b{2,3}",
             "<{1,2}/a/b>         % 0    % {1,2}/a/b{0}",

@@ -66,7 +66,7 @@ public class ObjsTest extends AbstractObjTest {
         AbstractMetatronTest.checkEquality(LOG, ObjmtronSerializer.parse(expectedType), ObjmtronSerializer.parse(objs).type(), shouldEqual);
     }
 
-    @Training.SkipTraining(reason = "asserts the (retrieved, remaining) PAIR of a Java-side take(coefficient); the mtron take() counts objs instead of splitting by coefficient, so no single expression yields the expected columns")
+    @Training.SkipTraining(reason = "asserts the (retrieved, remaining) PAIR of a Java-side take(count), whose count may be a range; the mtron take() and skip() each answer one side, so no single expression yields the expected columns")
     @ParameterizedTest
     @CsvSource(value = {
             "{1,1,1,1}                      |int{0}       |{,}                            |{1,1,1,1}",
@@ -78,6 +78,11 @@ public class ObjsTest extends AbstractObjTest {
             "{1,2,3,4}                      |int{4}       |{1,2,3,4}                      |{,}",
             "{1,2,3,4,5,5,5,5,5}            |int{4}       |{1,2,3,4}                      |int{5}::5",
             "{1,2,3,'four',5,5,5,5,5}       |obj{4}       |{1,2,3,'four'}                 |int{5}::5",
+            // UP TO THE COUNT, BOUND FOR BOUND (2026-11-26): what is left after a range of copies is a range, so each
+            // member after it is maybe taken, and a count from the end meets the range first
+            "{int{2,7}::1,2}                |int{5}       |{int{2,5}::1,int{?}::2}        |{int{0,2}::1,int{?}::2}",
+            "{int{2,7}::1,2,3}              |int{5}       |{int{2,5}::1,int{?}::2,int{?}::3} |{int{0,2}::1,int{?}::2,int{?}::3}",
+            "{2,int{2,7}::1}                |int{-5}      |{int{2,5}::1,int{?}::2}        |{int{0,2}::1,int{?}::2}",
     }, delimiter = '|')
     public void testTake(final String current, final String remove, final String retrieved, final String remaining) {
         super.testTake(current, remove, retrieved, remaining);

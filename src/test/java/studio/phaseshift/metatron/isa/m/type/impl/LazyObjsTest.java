@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -61,5 +62,25 @@ public class LazyObjsTest extends AbstractMetatronTest {
         assertEquals(c, lo2.c());
         /// ////////////////////////////////////////////////////////////////////////////////////////////
         //assertEquals(o.c(), lo.c());
+    }
+
+    /**
+     * A LAZY STREAM IS TAKEN AS A DRAINED ONE IS (2026-11-26): up to the count, from either end. Its own loop took the
+     * whole count from its first member ({@code {1,2,3}} take 2 was {@code {2}1}, take 5 {@code {5}1}) and nothing of a
+     * negative count. Each row: the stream % the count % the head % the tail.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3}       % 2     % {1,2}      % 3",
+            "{1,2,3}       % 5     % {1,2,3}    % noobj",
+            "{1,2,3}       % 0     % noobj      % {1,2,3}",
+            "{1,2,3}       % -1    % 3          % {1,2}",
+            "{1,1,2}       % 1     % 1          % {1,2}",
+            "{1,1,2}       % 3     % {1,1,2}    % noobj",
+    }, delimiter = '%')
+    public void testTake(final String objs, final String count, final String head, final String tail) {
+        final Tuple.Pair<Obj, Obj> split = lazyObjs(ObjmtronSerializer.parse(objs).clone().iterator()).take(cInt.of(count));
+        checkEquality(LOG, ObjmtronSerializer.parse(head), split.get0(), true);
+        checkEquality(LOG, ObjmtronSerializer.parse(tail), split.get1(), true);
     }
 }
