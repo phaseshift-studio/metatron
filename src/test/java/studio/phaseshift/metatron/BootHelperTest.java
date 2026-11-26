@@ -145,7 +145,8 @@ public class BootHelperTest extends AbstractMetatronTest {
      * default binds noobj and a conversion fails, so both are required, as is a literal spec (a value, not a default:
      * it binds what the call passes). a name is declared whatever its coefficient ({?}port declares port), and a helper
      * that declares nothing declares no name. a helper file cannot declare an open list (a key that is a type, as
-     * Inst.Helper.isOpenArgs reads one): the parser refuses one, "(<T>=>int::T) [pair] is not a uri::T"
+     * Inst.Helper.isOpenArgs reads one): an inst literal's argument keys are parsed as uris (mParser.m_inst_arg_key),
+     * so no key of a declaration in an .mtron file is a type
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
@@ -204,11 +205,9 @@ public class BootHelperTest extends AbstractMetatronTest {
 
     /**
      * the names an argument list gives, in order and coefficients aside: the parser keeps a key's coefficient in its
-     * uri ({?}port is port{?}). an ordered list gives none (the boot test refuses one by name)
+     * uri ({?}port is port{?}). the boot test refuses an ordered list before it asks, and the empty one has no keys
      */
     private static Set<fURI> names(final Poly<?, ?> arguments) {
-        return arguments.isRec()
-                ? arguments.keys().map(key -> key.uriValue().cLess()).collect(Collectors.toCollection(LinkedHashSet::new))
-                : Set.of();
+        return arguments.keys().map(key -> key.uriValue().cLess()).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }
