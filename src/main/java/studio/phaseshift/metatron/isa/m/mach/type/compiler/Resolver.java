@@ -24,12 +24,14 @@ import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.BINDER;
 import static studio.phaseshift.metatron.Tokens.SELECTOR;
@@ -122,9 +124,18 @@ public interface Resolver extends Component {
          * ({@code Code.nextInst}), so such a chain must not be treated as compile-once.
          */
         public static boolean isNumbered(final Code code) {
-            for (final Inst inst : code.jvm())
-                if (null == inst.vid())
+            // NO TWO SHARE A NUMBER (2026-11-26): Code.nextInst finds an instruction by its vid, so a repeated vid walks
+            // back to its first holder and the chain never ends. A rewrite that splices a compiled branch member into the
+            // chain brings the member's own numbers (start@<0>.plus@<0>.mult@<1>). No set: this runs on every resolve
+            final List<Inst> insts = code.jvm();
+            for (int i = 0; i < insts.size(); i++) {
+                final fURI vid = insts.get(i).vid();
+                if (null == vid)
                     return false;
+                for (int j = 0; j < i; j++)
+                    if (vid.equals(insts.get(j).vid()))
+                        return false;
+            }
             return true;
         }
 
@@ -191,35 +202,40 @@ public interface Resolver extends Component {
             for (final Inst inst : code.insts()) {
                 final Obj before = token;
                 try {
-                    final boolean isBranchInst = false && inst.tid().basePath().equals(BRANCH_INST_TID);
-                    final Inst bound = isBranchInst ? inst : inst.resolve(token, sel, binder);
+                    final Inst bound = inst.resolve(token, sel, binder);
                     // A CALL A BUNDLE'S TYPE BINDS THROUGH ONE OF ITS FIBERS COMPILES TO THE LIFT OF THE CALL (FiberedRec):
                     // left bound, one fiber's overload would be offered to every fiber. An unbound call stays for run time
                     final Inst resolvedInst = bound.hasf() ? FiberedRec.Helper.resolve(token.asType(), bound, inst) : bound;
-                    if (isBranchInst) {
-                        final Obj token2 = token;
-                        List<Obj> branches = resolvedInst.args().values().filter(b -> !b.isNoObj()).map(branch -> branch.isCode() ? resolver.apply(token2, branch.asCode()) : branch.isInst() ? branch.resolve(token2) : branch).toList();
-                        // A BRANCH APPLIES PER ELEMENT, as its declared dom A says: the stream's coefficient is not its
-                        // dom. Typed int{3} off a {1,2,3} token it read as batching, so the whole stream reached the
-                        // body as ONE lhs and each member's results were stamped with the stream's count
-                        final Type domToken = token2.c().isZero() ? token2.asType() : token2.asType().c(cInt.ONE()).asType();
-                        // a member emits its range times the coefficients of its instructions: plus{2}(2) is two ints,
-                        // not one, and a collapsed code carries its summed coefficient on an inner inst
-                        // (plus{3}(2).plus(2)) -- the multiplicity the evaluated member brings to the branch body
-                        final cInt rngC = branches.stream()
-                                .map(o -> o.isCall()
-                                        ? o.asCall().insts().stream().map(Obj::c).reduce(o.isCode() ? o.rng().c().mult(o.c()) : o.rng().c(), cInt::mult)
-                                        : o.c())
-                                .reduce(cInt.ZERO(), cInt::plus);
-                        final Type rngToken = Type.Helper.findLCD(branches.stream().map(Obj::rng).toList()).c(rngC).asType();
-                        final Inst branchInst2 = resolvedInst.args(lst(branches)).dom(domToken).rng(rngToken.c(rngC).asType());
-                        resolvedCode.add(branchInst2);
-                        token = rngToken;
-                    } else if (!resolvedInst.hasDom()) {
+                    if (!resolvedInst.hasDom()) {
                         resolvedCode.add(inst.clone().selfVID(f(i)).as());
                         token = inst.hasRng() ? inst.rng() : token;
                     } else {
-                        resolvedCode.add(resolvedInst.clone().selfVID(f(i)).as());
+                        // A BRANCH'S OWN MEMBERS COMPILE WITH IT (Marko, 2026-11-25): a positional member of a branch that
+                        // is no layout runs here, so it is resolved against the carrier flowing in and held in the branch's
+                        // args, and route runs it as compiled rather than compiling it again for every obj. A keyed or a
+                        // laid-out member runs where its place is, so it compiles there (ed27688a1). The carrier must be
+                        // the type of each obj a member is fed, which holds for a branch that feeds its members one obj at
+                        // a time, once: a batching branch feeds them a bag, a spanned one feeds its later runs its own
+                        // output, and a stream of two types ({2,'ab'} carries </m/{int,str}>::T) has no one type. A member
+                        // is held compiled only when the carrier resolves it whole and it reads no walked path (its path
+                        // starts at Code.apply's start(lhs), a step the compiled member never takes); any other member is
+                        // held as written and compiles per obj, as before
+                        final Obj carrier = token;
+                        final List<Obj> members = BRANCH_INST_TID.equals(inst.tid().basePath()) && resolvedInst.args().isLst()
+                                && !resolvedInst.isBatching() && resolvedInst.tid().b().isOne() && !carrier.tid().hasBranches()
+                                && resolvedInst.args().lstValue().stream().anyMatch(member -> member.isCode() && 1 < member.asCode().insts().size())
+                                && !BranchInst.isLayout(resolvedInst)
+                                ? resolvedInst.args().lstValue() : List.of();
+                        final List<Obj> compiledMembers = members.stream().map(member -> {
+                            if (!member.isCode() || 2 > member.asCode().insts().size())
+                                return member;
+                            final Code compiledMember = resolver.apply(carrier, member.asCode());
+                            return compiledMember.isResolved(true) && !Code.Helper.computesPath(compiledMember) ? compiledMember : member;
+                        }).toList();
+                        // the args are rebuilt only when a member compiled: an untouched branch keeps its own args poly
+                        final Inst compiled = IntStream.range(0, members.size()).allMatch(k -> members.get(k) == compiledMembers.get(k))
+                                ? resolvedInst : resolvedInst.args(lst(compiledMembers));
+                        resolvedCode.add(compiled.clone().selfVID(f(i)).as());
                         // A filter's rng is X{0,1} ("one-or-none": emit the object or ∅). Threading that
                         // {0,1} into the next inst makes a map's dom X{1,1} fail to match, but the ∅ branch
                         // can never reach the map — a filter that emits ∅ short-circuits the chain. So drop

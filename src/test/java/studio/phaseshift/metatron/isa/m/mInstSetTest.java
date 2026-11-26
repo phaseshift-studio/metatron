@@ -1587,6 +1587,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.branch(+1,+2).explain()>>per_inst>>1>>c_dom        % 1            % a branch's c_dom is its grain, one obj",
             "1.branch(+1,+2).explain()>>per_inst>>1>>c_rng        % 2            % ... and its c_rng the sum of its branches' rngs",
             "1.branch(+1,+2).explain()>>format.has('#[{]2[}]::T').count() % 1  % the rng type names the summed count over unresolved branches (#)",
+            "1.branch(plus(1).mult(2),plus(2).mult(3)).explain()>>format.has('int[{]2[}]::T').count() % 1 % members held compiled type it (int)",
             // c_out is the running product of c_rng, seeded at one
             "1.plus(2).explain()>>per_inst>>0>>c_out             % 1            % the running output starts at one",
             "1.branch(+1,+2).explain()>>per_inst>>1>>c_out       % 2            % ... and is the product of the c_rngs so far (1 × 2)",

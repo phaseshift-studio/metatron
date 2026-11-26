@@ -27,6 +27,9 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.BLOCK;
 import static studio.phaseshift.metatron.Tokens.CODE_TID;
+import static studio.phaseshift.metatron.Tokens.MONAD_IN;
+import static studio.phaseshift.metatron.Tokens.PATH;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
@@ -215,6 +218,15 @@ public interface Code extends Call {
     class Helper {
         private Helper() {
             // do nothing
+        }
+
+        /**
+         * Whether any instruction of the code reads the walked path ({@code monad_in=state/path}): the processor then
+         * records the path as the code runs, and a branch holds no such member compiled, as its path starts where
+         * {@code Code.apply}'s {@code start(lhs)} does.
+         */
+        public static boolean computesPath(final Code code) {
+            return code.insts().stream().anyMatch(i -> i.tid().hasQ(MONAD_IN) && PATH.equals(f(i.tid().q(MONAD_IN)).name()));
         }
 
         /**

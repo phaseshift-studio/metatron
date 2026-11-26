@@ -26,8 +26,10 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Resolver;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
@@ -264,9 +266,15 @@ public class BranchInst extends MInst {
             // another machine persists there, as a move does, so each member runs from the machine the branch stands
             // in and the caller is left there: the next member and the instruction after the branch start from home
             final Machine home = Machine.current();
+            // A COMPILED MEMBER RUNS AS COMPILED (Marko, 2026-11-25): the resolver held it resolved in this branch's args,
+            // so it runs in its own chain, the processor seeding its first instruction with the lhs, never wrapped in a new
+            // start(lhs) and compiled again as Code.apply did for every obj. The empty code is resolved and numbered with no
+            // instruction to seed: it is the unit, which Code.apply answers as id{c}()
             return objs(this.args().elements().map(o -> Machine.Helper.evalAt(home, () -> this.isBatching()
                     ? start_(lhs).addInsts(program(o)).apply(noobj())
-                    : o.apply(lhs).c(c -> lhs.c().mult(c)))));
+                    : (o.isCode() && !o.asCode().jvm().isEmpty() && o.asCode().isResolved(true) && Resolver.Helper.isNumbered(o.asCode())
+                    ? home.processor().apply(home.compiler().typer().apply(o.asCode())).apply(lhs)
+                    : o.apply(lhs)).c(c -> lhs.c().mult(c)))));
         }
         final List<Lane> lanes = lanes(this);
         final long[] weights = lanes.stream().mapToLong(lane -> lane.seeded() ? 0L : lane.weight()).toArray();

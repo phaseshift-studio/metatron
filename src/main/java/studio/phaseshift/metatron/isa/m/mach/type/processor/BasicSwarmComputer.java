@@ -273,7 +273,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer, Analy
         // boolean-switch: if any inst reads the walked path (?monad_in=state/path), tag the code
         // with ?path so the monads it mints accrue the path (looked up via the shared code, not
         // copied into each monad's state).
-        final Code code = computesPath(resolvedCode) ? resolvedCode.tid(resolvedCode.tid().addQ(PATH)) : resolvedCode;
+        final Code code = Code.Helper.computesPath(resolvedCode) ? resolvedCode.tid(resolvedCode.tid().addQ(PATH)) : resolvedCode;
         final BasicSwarmComputer mach = this.code(code);
         for (final Inst inst : mach.code().jvm()) {
             if (inst.isInitial()) {
@@ -286,13 +286,6 @@ public class BasicSwarmComputer extends VirtualThread implements Computer, Analy
             }
         }
         return mach;
-    }
-
-    /**
-     * true when any instruction in {@code code} reads the walked path ({@code monad_in=state/path}).
-     */
-    private static boolean computesPath(final Code code) {
-        return code.insts().stream().anyMatch(i -> i.tid().hasQ(MONAD_IN) && PATH.equals(f(i.tid().q(MONAD_IN)).name()));
     }
 
     // ======================== Execution ========================
