@@ -149,7 +149,10 @@ public class dcmntSpaceSubQ extends BaseQ implements Closeable {
                     subq.onWrite().ifPresent(w -> w.preWrite(vid, obj));
 
                     // Parse the path to determine collection and optional document ID
-                    final DataPath dp = DataPath.of(basePath);
+                    // the routed path taken apart as the space's own reads take it (its first segment the
+                    // collection): DataPath.of read feed:arenas/+ as database arenas and collection +, so
+                    // the watcher watched a collection named + and no subscriber heard a change
+                    final DataPath dp = space.dataPath(space.redirect(basePath, true));
                     // final List<String> segments = reladtivePath.segments();
 
                     if (!dp.hasCollection()) {
@@ -283,7 +286,10 @@ public class dcmntSpaceSubQ extends BaseQ implements Closeable {
             // For insert, update, replace - get the full document
             final Document fullDoc = change.getFullDocument();
             if (fullDoc != null) {
-                obj = space.getSerializer().readRec(fullDoc.toBsonDocument()).selfVID(docVID);
+                // published as a read of docVID answers it (dcmntSpace.processDocument): readRec of the raw
+                // document kept its _id as a field, read a stored value as its wrapper rec, and failed on a
+                // document holding a reference, which the driver decodes as a DBRef
+                obj = space.processDocument(fullDoc).selfVID(docVID);
             } else {
                 // Fallback if full document not available
                 LOG.debug("full document not available for change event on %s", docVID);

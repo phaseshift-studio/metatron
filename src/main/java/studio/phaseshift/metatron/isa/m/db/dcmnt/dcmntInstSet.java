@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.db.dcmnt;
 
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import org.bson.BsonTimestamp;
@@ -29,7 +28,6 @@ import studio.phaseshift.metatron.algebra.rewrite.db.DBRewriteBuilder;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.schema.MQLRewriteUtils;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -40,7 +38,6 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
-import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
@@ -57,7 +54,6 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -165,7 +161,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                 (space, dp) -> {
                                     final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    return collection.countDocuments();
+                                    // a document whose _id is null is no entry the walk lists
+                                    return collection.countDocuments(Filters.ne(ID_FIELD_STRING, null));
                                 },
                                 dcmntInstSet::readsDocuments
                         ),
@@ -209,7 +206,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 // MongoDB's find().limit(0) means "no limit" (returns everything), unlike SQL LIMIT 0
                                 // (returns nothing), so the zero case is guarded. limit takes an int: the cast alone
                                 // cut take(4294967297) to limit(1)
-                                (space, dp, limit) -> 0 == limit ? noobj() : readDocuments(space, dp.collection(),
+                                (space, dp, limit) -> 0 == limit ? noobj() : space.documents(dp.collection(),
                                         space.getDatabase().getCollection(dp.collection()).find()
                                                 .limit((int) Math.min(limit, Integer.MAX_VALUE))),
                                 dcmntInstSet::readsDocuments
@@ -224,7 +221,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                     if (filter == null) {
                                         throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
                                     }
-                                    return readDocuments(space, dp.collection(),
+                                    return space.documents(dp.collection(),
                                             space.getDatabase().getCollection(dp.collection()).find(filter));
                                 },
                                 MQLRewriteUtils.PREDICATE_JOINER,
@@ -244,7 +241,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                     if (filter == null) {
                                         throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
                                     }
-                                    return collection.countDocuments(filter);
+                                    return collection.countDocuments(Filters.and(filter, Filters.ne(ID_FIELD_STRING, null)));
                                 }
                         ),
 
@@ -260,7 +257,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                     }
                                     // MongoDB's limit(0) means "no limit", as mql_limit guards for the unfiltered
                                     // take(0): the filtered one returned every match. A take past an int is no limit
-                                    return 0 == limit ? noobj() : readDocuments(space, dp.collection(),
+                                    return 0 == limit ? noobj() : space.documents(dp.collection(),
                                             space.getDatabase().getCollection(dp.collection()).find(filter)
                                                     .limit((int) Math.min(limit, Integer.MAX_VALUE)));
                                 }
@@ -274,19 +271,14 @@ public class dcmntInstSet extends AbstractInstSet {
                                     final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
 
-                                    // Build MongoDB projection: {field1: 1, field2: 1, _id: 0}
+                                    // Build MongoDB projection: {field1: 1, field2: 1}. It keeps the _id, as MongoDB
+                                    // returns it unless told not to, so a document whose _id is null is skipped as the
+                                    // walk skips it, and the read strips the _id from the rest
                                     final Document projection = new Document();
                                     for (final String col : columns) {
                                         projection.append(col, 1);
                                     }
-                                    // Exclude _id unless requested: a requested _id is read only to be stripped, as
-                                    // the walk strips it from every document it reads
-                                    if (!columns.contains(ID_FIELD_STRING)) {
-                                        projection.append(ID_FIELD_STRING, 0);
-                                    }
-
-                                    return objs(IteratorUtil.stream(collection.find().projection(projection).iterator())
-                                            .map(space::processDocument));
+                                    return space.documents(collectionName, collection.find().projection(projection));
                                 },
                                 dcmntInstSet::readsDocuments
                         )
@@ -304,36 +296,6 @@ public class dcmntInstSet extends AbstractInstSet {
     // ==================== Helper Methods for Rewrites ====================
 
     /**
-     * THE DOCUMENTS A FIND ANSWERS, EACH READ AS THE WALK READS IT (2026-11-26): through
-     * {@link dcmntSpace#processDocument}, so its {@code _id} is stripped, a value stored at an entry is unwrapped and a
-     * reference is read as one. The plans read the raw document: their documents kept the {@code _id} the walk strips,
-     * a stored value read as the document that wraps it, and a document holding a reference failed, as the driver
-     * decodes one as a {@code DBRef} that {@code toBsonDocument} has no codec for. A document whose {@code _id} is null
-     * is skipped, as the walk skips it; the plans threw on it.
-     * <p>
-     * Each document gets the vid the walk gives it (space pattern, then collection, then id): the scheme-less
-     * {@code DataPath.spaceURI()} made one like {@code users/user1}, which routes to the root memSpace rather than back
-     * to this space. And each is stamped with its collection's type, since a bare {@code rec::T} is no refinement of
-     * it, read with {@link SchemaSpace.Helper#type} as the SQL plans read theirs: the declared type, else the schema
-     * instset's own read, which infers it. A scan of {@code space.schema().types()} found only what a read had
-     * inferred before, so a first query's documents went untyped (2026-11-25). Only a document the type accepts is
-     * stamped: a value stored at an entry is no document, and a document another client wrote need not fit the type,
-     * and stamping a non-instance would make the plans fail their result-type check.
-     */
-    private static Obj readDocuments(final dcmntSpace space, final String collectionName,
-                                     final FindIterable<Document> found) {
-        final Type collectionType = SchemaSpace.Helper.type(space, collectionName);
-        return objs(IteratorUtil.stream(found.iterator())
-                .filter(doc -> null != doc.get(ID_FIELD_STRING))
-                .map(doc -> {
-                    final Obj document = space.processDocument(doc).selfVID(
-                            space.pattern().retractPattern().extend(collectionName).extend(dcmntSpace.idToString(doc)));
-                    return null == collectionType || !document.test(collectionType)
-                            ? document : document.tid(collectionType.vid());
-                }));
-    }
-
-    /**
      * A SUM OR A MEAN OF A FIELD THAT HOLDS WHAT IS NO NUMBER FAILS LOUDLY (2026-11-26, Marko): {@code $sum} and
      * {@code $avg} skip it, where the walk concatenates strs, merges sub-documents, folds lsts or fails, so the plan
      * answered a number the walk does not. The same {@code $group} counts those values: a value at or past {@code ""} in
@@ -347,7 +309,9 @@ public class dcmntInstSet extends AbstractInstSet {
      */
     private static Number fieldAggregate(final dcmntSpace space, final DataPath dp, final String accumulator) {
         final String field = "$" + dp.fieldPathStr();
+        // a document whose _id is null is no entry the walk lists, so it is not aggregated either
         final Document result = space.getDatabase().getCollection(dp.collection()).aggregate(List.of(
+                new Document("$match", new Document(ID_FIELD_STRING, new Document("$ne", null))),
                 new Document("$group", new Document(ID_FIELD_STRING, null)
                         .append("value", new Document(accumulator, field))
                         .append("others", new Document("$sum", new Document("$cond", List.of(new Document("$and", List.of(

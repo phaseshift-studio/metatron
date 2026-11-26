@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.db.dcmnt.space;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -657,16 +658,48 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
     // Query support
     // =======================================================================
 
+    /**
+     * The documents a MongoDB query matches, each read as a read of its address answers it ({@link #documents}): its
+     * {@code _id} is the name of its vid, never a field (Marko, 2026-11-26). The query read the raw document, so it
+     * answered the {@code _id} as a field, a stored value as the rec that wraps it, and failed on a document holding a
+     * reference ("Can't find a codec ... DBRef").
+     */
     public Obj mql(final String collection, final Rec query) {
         try {
-            return objs(IteratorUtil
-                    .stream(this.database
-                            .getCollection(collection)
-                            .find(this.getSerializer().writeRec(query)))
-                    .map(doc -> this.getSerializer().read(doc.toBsonDocument())));
+            return this.documents(collection, this.database.getCollection(collection).find(this.getSerializer().writeRec(query)));
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
+    }
+
+    /**
+     * THE DOCUMENTS A FIND ANSWERS, EACH READ AS THE WALK READS IT (2026-11-26), for the mql instruction and
+     * dcmntInstSet's native plans alike: through {@link #processDocument}, so its {@code _id} is stripped, a value stored
+     * at an entry is unwrapped and a reference is read as one. The plans read the raw document: their documents kept the
+     * {@code _id} the walk strips, a stored value read as the document that wraps it, and a document holding a reference
+     * failed, as the driver decodes one as a {@code DBRef} that {@code toBsonDocument} has no codec for. A document whose
+     * {@code _id} is null is skipped, as the walk skips it; the plans threw on it.
+     * <p>
+     * Each document gets the vid the walk gives it (space pattern, then collection, then id), so its {@code _id} is the
+     * vid's name: the scheme-less {@code DataPath.spaceURI()} made one like {@code users/user1}, which routes to the root
+     * memSpace rather than back to this space. And each is stamped with its collection's type, since a bare
+     * {@code rec::T} is no refinement of it, read with {@link SchemaSpace.Helper#type} as the SQL plans read theirs: the
+     * declared type, else the schema instset's own read, which infers it. A scan of {@code schema().types()} found only
+     * what a read had inferred before, so a first query's documents went untyped (2026-11-25). Only a document the type
+     * accepts is stamped: a value stored at an entry is no document, a projection holds part of one, and a document
+     * another client wrote need not fit the type, and stamping a non-instance would make the plans fail their
+     * result-type check.
+     */
+    public Obj documents(final String collection, final FindIterable<Document> found) {
+        final Type collectionType = SchemaSpace.Helper.type(this, collection);
+        return objs(IteratorUtil.stream(found.iterator())
+                .filter(doc -> null != doc.get(ID_FIELD))
+                .map(doc -> {
+                    final Obj document = this.processDocument(doc).selfVID(
+                            this.pattern.retractPattern().extend(collection).extend(idToString(doc)));
+                    return null == collectionType || !document.test(collectionType)
+                            ? document : document.tid(collectionType.vid());
+                }));
     }
 
     // =======================================================================

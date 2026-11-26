@@ -65,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,6 +78,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_fro
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -1520,6 +1522,12 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
             "*mongo:nulls/+.take(5)>>n.sum()                                        % 2            % mql_limit",
             "*mongo:nulls/+.isa([n=>?>0])>>n.sum()                                  % 2            % mql_where",
             "*mongo:nulls/+.isa([n=>?>0]).take(5)>>n.sum()                          % 2            % mql_where_limit",
+            "*mongo:nulls/+.count()                                                 % 1            % mql_count",
+            "*mongo:nulls/+.isa([n=>?>0]).count()                                   % 1            % mql_where_count",
+            "*mongo:nulls/+>>n.count()                                              % 1            % mql_select",
+            "*mongo:nulls/+>>n.sum()                                                % 2            % mql_sum_column",
+            "*mongo:nulls/+/n.sum()                                                 % 2            % mql_sum",
+            "*mongo:nulls/+/n.mean()                                                % 2.0          % mql_mean",
             "*mongo:rewrite_test/+.take(4294967297).count()                         % 10           % mql_limit",
             "*mongo:rewrite_test/+.isa([value=>?>5]).take(4294967297).count()       % 5            % mql_where_limit",
             "*mongo:rewrite_test/+.isa([<_id>=>'1'])>>name                          % noobj        % from",
@@ -1583,6 +1591,94 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         final Obj plan = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
         assertEquals(reads, plan.asCode().insts().getFirst().tid().name(), "the op the plan reads with: " + plan);
         checkEquality(LOG, Machine.parse(expected), MCode.of(plan.asCode().insts()).apply(), true);
+    }
+
+    /**
+     * A QUERY ANSWERS A DOCUMENT AS A READ OF ITS ADDRESS DOES (2026-11-26, Marko: the {@code _id} is the name of the
+     * vid). dcmntSpace.mql, which both mql instructions call, reads through dcmntSpace.documents as the plans do. It read
+     * the raw document: it answered the {@code _id} as a field, a stored value as the rec that wraps it, and a document
+     * whose {@code _id} is null, and it failed on a document holding a reference ("Can't find a codec ... DBRef").
+     */
+    @Test
+    public void testAQueryAnswersADocumentAsItsRead() {
+        final dcmntSpace space = (dcmntSpace) this.space;
+        ObjmtronSerializer.parse("mongo:wrapped/x -> 5").apply();
+        ObjmtronSerializer.parse("mongo:wrapped/y -> [n=>1]").apply();
+        Machine.write(f("mongo:locations/1"), rec(uri(NAME), str("downtown")));
+        Machine.write(f("mongo:arenas/1"), rec(
+                uri(NAME), str("main_stage"),
+                uri("venue"), auto_from_(f("mongo:locations/1")).tryToInst()));
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            client.getDatabase(DB_NAME).getCollection("nulls").insertMany(List.of(
+                    new Document("_id", null).append("n", 1),
+                    new Document("_id", "a").append("n", 2)));
+        }
+        try {
+            final Obj arena = space.mql("arenas", rec(uri(NAME), str("main_stage")));
+            assertEquals(f("mongo:arenas/1"), arena.vid(), "the _id is the name of the document's vid");
+            checkEquality(LOG, noobj(), arena.asRec().at(uri(dcmntSpace.ID_FIELD)), true);
+            checkEquality(LOG, str("downtown"), arena.asRec().at(uri("venue")).asRec().at(uri(NAME)), true);
+            checkEquality(LOG, jnt(1), jnt(space.mql("wrapped", rec()).stream().filter(Obj::isInt).count()), true);
+            checkEquality(LOG, jnt(2), space.mql("nulls", rec()).asRec().at(uri("n")), true);
+        } finally {
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("arenas").drop();
+                client.getDatabase(DB_NAME).getCollection("locations").drop();
+                client.getDatabase(DB_NAME).getCollection("wrapped").drop();
+                client.getDatabase(DB_NAME).getCollection("nulls").drop();
+            }
+            ObjmtronSerializer.parse("mongo:wrapped/x -> noobj").apply();
+        }
+    }
+
+    /**
+     * A SUBSCRIBER HEARS A DOCUMENT AS A READ OF ITS ADDRESS ANSWERS IT (2026-11-26). No subscriber of a collection heard
+     * anything: dcmntSpaceSubQ took the subscribed path apart with DataPath.of, which reads feed:arenas/+ as database
+     * arenas and collection +, so the watcher watched a collection named +. It takes the routed path apart as the
+     * space's reads do now. And it published readRec of the change stream's raw document, which a subscriber with the
+     * watcher fixed alone did not hear either: the driver decodes a reference as a DBRef, which toBsonDocument has no
+     * codec for, and the failure ended the watcher. It publishes through dcmntSpace.processDocument now. A change stream
+     * needs an oplog, which the shared in-memory server does not keep, so the subscription runs against a server of its
+     * own.
+     */
+    @Test
+    public void testASubscriberHearsADocumentAsItsRead() throws Exception {
+        final MemoryBackend backend = new MemoryBackend();
+        backend.enableOplog();
+        final MongoServer server = new MongoServer(backend);
+        final InetSocketAddress address = server.bind();
+        final dcmntSpace feed = dcmntSpace.of(
+                rec(
+                        uri(PATTERN), uri("feed:#"),
+                        uri(QPROC), lst(QCollection.subQ()),
+                        uri(HOST), uri("mongodb://" + address.getHostString() + ":" + address.getPort() + "/" + DB_NAME),
+                        uri(ROUTE), rec(uri("feed:"), uri("")),
+                        uri(COLLECTION), lst()
+                ).jvm(),
+                f("/memory/space/doc/feed_test"));
+        final AtomicReference<Obj> heard = new AtomicReference<>();
+        try {
+            Machine.write(f("feed:locations/1"), rec(uri(NAME), str("downtown")));
+            Machine.write(f("feed:arenas/+").addQ(SUBQ), instLambda((pub, inst) -> {
+                heard.compareAndSet(null, pub.asLst().lstValue().get(1));
+                return noobj();
+            }));
+            Machine.write(f("feed:arenas/1"), rec(
+                    uri(NAME), str("main_stage"),
+                    uri("venue"), auto_from_(f("feed:locations/1")).tryToInst()));
+            final long deadline = System.currentTimeMillis() + 5000;
+            while (null == heard.get() && System.currentTimeMillis() < deadline)
+                Thread.sleep(20);
+            assertNotNull(heard.get(), "the subscriber hears the document");
+            assertEquals(f("feed:arenas/1"), heard.get().vid(), "the _id is the name of the document's vid");
+            checkEquality(LOG, noobj(), heard.get().asRec().at(uri(dcmntSpace.ID_FIELD)), true);
+            checkEquality(LOG, str("downtown"), heard.get().asRec().at(uri("venue")).asRec().at(uri(NAME)), true);
+        } finally {
+            Machine.write(f("feed:arenas/+").addQ(SUBQ), noobj());
+            Machine.current().memory().removeSpace(feed.vid());
+            feed.close();
+            server.shutdown();
+        }
     }
 
     /**
