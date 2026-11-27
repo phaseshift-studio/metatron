@@ -507,7 +507,7 @@ public class mParser {
      * parameter the definition names.
      */
     private static Parser m_inst_arg_key() {
-        return m_furi().map(t -> f(((fURI) t).toString().stripTrailing()).toUri());
+        return choice(m_type(), m_int(), m_real(), m_bool(), m_inst(), m_code(), m_furi().map(t -> f(((fURI) t).toString().stripTrailing()).toUri()), m_obj());
     }
 
     public static Parser m_inst_c() {
