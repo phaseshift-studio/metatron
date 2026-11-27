@@ -173,6 +173,11 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
      * the names peers 1 and 2 are called by in this machine's prefix table, while an addressed row runs ({@link #named})
      */
     private static final List<fURI> NAMES = List.of(f("//east"), f("//west"));
+    /**
+     * the names peers 1 and 2 are called by while a partition row runs: their numbers, so a key template computes a
+     * place ({@code <//${_}>} keys 1 to peer 1)
+     */
+    private static final List<fURI> NUMBERS = List.of(f("//1"), f("//2"));
     private static Protocol protocol;
     private static final List<AutoCloseable> clients = new ArrayList<>();
 
@@ -194,8 +199,10 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
         Machine.current().compiler(CatTheoryCompiler.single());
         Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
         // no peer mounts the category: law_shard is /m's, so a lane with budget left is re-planned wherever it lands. Each
-        // peer holds data of its own at /n/data, {i,10i,100i}, which the addressed rows (B, C) read where it lives
-        cluster = PeerCluster.of(3).seed("import(/m/math)", "{$index,$index0,$index00}.to?<=int{*}($root/data)").start();
+        // peer holds data of its own at /n/data, {i,10i,100i}, which the addressed rows (B, C) read where it lives, and
+        // {i,10i} at /n/kv/i, which a co-located partition's lanes read where their keys live
+        cluster = PeerCluster.of(3).seed("import(/m/math)", "{$index,$index0,$index00}.to?<=int{*}($root/data)",
+                "{$index,$index0}.to?<=int{*}($root/kv/$index)").start();
         // THE DIAL GRAPH THE TREE FOLLOWS (row E): peers 1 and 2 dial each other and peer 3, which dials no one. A dial
         // is construction, so it happens THERE: a peer is sent the client rec as a value, and constructing it there
         // dials from that peer and indexes the client as its own. Code naming the client type does not travel (this
@@ -292,18 +299,18 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     }
 
     /**
-     * THE NAMES AN ADDRESSED ROW SPELLS ITS OWNERS BY, bound around the row and unbound after it: {@code //east} and
-     * {@code //west} (peers 1 and 2), every name {@code //+} sums. Letters, as a numeric branch in a host reads as a
-     * coefficient ({@code {0,1}} is a range). No other row binds them: a name is how a profile and a topology name a
-     * place, and the rows that assert those names expect this machine to name its peers nothing.
+     * THE NAMES A ROW SPELLS PEERS 1 AND 2 BY, bound around the row and unbound after it: an addressed row's owners
+     * ({@link #NAMES}, {@code //east} and {@code //west}, every name {@code //+} sums) or a partition row's places
+     * ({@link #NUMBERS}). No other row binds them: a name is how a profile and a topology name a place, and the rows
+     * that assert those names expect this machine to name its peers nothing.
      */
-    private static void named(final Runnable row) {
+    private static void named(final List<fURI> names, final Runnable row) {
         for (int i = 1; i <= 2; i++)
-            Machine.current().network().registerPrefix(NAMES.get(i - 1), protocol.endpoint(i));
+            Machine.current().network().registerPrefix(names.get(i - 1), protocol.endpoint(i));
         try {
             row.run();
         } finally {
-            NAMES.forEach(name -> Machine.current().network().unregisterPrefix(name));
+            names.forEach(name -> Machine.current().network().unregisterPrefix(name));
         }
     }
 
@@ -323,7 +330,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "*<{/n/data,//east/n/data}>.count() % branch(from(</n/data>).count(),from(</n/data>).count()).sum()     % 5",
     }, delimiter = '%')
     void test_B_data_local_shard(final String code, final String expectedRewriteForm, final String expectedResult) {
-        named(() -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
+        named(NAMES, () -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
     }
 
     /**
@@ -336,7 +343,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "*//west/n/data.order()             % branch(from(</n/data>).order()).kmerge()   % [2,20,200]",
     }, delimiter = '%')
     void test_C_authority_push_down(final String code, final String expectedRewriteForm, final String expectedResult) {
-        named(() -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
+        named(NAMES, () -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
     }
 
     /**
@@ -350,7 +357,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "1.branch(*//east/n/data.count(),*//west/n/data.count()).sum()  % 6",
     }, delimiter = '%')
     void test_C_an_addressed_read_takes_an_input(final String code, final String expected) {
-        named(() -> checkCodeParseApply(LOG, code, expected));
+        named(NAMES, () -> checkCodeParseApply(LOG, code, expected));
     }
 
     /**
@@ -366,7 +373,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "*//{east,west}/n/data.mean()                       % from(<//{east,west}/n/data>).mean()              % 55.5",
     }, delimiter = '%')
     void test_B_what_an_addressed_read_keeps_home(final String code, final String expectedRewriteForm, final String expectedResult) {
-        named(() -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
+        named(NAMES, () -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
     }
 
     /**
@@ -379,7 +386,74 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "*//nobody/n/data.count()          % <ERROR>",
     }, delimiter = '%')
     void test_B_an_owner_no_peer_answers_fails(final String code, final String expected) {
-        named(() -> checkCodeParseApply(LOG, code, expected));
+        named(NAMES, () -> checkCodeParseApply(LOG, code, expected));
+    }
+
+    // ================================================================================================
+    // PARTITION — each obj to the lane its function keys (Marko, 2026-11-27). A hosted key is a place, and its
+    // lane is the cut its program runs in there, so each place is sent its share alone, where a branch sends
+    // every lane the whole bag. DATA DISTRIBUTION routes the data; CO-LOCATION routes keys to the places that
+    // hold their data, and each lane reads its keys there. The peers are named by number here (//1, //2), so a
+    // key template computes a place. Peer i's /n/data sums to 111i and this machine's to 15, so a lane's answer
+    // names where it ran and what it was sent.
+    // ================================================================================================
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // the evens to peer 1 (2+4+6 and its 111), the odds to peer 2 (1+3+5 and its 222), each share sent once
+            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum()))  % {123,231}",
+            // one obj at a time, each sent alone: 1 and 3 to peer 2, 2 and 4 to peer 1
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum()))                 % {223,113,225,115}",
+            // the rest runs here, beside a place: the odds key //2, which no lane names, and read this machine's {7,8}
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), <#> => plus(*/n/data.sum()))                 % {16,113,18,115}",
+            // the lanes' answers fold at home
+            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => count(), //2 => count()).sum()                         % 6",
+            // a place no name reaches fails the call (3 keys //3), as the same call keyed by a reached one answers
+            "{1,3}.partition(<//${_}>, //1 => count(), //3 => count())                                                             % <ERROR>",
+            "{1,2}.partition(<//${_}>, //1 => count(), //2 => count())                                                             % {1,1}",
+            // CO-LOCATION: peer i holds {i,10i} at /n/kv/i, and key i is routed to peer i, where its data is read ...
+            "{1,2}.partition(<//${_}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum())                                     % {11,22}",
+            // ... bucketed, each place reading every key it was sent, the partials folded at home ...
+            "{1,2}.partition?<=int{*}(<//${_}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum()).sum()                      % 33",
+            // ... and a key routed to a place that does not hold it reads nothing there
+            "{1,2}.partition(<//${mod(2).plus(1)}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum())                        % {0,0}",
+            // THE TOPOLOGY: each place is dealt a share of the four, at most all of them, and the partials merge at home
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('[{]4[}]──┤').count()                % 1",
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('─►//1─[{]0,4[}]─[{]1[}]─┐').count() % 1",
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('─►//2─[{]0,4[}]─[{]1[}]─┘').count() % 1",
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('├─►//local─[{]2[}]').count()        % 1",
+    }, delimiter = '%')
+    void test_partition_routes_each_obj_to_its_place(final String code, final String expected) {
+        named(NUMBERS, () -> checkCodeParseApply(LOG, code, expected));
+    }
+
+    /**
+     * A PARTITION IS A LAYOUT ALREADY: its lanes are routed by their keys, so the planner leaves it as written, and the
+     * fold after it stays home.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => count(), //2 => count()).sum() % start().partition().sum() % 6",
+    }, delimiter = '%')
+    void test_partition_is_a_layout(final String code, final String expectedRewriteForm, final String expectedResult) {
+        named(NUMBERS, () -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
+    }
+
+    /**
+     * THE DATA-DISTRIBUTION SPELLING, {@code *large_data.partition(*partition_function, //a => …, //b => …)}: this
+     * machine's {7,8} routed by a stored function, 8 to peer 1 and 7 to peer 2.
+     */
+    @Test
+    void test_partition_by_a_stored_function() {
+        named(NUMBERS, () -> {
+            try {
+                Machine.write(f("/n/pf"), Machine.parse("<//${mod(2).plus(1)}>"));
+                checkCodeParseApply(LOG, "*/n/data.partition?<=int{*}(*/n/pf, //1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum()))",
+                        "{119,229}");
+            } finally {
+                Machine.write(f("/n/pf"), noobj());
+            }
+        });
     }
 
     // ================================================================================================

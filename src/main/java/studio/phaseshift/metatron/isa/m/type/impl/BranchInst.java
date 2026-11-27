@@ -143,6 +143,9 @@ public class BranchInst extends MInst {
      * branch runs, as {@code ?place} resolves it: no place, no lane.
      */
     public static List<Lane> lanes(final Inst branch) {
+        // a partition is a layout too, and its lanes are its routes (PartitionInst#lanes)
+        if (PARTITION_INST_TID.equals(branch.tid().basePath()))
+            return PartitionInst.lanes(branch);
         if (branch.args().isRec()) {
             final List<Lane> lanes = routes(branch).<Rel>elements().flatMap(route -> {
                 final fURI key = route.first().uriValue();

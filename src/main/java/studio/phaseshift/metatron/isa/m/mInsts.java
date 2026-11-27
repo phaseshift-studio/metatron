@@ -1495,8 +1495,9 @@ public final class mInsts {
                                 function keys, where a branch routes every obj to every lane. partition(p, k => c, …)
                                 means the branch whose lanes are guarded by the fibres of p,
                                 branch(k => filter(p.eq(k)).c, …), and evaluates p once per obj, not every guard.
-                                the partition function is applied to each obj; when it answers an instruction (a stored
-                                function, *xyz), that instruction is applied to the obj in turn. a key is a uri, or an int
+                                the partition function is applied to each obj, and what it answers is applied to the obj
+                                in turn: a value answers itself, and a stored function (*xyz: an instruction, a code or a
+                                key template) keys the obj. a key is a uri, or an int
                                 read as its decimal spelling.
                                 a hosted key (//a) is a place, and its lane runs there as a keyed branch's lane does; any
                                 other key (<0>) is a label, and its lane runs here. a key naming two lanes names their

@@ -49,9 +49,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * so the branch's laws hold of it, and its body evaluates p once per member where the guarded branch would evaluate
  * every guard on every member: a switch, not a chain of tests.
  * <ul>
- *     <li>THE PARTITION FUNCTION is applied to each member, and when what it answers is an instruction (a stored
- *     function, {@code *xyz}) that instruction is applied to the member in turn, so {@code mod(2)}, a key template
- *     {@code <${mod(2)}>} and {@code *xyz} all key a member. A key is a uri, or an int read as its decimal spelling.</li>
+ *     <li>THE PARTITION FUNCTION is applied to each member, and what it answers is applied to the member in turn: a
+ *     value answers itself, and a stored function ({@code *xyz}, an instruction, a code or a key template) keys the
+ *     member. So {@code mod(2)}, a key template {@code <${mod(2)}>} and {@code *xyz} all key a member. A key is a uri,
+ *     or an int read as its decimal spelling.</li>
  *     <li>A LANE'S KEY IS ITS PLACE OR ITS LABEL: a hosted key ({@code //a}) is a place, and the lane is the cut its
  *     program runs in there, as a keyed branch's lane is; any other key ({@code <0>}) is a label, and the lane runs
  *     here. A key naming two lanes names their branch, and the member goes to each. A {@code <#>} lane takes every
@@ -71,7 +72,8 @@ public class PartitionInst extends MInst {
 
     /**
      * THE LANES, one per route {@code key => program} in the order written: a hosted key's lane is the cut its program
-     * runs in at that place, and any other key's a home lane.
+     * runs in at that place, and any other key's a home lane. Each lane's weight is one, a dealt lane's, as a reader of
+     * a layout reads it: a lane receives its key's share, never the whole lhs (a weight of zero).
      */
     public static List<BranchInst.Lane> lanes(final Inst partition) {
         return routes(partition).stream().map(route -> {
@@ -79,8 +81,8 @@ public class PartitionInst extends MInst {
             final List<Inst> program = BranchInst.program(route.second());
             final Obj tail = program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst();
             return key.hasHost()
-                    ? new BranchInst.Lane(key, program, 0L, instB(CUT_INST_TID, lst(uri(Machine.Helper.align(Machine.current(), key)), tail)))
-                    : new BranchInst.Lane(null, program, 0L, tail);
+                    ? new BranchInst.Lane(key, program, 1L, instB(CUT_INST_TID, lst(uri(Machine.Helper.align(Machine.current(), key)), tail)))
+                    : new BranchInst.Lane(null, program, 1L, tail);
         }).toList();
     }
 
@@ -102,8 +104,9 @@ public class PartitionInst extends MInst {
         final int rest = keys.indexOf(fURI.Singleton.f("#").one());
         final List<List<Obj>> shares = keys.stream().map(key -> (List<Obj>) new ArrayList<Obj>()).toList();
         for (final Obj member : lhs.stream().toList()) {
-            final Obj applied = function.apply(member);
-            final Obj answer = applied.isObjInst() ? applied.asInst().apply(member) : applied;
+            // what the function answers is applied to the member in turn: a value answers itself, and a stored function
+            // (*xyz: an instruction, a code or a key template) keys the member
+            final Obj answer = function.apply(member).apply(member);
             if (!answer.isNoObj() && !answer.isUri() && !answer.isInt())
                 throw MTronException.of("a partition key is a uri or an int: %s keys %s as %s", function, member, answer);
             // a member keyed noobj is in no fibre, so it is the rest's
