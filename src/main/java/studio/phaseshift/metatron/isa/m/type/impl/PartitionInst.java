@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.impl;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -56,7 +57,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *     <li>A LANE'S KEY IS ITS PLACE OR ITS LABEL: a hosted key ({@code //a}) is a place, and the lane is the cut its
  *     program runs in there, as a keyed branch's lane is; any other key ({@code <0>}) is a label, and the lane runs
  *     here. A key naming two lanes names their branch, and the member goes to each. A {@code <#>} lane takes every
- *     member no other key names, a member keyed noobj included; with none, such a member fails the call.</li>
+ *     member no other key names; with none, such a member fails the call. A member keyed noobj goes to each lane whose
+ *     key is zeroable ({@code {?}//a}, {@code {*}<a>}); with none, it fails the call too.</li>
  *     <li>THE DOM COEFFICIENT IS THE GRAIN, as for a branch: {@code {?}} routes one member at a time, {@code {n}}
  *     buckets a page of n, and {@code {*}} buckets the whole lhs, so each lane receives its share once. A lane whose
  *     share of a call is empty runs nothing.</li>
@@ -77,8 +79,10 @@ public class PartitionInst extends MInst {
      */
     public static List<BranchInst.Lane> lanes(final Inst partition) {
         return routes(partition).stream().map(route -> {
-            final fURI key = route.first().uriValue();
-            final List<Inst> program = BranchInst.program(route.second());
+            // THE ROUTE'S COEFFICIENT IS ITS KEY'S: it says whether the lane takes noobj (a zeroable key, {?}//a), and a rel
+            // multiplies it into both its sides, so the place is read at one and the program runs as written
+            final fURI key = route.first().uriValue().one();
+            final List<Inst> program = BranchInst.program(route.c(cInt.ONE()).asRel().second());
             final Obj tail = program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst();
             return key.hasHost()
                     ? new BranchInst.Lane(key, program, 1L, instB(CUT_INST_TID, lst(uri(Machine.Helper.align(Machine.current(), key)), tail)))
@@ -99,8 +103,9 @@ public class PartitionInst extends MInst {
      */
     public Obj route(final Obj lhs) {
         final Obj function = this.arg(0);
+        final List<Rel> routes = routes(this);
         // keys compare at coefficient one: a bulked member's key carries its count
-        final List<fURI> keys = routes(this).stream().map(route -> route.first().uriValue().one()).toList();
+        final List<fURI> keys = routes.stream().map(route -> route.first().uriValue().one()).toList();
         final int rest = keys.indexOf(fURI.Singleton.f("#").one());
         final List<List<Obj>> shares = keys.stream().map(key -> (List<Obj>) new ArrayList<Obj>()).toList();
         for (final Obj member : lhs.stream().toList()) {
@@ -109,12 +114,15 @@ public class PartitionInst extends MInst {
             final Obj answer = function.apply(member).apply(member);
             if (!answer.isNoObj() && !answer.isUri() && !answer.isInt())
                 throw MTronException.of("a partition key is a uri or an int: %s keys %s as %s", function, member, answer);
-            // a member keyed noobj is in no fibre, so it is the rest's
             final fURI key = answer.isUri() ? answer.uriValue().one()
                     : answer.isInt() ? fURI.Singleton.f(answer.intValue().toString())
                     : null;
-            // A KEY NAMING TWO LANES NAMES THEIR BRANCH: the member goes to each, as the guarded branch sends it
-            final int[] named = IntStream.range(0, keys.size()).filter(r -> keys.get(r).equals(key)).toArray();
+            // A KEY NAMING TWO LANES NAMES THEIR BRANCH: the member goes to each, as the guarded branch sends it. A MEMBER
+            // KEYED NOOBJ goes to each lane whose key is zeroable, {?}//a or {*}<a> (Marko, 2026-11-27)
+            final int[] named = IntStream.range(0, keys.size())
+                    .filter(r -> null == key ? routes.get(r).first().c().isZeroable() : keys.get(r).equals(key)).toArray();
+            if (0 == named.length && null == key)
+                throw MTronException.of("no lane of the partition is zeroable ({?}//a): %s keys %s noobj", function, member);
             if (0 == named.length && -1 == rest)
                 throw MTronException.of("no lane of the partition is keyed %s: %s keys %s so, and no <#> lane takes the rest", answer, function, member);
             (0 == named.length ? IntStream.of(rest) : IntStream.of(named)).forEach(r -> shares.get(r).add(member));

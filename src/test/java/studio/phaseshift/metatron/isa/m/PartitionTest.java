@@ -70,18 +70,22 @@ public class PartitionTest extends AbstractMetatronTest {
             "{1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100))                             % {101,102,3}",
             // a key template keys each obj as its spelling says
             "{1,2,3,4}.partition(<${mod(2)}>, <0> => plus(10), <1> => plus(20))                   % {21,12,23,14}",
-            // A KEY FUNCTION THAT SPLITS ON A PREDICATE keys the objs it admits and leaves the rest noobj, which <#>
-            // takes: map's dom narrowed to one obj (Marko, 2026-11-27) maps only what the filter kept ...
-            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=int(<even>), <even> => plus(10), <#> => plus(20))             % {21,12,23,14}",
-            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=A(<even>), <even> => plus(10), <#> => plus(20))               % {21,12,23,14}",
+            // A KEY FUNCTION THAT SPLITS ON A PREDICATE keys the objs it admits and leaves the rest noobj, which a
+            // zeroable lane takes: map's dom narrowed to one obj (Marko, 2026-11-27) maps only what the filter kept ...
+            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=int(<even>), <even> => plus(10), {?}<odd> => plus(20))        % {21,12,23,14}",
+            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=A(<even>), <even> => plus(10), {?}<odd> => plus(20))          % {21,12,23,14}",
             // ... as map's own dom, maybe an obj, maps the noobj too (a mid-expression start), and every obj keys even
-            "{1,2,3,4}.partition(is(mod(2).eq(0)).map(<even>), <even> => plus(10), <#> => plus(20))                   % {11,12,13,14}",
+            "{1,2,3,4}.partition(is(mod(2).eq(0)).map(<even>), <even> => plus(10), {?}<odd> => plus(20))              % {11,12,13,14}",
             // a bulked obj goes whole to one lane, its count riding
             "{{2}1,{3}2}.partition(mod(2), <0> => plus(10), <1> => plus(20))                      % {{2}21,{3}12}",
             // A KEY NAMING TWO LANES NAMES THEIR BRANCH: 1 goes to both <1> lanes, as the guarded branch sends it
             "{1,2}.partition(mod(2), <1> => plus(10), <1> => plus(20), <0> => id())               % {11,21,2}",
-            // AN OBJ KEYED NOOBJ IS IN NO FIBRE: is(gt(2)) keys 1 and 2 nothing, so the rest takes them
-            "{1,2,3}.partition(is(gt(2)), <3> => plus(10), <#> => plus(100))                      % {101,102,13}",
+            // AN OBJ KEYED NOOBJ GOES TO EACH ZEROABLE LANE (Marko, 2026-11-27): is(gt(2)) keys 1 and 2 nothing ...
+            "{1,2,3}.partition(is(gt(2)), <3> => plus(10), {?}<#> => plus(100))                   % {101,102,13}",
+            // ... any coefficient that holds zero is zeroable, and each such lane takes it
+            "{1,3}.partition(is(gt(2)), {0,5}<3> => plus(10), {*}<4> => plus(20))                 % {11,21,13}",
+            // ... the rest is not zeroable, so a <#> lane takes keys, never noobj, and with no zeroable lane the call fails
+            "{1,2,3}.partition(is(gt(2)), <3> => plus(10), <#> => plus(100))                      % <ERROR>",
             "{1,2,3}.partition(is(gt(2)), <3> => plus(10))                                        % <ERROR>",
             // AN OBJ NO LANE TAKES FAILS THE CALL: 2 keys <2>, and no lane is keyed so ...
             "{1,2,3}.partition(mod(3), <0> => id(), <1> => id())                                  % <ERROR>",

@@ -86,7 +86,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * rewrite form, and the actual compilation. So a row proves the layout <em>and</em> that distributing did not
  * change the answer.
  *
- * <h2>the menu (A–W)</h2>
+ * <h2>the menu (A–X)</h2>
  *
  * <p>{@code ✅} = the lowering is written; an empty box = the law is sound but the lowering is unwritten (the
  * row is present below as a {@code @Disabled} stub naming what it still needs). The law column is the reason
@@ -118,6 +118,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <tr><td>U</td><td>profile collation</td><td>p̂(a ⊎ b) = p̂(a) ⊕ p̂(b), ⊕ = keyed union, the figures add or fold</td><td>{@code {1,2,3,4,5}.plus(10).sum().profile()>>format}</td><td>✅</td></tr>
  *   <tr><td>V</td><td>generative run</td><td>a^[m,n] = Σ_k a^k (the unrolls are independent terms)</td><td>{@code start(0).{0,1000}plus(1).sum()}</td><td>✅</td></tr>
  *   <tr><td>W</td><td>embarrassingly parallel</td><td>(a+b)·f = a·f + b·f, f floatable, no cut</td><td>{@code {1,…,8}.plus(1)}</td><td>✅</td></tr>
+ *   <tr><td>X</td><td>partition by key (the shuffle)</td><td>partition(p, k⇒c) = branch(k⇒filter(p.eq(k))·c)</td><td>{@code {1,…,6}.partition(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum())}</td><td>✅</td></tr>
  * </table>
  *
  * <h2>why this suite needs a real cluster</h2>
@@ -389,71 +390,39 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
         named(NAMES, () -> checkCodeParseApply(LOG, code, expected));
     }
 
-    // ================================================================================================
-    // PARTITION — each obj to the lane its function keys (Marko, 2026-11-27). A hosted key is a place, and its
-    // lane is the cut its program runs in there, so each place is sent its share alone, where a branch sends
-    // every lane the whole bag. DATA DISTRIBUTION routes the data; CO-LOCATION routes keys to the places that
-    // hold their data, and each lane reads its keys there. The peers are named by number here (//1, //2), so a
-    // key template computes a place. Peer i's /n/data sums to 111i and this machine's to 15, so a lane's answer
-    // names where it ran and what it was sent.
-    // ================================================================================================
-
+    /**
+     * B BY KEY — CO-LOCATION: a partition routes each key to the place that holds its data, and the lane reads the key
+     * there, so the code moves to the data as an addressed read's does, the key naming its owner where an address names
+     * it (X, below, is the partition itself). Peer i holds {i,10i} at /n/kv/i, and these rows name peers 1 and 2 by
+     * number ({@link #NUMBERS}), so {@code <//${_}>} keys i to peer i.
+     */
     @ParameterizedTest
     @CsvSource(value = {
-            // the evens to peer 1 (2+4+6 and its 111), the odds to peer 2 (1+3+5 and its 222), each share sent once
-            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum()))  % {123,231}",
-            // one obj at a time, each sent alone: 1 and 3 to peer 2, 2 and 4 to peer 1
-            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum()))                 % {223,113,225,115}",
-            // the rest runs here, beside a place: the odds key //2, which no lane names, and read this machine's {7,8}
-            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), <#> => plus(*/n/data.sum()))                 % {16,113,18,115}",
-            // the lanes' answers fold at home
-            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => count(), //2 => count()).sum()                         % 6",
-            // a place no name reaches fails the call (3 keys //3), as the same call keyed by a reached one answers
-            "{1,3}.partition(<//${_}>, //1 => count(), //3 => count())                                                             % <ERROR>",
-            "{1,2}.partition(<//${_}>, //1 => count(), //2 => count())                                                             % {1,1}",
-            // CO-LOCATION: peer i holds {i,10i} at /n/kv/i, and key i is routed to peer i, where its data is read ...
-            "{1,2}.partition(<//${_}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum())                                     % {11,22}",
+            // key i is routed to peer i, where its data is read ...
+            "{1,2}.partition(<//${_}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum())                     % {11,22}",
             // ... bucketed, each place reading every key it was sent, the partials folded at home ...
-            "{1,2}.partition?<=int{*}(<//${_}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum()).sum()                      % 33",
+            "{1,2}.partition?<=int{*}(<//${_}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum()).sum()      % 33",
             // ... and a key routed to a place that does not hold it reads nothing there
-            "{1,2}.partition(<//${mod(2).plus(1)}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum())                        % {0,0}",
-            // THE TOPOLOGY: each place is dealt a share of the four, at most all of them, and the partials merge at home
-            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('[{]4[}]──┤').count()                % 1",
-            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('─►//1─[{]0,4[}]─[{]1[}]─┐').count() % 1",
-            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('─►//2─[{]0,4[}]─[{]1[}]─┘').count() % 1",
-            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('├─►//local─[{]2[}]').count()        % 1",
+            "{1,2}.partition(<//${mod(2).plus(1)}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum())        % {0,0}",
     }, delimiter = '%')
-    void test_partition_routes_each_obj_to_its_place(final String code, final String expected) {
+    void test_B_a_partition_co_locates_each_key_with_its_data(final String code, final String expected) {
         named(NUMBERS, () -> checkCodeParseApply(LOG, code, expected));
     }
 
     /**
-     * A PARTITION IS A LAYOUT ALREADY: its lanes are routed by their keys, so the planner leaves it as written, and the
-     * fold after it stays home.
+     * C BY KEY: B with one owner. Every key lives at peer 1, so the one lane's fold runs where the data lives, and a
+     * bulked key keeps its count across the cut.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => count(), //2 => count()).sum() % start().partition().sum() % 6",
+            "{1}.partition(<//${_}>, //1 => *</n/kv/${_}>.count())                % 2",
+            // one obj at a time, each of the three copies counts its own read ...
+            "{{3}1}.partition(<//${_}>, //1 => *</n/kv/${_}>.count())             % {3}2",
+            // ... and bucketed, the place counts every read
+            "{{3}1}.partition?<=int{*}(<//${_}>, //1 => *</n/kv/${_}>.count())    % 6",
     }, delimiter = '%')
-    void test_partition_is_a_layout(final String code, final String expectedRewriteForm, final String expectedResult) {
-        named(NUMBERS, () -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
-    }
-
-    /**
-     * THE DATA-DISTRIBUTION SPELLING, {@code *large_data.partition(*partition_function, //a => …, //b => …)}: this
-     * machine's {7,8} routed by a stored function, 8 to peer 1 and 7 to peer 2.
-     */
-    @Test
-    void test_partition_by_a_stored_function() {
-        named(NUMBERS, () -> {
-            try {
-                Machine.write(f("/n/pf"), Machine.parse("<//${mod(2).plus(1)}>"));
-                checkCodeParseApply(LOG, "*/n/data.partition?<=int{*}(*/n/pf, //1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum()))",
-                        "{119,229}");
-            } finally {
-                Machine.write(f("/n/pf"), noobj());
-            }
-        });
+    void test_C_a_partition_of_one_place_folds_where_its_keys_live(final String code, final String expected) {
+        named(NUMBERS, () -> checkCodeParseApply(LOG, code, expected));
     }
 
     // ================================================================================================
@@ -920,7 +889,70 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     }
 
     // ================================================================================================
-    // THE UNWRITTEN ROWS (B, C, F, I, L, M, P, Q, R). Each is SOUND -- the law holds -- and each
+    // X — partition by key (the shuffle): partition(p, k⇒c) = branch(k⇒filter(p.eq(k))·c), with p evaluated once
+    // per obj (Marko, 2026-11-27). A hosted key is a place, and its lane is the cut its program runs in there, so each
+    // place is sent its share alone (data distribution), where a branch sends every lane the whole bag; B and C route
+    // keys to the places that hold their data (co-location). The rows name peers 1 and 2 by number (NUMBERS), so a key
+    // template computes a place. Peer i's /n/data sums to 111i and this machine's to 15, so a lane's answer names
+    // where it ran and what it was sent.
+    // ================================================================================================
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // the evens to peer 1 (2+4+6 and its 111), the odds to peer 2 (1+3+5 and its 222), each share sent once
+            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum()))  % {123,231}",
+            // one obj at a time, each sent alone: 1 and 3 to peer 2, 2 and 4 to peer 1
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum()))                 % {223,113,225,115}",
+            // the rest runs here, beside a place: the odds key //2, which no lane names, and read this machine's {7,8}
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), <#> => plus(*/n/data.sum()))                 % {16,113,18,115}",
+            // a zeroable place takes the objs keyed noobj: the odds, which the narrowed map leaves nothing, run at peer 2
+            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=A(<//1>), //1 => plus(*/n/data.sum()), {?}//2 => plus(*/n/data.sum()))  % {223,113,225,115}",
+            // the lanes' answers fold at home
+            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => count(), //2 => count()).sum()                         % 6",
+            // a place no name reaches fails the call (3 keys //3), as the same call keyed by a reached one answers
+            "{1,3}.partition(<//${_}>, //1 => count(), //3 => count())                                                             % <ERROR>",
+            "{1,2}.partition(<//${_}>, //1 => count(), //2 => count())                                                             % {1,1}",
+            // THE TOPOLOGY: each place is dealt a share of the four, at most all of them, and the partials merge at home
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('[{]4[}]──┤').count()                % 1",
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('─►//1─[{]0,4[}]─[{]1[}]─┐').count() % 1",
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('─►//2─[{]0,4[}]─[{]1[}]─┘').count() % 1",
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('├─►//local─[{]2[}]').count()        % 1",
+    }, delimiter = '%')
+    void test_X_partition_by_key(final String code, final String expected) {
+        named(NUMBERS, () -> checkCodeParseApply(LOG, code, expected));
+    }
+
+    /**
+     * X IS A LAYOUT ALREADY: its lanes are routed by their keys, so the planner leaves it as written, and the fold after
+     * it stays home.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => count(), //2 => count()).sum() % start().partition().sum() % 6",
+    }, delimiter = '%')
+    void test_X_a_partition_is_a_layout(final String code, final String expectedRewriteForm, final String expectedResult) {
+        named(NUMBERS, () -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
+    }
+
+    /**
+     * X AS DATA DISTRIBUTION IS SPELLED, {@code *large_data.partition(*partition_function, //a => …, //b => …)}: this
+     * machine's {7,8} routed by a stored function, 8 to peer 1 and 7 to peer 2.
+     */
+    @Test
+    void test_X_partition_by_a_stored_function() {
+        named(NUMBERS, () -> {
+            try {
+                Machine.write(f("/n/pf"), Machine.parse("<//${mod(2).plus(1)}>"));
+                checkCodeParseApply(LOG, "*/n/data.partition?<=int{*}(*/n/pf, //1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum()))",
+                        "{119,229}");
+            } finally {
+                Machine.write(f("/n/pf"), noobj());
+            }
+        });
+    }
+
+    // ================================================================================================
+    // THE UNWRITTEN ROWS (F, I, L, M, P, Q, R). Each is SOUND -- the law holds -- and each
     // needs a premise the emitter does not hold yet, which is why the interpreter DECLINES it to the identity
     // rather than approximating a layout. These stubs WARN rather than fail: "not implemented" is a logged
     // target, not a silent absence, and a red suite is reserved for behaviour that regressed. When a row's

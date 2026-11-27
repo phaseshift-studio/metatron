@@ -1501,8 +1501,9 @@ public final class mInsts {
                                 read as its decimal spelling.
                                 a hosted key (//a) is a place, and its lane runs there as a keyed branch's lane does; any
                                 other key (<0>) is a label, and its lane runs here. a key naming two lanes names their
-                                branch, and the obj goes to each. a <#> lane takes every obj no other key names, an obj
-                                keyed noobj included; with none, such an obj fails the call.
+                                branch, and the obj goes to each. a <#> lane takes every obj no other key names; with
+                                none, such an obj fails the call. an obj keyed noobj goes to each lane whose key is
+                                zeroable ({?}//a, {*}<a>); with none, it fails the call too.
                                 the dom coefficient is the grain: `{?}` routes one obj at a time, `{n}` buckets a page of n,
                                 and `{*}` buckets the whole lhs, so each lane receives its share once. a lane whose share
                                 of a call is empty runs nothing.""")
