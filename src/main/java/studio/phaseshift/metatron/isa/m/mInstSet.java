@@ -173,6 +173,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI FROM_INST_TID = M_ISA_INST_TID.extend("from");
     public static final fURI REF_INST_TID = M_ISA_INST_TID.extend("ref");
     public static final fURI BRANCH_INST_TID = M_ISA_INST_TID.extend("branch"); // -<[]>-
+    public static final fURI PARTITION_INST_TID = M_ISA_INST_TID.extend("partition");
     public static final fURI SPLIT_INST_TID = M_ISA_INST_TID.extend("split"); // -<
     public static final fURI CHOOSE_INST_TID = M_ISA_INST_TID.extend("choose"); // -<|
     public static final fURI MERGE_INST_TID = M_ISA_INST_TID.extend("merge");

@@ -54,6 +54,7 @@ import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MOVE_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.PARTITION_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
@@ -205,8 +206,12 @@ public class BranchInst extends MInst {
      * members, and only a lone lane that runs here is inlined.
      */
     public static boolean isLayout(final Inst inst) {
-        return BRANCH_INST_TID.equals(inst.tid().basePath())
-                && (inst.args().isRec() || inst.tid().hasQ(SPLIT) || lanes(inst).stream().anyMatch(lane -> !lane.home()));
+        final fURI base = inst.tid().basePath();
+        return (BRANCH_INST_TID.equals(base)
+                && (inst.args().isRec() || inst.tid().hasQ(SPLIT) || lanes(inst).stream().anyMatch(lane -> !lane.home())))
+                // A PARTITION WHOSE LANES LEAVE FOR PLACES ROUTES THEM, as a keyed branch does: a hosted key is a place
+                || (PARTITION_INST_TID.equals(base) && inst.args().<Obj>elements().skip(1)
+                .anyMatch(route -> route.isRel() && route.asRel().first().isUri() && route.asRel().first().uriValue().hasHost()));
     }
 
     /**
@@ -279,11 +284,18 @@ public class BranchInst extends MInst {
         final List<Lane> lanes = lanes(this);
         final long[] weights = lanes.stream().mapToLong(lane -> lane.seeded() ? 0L : lane.weight()).toArray();
         final List<List<Obj>> parts = deal(lhs, weights);
-        final List<Obj> threads = IntStream.range(0, lanes.size())
+        return await(IntStream.range(0, lanes.size())
                 .mapToObj(r -> 0 == weights[r] ? lane(lanes.get(r), lhs)
                         : parts.get(r).isEmpty() ? noobj()
                         : lane(lanes.get(r), objs(parts.get(r))))
-                .toList();
+                .toList());
+    }
+
+    /**
+     * THE MERGE: every lane's answer, each awaited through its {@code rhs} once all were submitted, a lane run nothing
+     * ({@code noobj}) answering nothing. A partition merges its lanes the same way ({@link PartitionInst}).
+     */
+    static Obj await(final List<Obj> threads) {
         return objs(threads.stream().map(thread -> {
             if (thread.isNoObj())
                 return thread;
@@ -395,7 +407,7 @@ public class BranchInst extends MInst {
      * where the caller stands, so a lane whose cut moves into another machine moves only its own thread: the caller is
      * never left anywhere else.
      */
-    private static Obj lane(final Lane lane, final Obj input) {
+    static Obj lane(final Lane lane, final Obj input) {
         final List<Inst> member = program(lane.member());
         final Obj code = lane.seeded() ? code(member) : start_(input).addInsts(member);
         // THE LANE'S THREAD WAITS AS LONG AS ITS CUTS MAY RUN, and a second more: a cut times its own run from when it

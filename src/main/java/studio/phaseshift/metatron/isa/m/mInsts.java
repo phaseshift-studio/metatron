@@ -1483,6 +1483,34 @@ public final class mInsts {
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build()
+                        .tid(PARTITION_INST_TID)
+                        // THE DOM IS THE GRAIN, as the branch's: {?} routes one obj at a time, {n} buckets a page, {*}
+                        // buckets the whole lhs, so each lane receives its share once
+                        .dom(A.maybe(), "maybe an obj: one obj at a time (`{n}` buckets a page, `{*}` the whole lhs)")
+                        .rng(B.maybeSome(), "what the lanes answer, merged")
+                        // ONE SLOT BINDS EVERY ARG: the partition function, then the lanes, key => program
+                        .argLst(T(A.maybeSome()), "the partition function, then the lanes, key => program")
+                        .desc("""
+                                a partitioning function: each obj of the lhs is routed to the lane its partition
+                                function keys, where a branch routes every obj to every lane. partition(p, k => c, …)
+                                means the branch whose lanes are guarded by the fibres of p,
+                                branch(k => filter(p.eq(k)).c, …), and evaluates p once per obj, not every guard.
+                                the partition function is applied to each obj; when it answers an instruction (a stored
+                                function, *xyz), that instruction is applied to the obj in turn. a key is a uri, or an int
+                                read as its decimal spelling.
+                                a hosted key (//a) is a place, and its lane runs there as a keyed branch's lane does; any
+                                other key (<0>) is a label, and its lane runs here. a key naming two lanes names their
+                                branch, and the obj goes to each. a <#> lane takes every obj no other key names, an obj
+                                keyed noobj included; with none, such an obj fails the call.
+                                the dom coefficient is the grain: `{?}` routes one obj at a time, `{n}` buckets a page of n,
+                                and `{*}` buckets the whole lhs, so each lane receives its share once. a lane whose share
+                                of a call is empty runs nothing.""")
+                        // THE BODY LIVES ON ITS CLASS, as the branch's: a call bound from the definition is a clone of it
+                        .inst(PartitionInst::new)
+                        .body((lhs, inst) -> ((PartitionInst) inst).route(lhs))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build()
                         .tid(REPEAT_INST_TID.q(MONAD_IN, "+").q(MONAD_OUT, "+"))
                         .dom(A, "any obj")
                         .rng(A.maybeSome(), "the repeated application results")

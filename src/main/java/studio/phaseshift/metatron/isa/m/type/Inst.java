@@ -379,6 +379,8 @@ public interface Inst extends Call {
                 base.equals(REPEAT_INST_TID) ||
                 base.equals(TIMEOUT_INST_TID) ||
                 base.equals(BRANCH_INST_TID) ||
+                // a partition applies its function and runs its lanes itself, one member at a time
+                base.equals(PARTITION_INST_TID) ||
                 base.equals(ELSE_INST_TID) ||
                 base.equals(CATCH_INST_TID);
     }
