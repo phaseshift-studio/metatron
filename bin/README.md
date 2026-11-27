@@ -71,7 +71,7 @@ console::[=>]@/usr/ui/console;
 `boot/spaces.boot.mtron` is the docker boot — mariadb/gremlin/chromadb
 backends as containers via dckrspace, then this local console (docker is the
 host requirement, plus an ollama serving the embedding model when the boot runs, which builds the model
-for `embed:` writes then).
+for `embed:` writes then; without one, `embed:` writes fail until a model is written to `/sys/model/embed`).
 
 ### 4. ttyd / web terminal — a console in the browser (historical / future route)
 

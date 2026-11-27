@@ -237,10 +237,15 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
         final fURI stand = f().scheme(HTTP).host(ollama.getAddress().getAddress().getHostAddress()).port(ollama.getAddress().getPort());
         final fURI location = f(address.group(1));
         try {
-            // the boot's model: its spec, its host moved to the stand-in, built where the embedq references it
-            ObjmtronSerializer.parse("<" + location + "> -> " + spec.group(1)).apply();
-            Machine.write(location.extend(HOST), uri(stand));
-            ObjmtronSerializer.parse("*<" + location + ">.as(model::T).to(" + location + ")").apply();
+            // the boot's own statement, with the boot's spec at boot/args/ollama and its host moved: to a closed port, where
+            // the build fails and writes nothing, then to the stand-in, where it builds the model where the embedq points
+            final String build = address.group(0).replaceAll(";$", "");
+            Machine.write(f("boot/args/ollama"), ObjmtronSerializer.parse(spec.group(1)).apply());
+            Machine.write(f("boot/args/ollama").extend(HOST), uri(f().scheme(HTTP).host(stand.host()).port(1)));
+            ObjmtronSerializer.parse(build).apply();
+            assertTrue(Machine.read(location).isNoObj(), "a build that fails at boot writes nothing: " + Machine.read(location));
+            Machine.write(f("boot/args/ollama").extend(HOST), uri(stand));
+            ObjmtronSerializer.parse(build).apply();
             AbstractMetatronTest.checkEquality(LOG, jnt(1), jnt(builds.get()), true);
             AbstractMetatronTest.checkEquality(LOG, uri(LLM_MODEL_TID), uri(Machine.read(location).tid()), true);
             memSpace.of(f("docker:#"), f("/memory/space/docker"));
@@ -253,6 +258,9 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
             AbstractMetatronTest.checkEquality(LOG, jnt(1), jnt(builds.get()), true);
             AbstractMetatronTest.checkCodeParseApply(LOG, "<embed:notes/given> -> [obj=>\"spark\",embed=>[0.25,0.75]]", "[obj=>\"spark\",embed=>[0.25,0.75]]");
             AbstractMetatronTest.checkCodeParseApply(LOG, "*<embed:notes/given?embedq>", "[0.25,0.75]");
+            // the embedq keeps the reference itself, unresolved
+            assertTrue(embedq(f("/memory/space/vec/chroma")).atDirect(uri(MODEL)).isAuto(),
+                    "the embedq keeps its reference: " + embedq(f("/memory/space/vec/chroma")).atDirect(uri(MODEL)));
             // a plain write embeds with the model at the address, which reading the embedq's model gives
             AbstractMetatronTest.checkCodeParseApply(LOG, "<embed:notes/volta> -> [note=>\"pile\"]", "[note=>\"pile\"]");
             AbstractMetatronTest.checkCodeParseApply(LOG, "*<embed:notes/volta?embedq>", "[0.5,0.25]");
@@ -275,19 +283,24 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
             // a document is embedded as it is: a str holding a template is not expanded, so its mtron never runs
             ObjmtronSerializer.parse("<embed:notes/template> -> \"a \\${'b'} c\"").apply();
             assertTrue(embedded.getLast().contains("${'b'}"), "the template's text is what is embedded: " + embedded.getLast());
-            // a model written to the address takes the place of the last, with no remount
-            ObjmtronSerializer.parse("<" + location + "> -> " + spec.group(1)).apply();
-            Machine.write(location.extend(HOST), uri(f().scheme(HTTP).host(stand.host()).port(other.getAddress().getPort())));
-            ObjmtronSerializer.parse("*<" + location + ">.as(model::T).to(" + location + ")").apply();
+            // a model written to the address takes the place of the last, with no remount: reading the embedq's model gives
+            // it, a new write embeds with it, and what the last model embedded stays as it was
+            final fURI otherStand = f().scheme(HTTP).host(stand.host()).port(other.getAddress().getPort());
+            Machine.write(f("boot/args/ollama").extend(HOST), uri(otherStand));
+            ObjmtronSerializer.parse(build).apply();
+            AbstractMetatronTest.checkEquality(LOG, jnt(1), jnt(otherBuilds.get()), true);
+            AbstractMetatronTest.checkEquality(LOG, uri(otherStand), embedq(f("/memory/space/vec/chroma")).at(uri(MODEL)).asRec().at(uri(HOST)), true);
             AbstractMetatronTest.checkCodeParseApply(LOG, "<embed:notes/kelvin> -> [note=>\"scale\"]", "[note=>\"scale\"]");
             AbstractMetatronTest.checkCodeParseApply(LOG, "*<embed:notes/kelvin?embedq>", "[0.125,0.5]");
-            AbstractMetatronTest.checkEquality(LOG, jnt(1), jnt(otherBuilds.get()), true);
+            AbstractMetatronTest.checkCodeParseApply(LOG, "*<embed:notes/volta?embedq>", "[0.5,0.25]");
             // with nothing at the address, a plain write fails naming the reference
             Machine.write(location, noobj());
             final Obj unmodeled = ObjmtronSerializer.parse("<embed:notes/blank> -> [note=>\"no model\"]").apply();
-            assertTrue(unmodeled.isFail() && unmodeled.toString().contains("reads no model"), "no model at the address: " + unmodeled);
+            assertTrue(unmodeled.isFail() && unmodeled.toString().contains("reads no model") && unmodeled.toString().contains(location.toString()),
+                    "no model at the address, which the failure names: " + unmodeled);
         } finally {
             Machine.write(location, noobj());
+            Machine.write(f("boot/args/ollama"), noobj());
             ollama.stop(0);
             other.stop(0);
             unmount(f("/memory/space/vec/chroma"), f("/memory/space/fs/boot"), f("/memory/space/docker"));
@@ -295,14 +308,16 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
     }
 
     /**
-     * the model a space's embedq references comes before its config's embedding function. A spec where the model should
-     * be is built at the write, and a build that fails fails the write as itself and leaves the spec. A model that
-     * answers an empty embedding is refused under the model's name. With neither a model nor a function, a write that
-     * brings no embedding fails naming the missing function
+     * the model a space's embedq references comes before its config's embedding function, and a reference that reads
+     * nothing fails the write rather than fall back to the function. A spec where the model should be is built at every
+     * write, and a build that fails fails the write as itself. A model that answers an empty embedding is refused under
+     * the model's name. With neither a model nor a function, a write that brings no embedding fails naming the missing
+     * function
      */
     @Test
     public void testAnEmbedqModelComesFirstAndAFailedBuildFailsItsWrite() throws IOException {
-        final HttpServer ollama = ollama(new AtomicInteger(), new CopyOnWriteArrayList<>());
+        final AtomicInteger builds = new AtomicInteger();
+        final HttpServer ollama = ollama(builds, new CopyOnWriteArrayList<>());
         final HttpServer hollow = ollama(new AtomicInteger(), new CopyOnWriteArrayList<>(), "{\"model\":\"qwen3-embedding:4b\",\"embeddings\":[[]],\"prompt_eval_count\":1}");
         final fURI stand = f().scheme(HTTP).host(ollama.getAddress().getAddress().getHostAddress()).port(ollama.getAddress().getPort());
         final fURI closed = f().scheme(HTTP).host(stand.host()).port(1);
@@ -310,6 +325,7 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
         final fURI hollowSpec = f("/sys/test/chroma/hollow");
         final fURI served = f("/sys/test/chroma/served");
         final fURI unserved = f("/sys/test/chroma/unserved");
+        final fURI unbuilt = f("/sys/test/chroma/unbuilt");
         final String space = "<" + endpoint + ">.-<[pattern => %1$s:#, host => <" + endpoint + ">, " +
                 "driver => <studio.phaseshift.metatron.isa.m.db.vec.space.ChromaV2Client>, q => [embedq::[%2$s]], " +
                 "route => -< [%1$s: => <>]%3$s]@</memory/space/vec/%1$s>.as(vecspace::T)";
@@ -322,13 +338,23 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
                     ", config => [embed => [# => inst?lst[real]<=#{?}(doc=>#::T){ [9.0,9.0] }]]")).apply();
             AbstractMetatronTest.checkCodeParseApply(LOG, "<firstembed:pile/volta> -> [n=>1]", "[n=>1]");
             AbstractMetatronTest.checkCodeParseApply(LOG, "*<firstembed:pile/volta?embedq>", "[0.5,0.25]");
-            // a spec where a model should be is built at the write: a build that fails fails the write as its own error,
-            // and the spec stays where it was
+            AbstractMetatronTest.checkEquality(LOG, jnt(1), jnt(builds.get()), true);
+            // with nothing where the reference points, the write fails: it does not fall back to the function
+            Machine.write(served, noobj());
+            final Obj unmodeled = ObjmtronSerializer.parse("<firstembed:pile/ohm> -> [n=>2]").apply();
+            assertTrue(unmodeled.isFail() && unmodeled.toString().contains("reads no model"), "no model, and no fallback to the function: " + unmodeled);
+            // a spec where the model should be is built at every write, and stays a spec
+            ObjmtronSerializer.parse("<" + unbuilt + "> -> [provider=>ollama,protocol=>ollama,host=><" + stand + ">,llm=><qwen3-embedding:4b>]").apply();
+            ObjmtronSerializer.parse(String.format(space, "specembed", "model=>!*<" + unbuilt + ">", "")).apply();
+            AbstractMetatronTest.checkCodeParseApply(LOG, "<specembed:pile/volta> -> [n=>1]", "[n=>1]");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "<specembed:pile/faraday> -> [n=>2]", "[n=>2]");
+            AbstractMetatronTest.checkEquality(LOG, jnt(3), jnt(builds.get()), true);
+            AbstractMetatronTest.checkEquality(LOG, uri(LLM_MODEL_TID), uri(Machine.read(unbuilt).tid()), false);
+            // a build that fails fails the write as its own error
             ObjmtronSerializer.parse(String.format(space, "failembed", "model=>!*<" + unserved + ">", "")).apply();
             final Obj unreachable = ObjmtronSerializer.parse("<failembed:pile/volta> -> [n=>1]").apply();
             assertTrue(unreachable.isFail() && unreachable.toString().contains("ConnectException") && !unreachable.toString().contains("not an embedding"),
                     "the build's own error, as itself: " + unreachable);
-            AbstractMetatronTest.checkEquality(LOG, uri(closed), Machine.read(unserved.extend(HOST)), true);
             // a model that answers an empty embedding is refused under its own name, not a function's
             ObjmtronSerializer.parse(String.format(space, "hollowembed", "model=>!*<" + hollowSpec + ">", "")).apply();
             final Obj hollowed = ObjmtronSerializer.parse("<hollowembed:pile/volta> -> [n=>1]").apply();
@@ -342,10 +368,12 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
         } finally {
             Machine.write(served, noobj());
             Machine.write(unserved, noobj());
+            Machine.write(unbuilt, noobj());
             Machine.write(hollowSpec, noobj());
             ollama.stop(0);
             hollow.stop(0);
-            unmount(f("/memory/space/vec/firstembed"), f("/memory/space/vec/failembed"), f("/memory/space/vec/hollowembed"), f("/memory/space/vec/noembed"));
+            unmount(f("/memory/space/vec/firstembed"), f("/memory/space/vec/specembed"), f("/memory/space/vec/failembed"),
+                    f("/memory/space/vec/hollowembed"), f("/memory/space/vec/noembed"));
         }
     }
 

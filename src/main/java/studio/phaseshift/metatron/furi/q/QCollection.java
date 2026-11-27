@@ -151,12 +151,12 @@ public final class QCollection {
             .tid(QPROC_TID)
             .vid(EMBEDQ_TID)
             // the rec an embedq is built from may reference the model a space embeds with, embedq::[model=>!*<location>],
-            // and the embedq keeps the reference as it is, read raw: at() would resolve it now, and the embedq would hold
-            // the model of this moment. Reading embedq>>model resolves it, to the model at the location then (Marko,
+            // and the embedq keeps the reference as it is, read with atDirect: at() would resolve it now, and the embedq
+            // would hold the model of this moment. Reading embedq>>model resolves it, to the model at the location then (Marko,
             // 2026-11-26: "the !* is just a reference. It references a model. It doesn't pull it into the embedq")
             .constructor(rec -> {
                 final QProc embedq = embedQ();
-                final Obj model = rec.isRec() ? rec.asRec().recValue().getOrDefault(uri(MODEL), noobj()) : noobj();
+                final Obj model = rec.isRec() ? rec.asRec().atDirect(uri(MODEL)) : noobj();
                 if (!model.isNoObj())
                     embedq.at(uri(MODEL), model, MUTABLE);
                 return embedq;

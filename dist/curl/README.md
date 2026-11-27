@@ -65,7 +65,10 @@ Ports, images, credentials and more are boot args — see the file's header.
 The `embed:#` space embeds each document it stores with an ollama model, named by the boot args `ollama/host`
 (default `http://127.0.0.1:11434`) and `ollama/llm` (default `qwen3-embedding:4b`). The boot builds the model at
 `/sys/model/embed` when it runs, so the ollama must answer then, with that model pulled (`ollama pull qwen3-embedding:4b`).
-The space mounts without one, and a write that brings no embedding fails until a model is written to `/sys/model/embed`.
+The space mounts without one. If the build fails, the boot writes nothing there and does not report it, and every write
+that brings no embedding fails ("reads no model") until a model is written to `/sys/model/embed`, for instance with
+`[provider=>ollama,protocol=>ollama,host=><http://127.0.0.1:11434>,llm=><qwen3-embedding:4b>].as(model::T).to(/sys/model/embed)`.
+No remount is needed: the space reads the model at each write.
 
 ## Alternatives
 

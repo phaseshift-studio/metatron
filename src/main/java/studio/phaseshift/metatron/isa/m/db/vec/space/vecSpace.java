@@ -252,7 +252,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
             toAdd = new vecIncrQ(this);
         else if (qProc.pattern().equals(
                 studio.phaseshift.metatron.furi.q.QCollection.EMBEDQ_PATTERN))
-            toAdd = new vecEmbedQ(this, qProc.asRec().recValue().getOrDefault(uri(MODEL), noobj()));
+            toAdd = new vecEmbedQ(this, qProc.atDirect(uri(MODEL)));
         else
             toAdd = qProc;
         final Obj key = uri(QPROC);
@@ -365,7 +365,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
                 // a document that carries no embedding is embedded by the model the space's embedq names, and by the
                 // config's embedding function when the embedq names none
                 final Optional<vecEmbedQ> named = isAlreadyEmbedded ? Optional.empty() : this.at(uri(QPROC)).orElse(lst()).asLst().<QProc>elements()
-                        .filter(q -> q instanceof vecEmbedQ && q.asRec().recValue().containsKey(uri(MODEL)))
+                        .filter(q -> q instanceof vecEmbedQ && !q.atDirect(uri(MODEL)).isNoObj())
                         .map(vecEmbedQ.class::cast)
                         .findFirst();
                 final Obj embedded = isAlreadyEmbedded

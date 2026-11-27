@@ -117,7 +117,7 @@ public class vecEmbedQ extends BaseQ {
     public Obj embed(final Obj doc) {
         final Obj named = this.at(uri(MODEL));
         if (named.isNoObj())
-            return fail("the embedq's model, %s, reads no model", this.recValue().get(uri(MODEL)));
+            return fail("the embedq's model, %s, reads no model", this.atDirect(uri(MODEL)));
         final Obj model = Machine.evaluate(named, Parser.Helper.toCode(Machine.parse("as(model::T)")));
         if (model.isFail())
             return model;
