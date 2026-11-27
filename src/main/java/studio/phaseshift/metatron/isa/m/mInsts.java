@@ -1494,19 +1494,22 @@ public final class mInsts {
                         // barrier (int{*}), so mod(2) was handed a bulk (Marko, 2026-11-27)
                         .args(rec(URI_TYPE, T(ALL.maybeSome())))
                         .desc("""
-                                a partitioning function: each obj of the lhs is routed to the lane its partition
-                                function keys, where a branch routes every obj to every lane. partition(p, k => c, …)
-                                means the branch whose lanes are guarded by the fibers of p,
-                                branch(k => filter(p.eq(k)).c, …), and evaluates p once per obj, not every guard.
-                                the partition function is applied to each obj, and what it answers is applied to the obj
-                                in turn: a value answers itself, and a stored function (*xyz: an instruction, a code or a
-                                key template) keys the obj. a key is a uri, or an int
-                                read as its decimal spelling.
-                                a hosted key (//a) is a place, and its lane runs there as a keyed branch's lane does; any
-                                other key (<0>) is a label, and its lane runs here. a key naming two lanes names their
-                                branch, and the obj goes to each. a <#> lane takes every obj no other key names; with
-                                none, such an obj fails the call. an obj keyed noobj goes to each lane whose key is
-                                zeroable ({?}//a, {*}<a>); with none, it fails the call too.
+                                a partitioning function: each obj of the lhs goes down the FIRST route that admits it,
+                                where a branch sends every obj down every lane. routing is the walk join of the rec algebra:
+                                the routes are one table [k => v, …], an obj's key k is lifted into [# => k], and the walks
+                                [# => k] * table are the routes that admit it, in written order; a partition keeps the
+                                first, as ==[_ => take(1)] keeps the first path of a composition.
+                                the key is what the selector, the first argument, answers for the obj (partition(mod(2),
+                                ?0 => …), and _ for the obj itself); what the selector answers is applied to the obj in turn,
+                                so a stored function (*xyz) keys it too. a key of noobj forms no relation, and its obj is
+                                dropped; none is a key like any other.
+                                a route's key admits a key as the walk join admits an end: ? on a value its equal (?0), ? on
+                                a type its instances (?int::T), a predicate what it holds for (?>2), a hosted uri the place
+                                it spells (//a), and _ every key, so _ written last is the else. a key no route admits fails
+                                the call.
+                                a walk runs its code at the last place it passes: 0 => //ginger => plus(1) runs plus(1) at
+                                //ginger, a hosted route key (//1 => code) is its own lane's place, and a selector that
+                                answers a place (<//${mod(2)}>) runs the code its route names there.
                                 a partition is a barrier instruction: its dom, `{*}` by default, gathers the whole lhs once,
                                 so each lane receives its share once. a smaller maximum makes it a lazy barrier: `{n}` buckets
                                 a page of n, and `{?}` routes one obj at a time. a lane whose share of a call is empty runs

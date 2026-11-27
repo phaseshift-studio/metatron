@@ -42,73 +42,63 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * PARTITION ROUTES EACH OBJ TO ONE LANE (Marko, 2026-11-27): partition(p, k => c, …) means the branch whose lanes are
- * guarded by the fibers of p, branch(filter(p.eq(k)).c, …), and evaluates p once per obj. These rows are the local half,
- * keys that are labels; a hosted key's lane runs at its place (AbstractDistributedComputingTest).
+ * PARTITION ROUTES EACH OBJ DOWN THE FIRST ROUTE ITS KEY ADMITS (Marko, 2026-11-27): the walk join of the rec algebra,
+ * [# => p(x)] * [k => v, …], with the first walk kept, and p evaluated once per obj. These rows are the local half; a
+ * walk that passes a place runs its code there (AbstractDistributedComputingTest).
  */
 public class PartitionTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            // each obj to the lane its key names, the whole lhs bucketed: the evens to <0>, the odds to <1>
-            "{1,2,3,4}.partition(mod(2), <0> => plus(10), <1> => plus(20))                       % {12,14,21,23}",
+            // EACH OBJ DOWN THE FIRST ROUTE ITS KEY ADMITS: ? on a value admits that value (Marko, 2026-11-27)
+            "{1,2,3,4}.partition(mod(2), ?0 => plus(10), ?1 => plus(20))                          % {12,14,21,23}",
+            // ... and a value route admits its equal too, as ? on it does
+            "{1,2,3,4}.partition(mod(2), 0 => plus(10), 1 => plus(20))                            % {12,14,21,23}",
             // ... which is what the guarded branch its derivation names answers, every guard evaluated on every obj
             "{1,2,3,4}.branch(filter(mod(2).eq(0)).plus(10), filter(mod(2).eq(1)).plus(20))       % {21,12,23,14}",
             // THE IDENTITY: identical lanes are one lane, each obj counted once (a branch of them counts it twice)
-            "{1,2,3,4}.partition(mod(2), <0> => plus(1), <1> => plus(1))                          % {3,5,2,4}",
+            "{1,2,3,4}.partition(mod(2), ?0 => plus(1), ?1 => plus(1))                            % {2,3,4,5}",
             "{1,2,3,4}.branch(plus(1), plus(1))                                                   % {{2}2,{2}3,{2}4,{2}5}",
             // A PARTITION IS A BARRIER INSTRUCTION (Marko, 2026-11-27): its dom gathers the whole lhs by default, so a
-            // lane's fold folds its whole share, the evens 6 and the odds 4 ...
-            "{1,2,3,4}.partition(mod(2), <0> => sum(), <1> => sum())                              % {6,4}",
-            "{1,2,3,4}.partition?<=int{*}(mod(2), <0> => sum(), <1> => sum())                     % {6,4}",
+            // route's fold folds its whole share, the evens 6 and the odds 4 ...
+            "{1,2,3,4}.partition(mod(2), ?0 => sum(), ?1 => sum())                                % {6,4}",
+            "{1,2,3,4}.partition?<=int{*}(mod(2), ?0 => sum(), ?1 => sum())                       % {6,4}",
             // ... and a smaller maximum is a lazy barrier: one obj at a time, a fold folds each obj alone
-            "{1,2,3,4}.partition?<=int{?}(mod(2), <0> => sum(), <1> => sum())                     % {1,2,3,4}",
-            // ... a page of two, a fold per page: {1,2} gives <0> 2 and <1> 1, {3,4} gives 4 and 3
-            "{1,2,3,4}.partition?<=int{2}(mod(2), <0> => sum(), <1> => sum())                     % {2,1,4,3}",
-            "{1,2,3,4}.partition?<=int{2}(mod(2), <0> => sum(), <1> => sum()).sum()               % 10",
+            "{1,2,3,4}.partition?<=int{?}(mod(2), ?0 => sum(), ?1 => sum())                       % {1,2,3,4}",
+            // ... a page of two, a fold per page: {1,2} gives ?0 2 and ?1 1, {3,4} gives 4 and 3
+            "{1,2,3,4}.partition?<=int{2}(mod(2), ?0 => sum(), ?1 => sum())                       % {2,1,4,3}",
+            "{1,2,3,4}.partition?<=int{2}(mod(2), ?0 => sum(), ?1 => sum()).sum()                 % 10",
             // ... and the three grains told apart by how many folds answer: one, one per page, one per obj
-            "{1,3,5,7}.partition(mod(2), <1> => sum()).count()                                   % 1",
-            "{1,3,5,7}.partition?<=int{2}(mod(2), <1> => sum()).count()                          % 2",
-            "{1,3,5,7}.partition?<=int{?}(mod(2), <1> => sum()).count()                          % 4",
-            // a lane with an empty share runs nothing: no obj keys <2>, so its count never answers 0
-            "{1,3}.partition(mod(2), <0> => count(), <1> => count(), <2> => count())              % 2",
-            // A <#> LANE TAKES THE REST: 3 keys <0>, and 1 and 2 key nothing else named
-            "{1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100))                             % {3,101,102}",
-            // ... and every <#> lane takes it, as every lane a key names takes its members
-            "{1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100), <#> => plus(200))           % {3,101,102,201,202}",
-            // a key compares without its query, which a hosted lane's cut reads (?timeout, ?hop)
-            "{1,2}.partition(mod(2), <0?timeout=5000> => plus(10), <1> => plus(20))               % {12,21}",
-            // a typed zero keys nothing, as noobj does: {0}1 is an int's zero
-            "{1,2}.partition(map({0}1), {?}<a> => plus(10))                                       % {11,12}",
+            "{1,3,5,7}.partition(mod(2), ?1 => sum()).count()                                     % 1",
+            "{1,3,5,7}.partition?<=int{2}(mod(2), ?1 => sum()).count()                            % 2",
+            "{1,3,5,7}.partition?<=int{?}(mod(2), ?1 => sum()).count()                            % 4",
+            // a route whose share is empty runs nothing: no obj keys 2, so its count never answers 0
+            "{1,3}.partition(mod(2), ?0 => count(), ?1 => count(), ?2 => count())                 % 2",
+            // GUARDS: the selector _ keys each obj by itself, a route's key tests it, and _ written last is the else
+            "{1,2,3,4}.partition(_, ?>2 => plus(10), _ => plus(20))                                % {13,14,21,22}",
+            "{1,2,7}.partition(_, ?1 => plus(10), ?2 => plus(20), _ => plus(100))                  % {11,22,107}",
+            // THE FIRST ROUTE TAKES IT: overlapping guards route each obj once, and a key naming two routes the first
+            "{1,2,3}.partition(_, ?>0 => plus(10), ?>1 => plus(20))                                % {11,12,13}",
+            "{1,2}.partition(mod(2), ?1 => plus(10), ?1 => plus(20), ?0 => id())                  % {11,2}",
+            // ? on a type admits its instances
+            "5.partition(_, ?int::T => map(<int>), ?str::T => map(<str>))                          % int",
+            "start('a').partition(_, ?int::T => map(<int>), ?str::T => map(<str>))                 % str",
             // a key template keys each obj as its spelling says
-            "{1,2,3,4}.partition(<${mod(2)}>, <0> => plus(10), <1> => plus(20))                   % {12,14,21,23}",
-            // A KEY FUNCTION THAT SPLITS ON A PREDICATE keys the objs it admits and leaves the rest noobj, which a
-            // zeroable lane takes: map's dom narrowed to one obj (Marko, 2026-11-27) maps only what the filter kept ...
-            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=int(<even>), <even> => plus(10), {?}<odd> => plus(20))        % {12,14,21,23}",
-            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=A(<even>), <even> => plus(10), {?}<odd> => plus(20))          % {12,14,21,23}",
-            // ... as map's own dom, maybe an obj, maps the noobj too (a mid-expression start), and every obj keys even
-            "{1,2,3,4}.partition(is(mod(2).eq(0)).map(<even>), <even> => plus(10), {?}<odd> => plus(20))              % {11,12,13,14}",
-            // a bulked obj goes whole to one lane, its count riding
-            "{{2}1,{3}2}.partition(mod(2), <0> => plus(10), <1> => plus(20))                      % {{3}12,{2}21}",
-            // A KEY NAMING TWO LANES NAMES THEIR BRANCH: 1 goes to both <1> lanes, as the guarded branch sends it
-            "{1,2}.partition(mod(2), <1> => plus(10), <1> => plus(20), <0> => id())               % {11,21,2}",
-            // AN OBJ KEYED NOOBJ GOES TO EACH ZEROABLE LANE (Marko, 2026-11-27): is(gt(2)) keys 1 and 2 nothing ...
-            "{1,2,3}.partition(is(gt(2)), <3> => plus(10), {?}<#> => plus(100))                   % {13,101,102}",
-            // ... any coefficient that holds zero is zeroable, and each such lane takes it
-            "{1,3}.partition(is(gt(2)), {0,5}<3> => plus(10), {*}<4> => plus(20))                 % {11,13,21}",
-            // ... the rest is not zeroable, so a <#> lane takes keys, never noobj, and with no zeroable lane the call fails
-            "{1,2,3}.partition(is(gt(2)), <3> => plus(10), <#> => plus(100))                      % <ERROR>",
-            "{1,2,3}.partition(is(gt(2)), <3> => plus(10))                                        % <ERROR>",
-            // AN OBJ NO LANE TAKES FAILS THE CALL: 2 keys <2>, and no lane is keyed so ...
-            "{1,2,3}.partition(mod(3), <0> => id(), <1> => id())                                  % <ERROR>",
-            // ... and the same call with a <2> lane answers
-            "{1,2,3}.partition(mod(3), <0> => id(), <1> => id(), <2> => id())                     % {3,1,2}",
-            // a key that is neither a uri nor an int is refused ...
-            "{1,2}.partition(gt(1), <true> => id(), <false> => id())                              % <ERROR>",
-            // ... and the same bool spelled as a uri keys
-            "{1,2}.partition(<${gt(1)}>, <true> => plus(10), <false> => plus(20))                 % {12,21}",
+            "{1,2,3,4}.partition(<${mod(2)}>, <0> => plus(10), <1> => plus(20))                    % {12,14,21,23}",
+            // a bulked obj goes whole to one route, its count riding
+            "{{2}1,{3}2}.partition(mod(2), ?0 => plus(10), ?1 => plus(20))                        % {{3}12,{2}21}",
+            // A KEY OF NOOBJ FORMS NO RELATION: is(gt(1)) keys 1 nothing, so 1 is dropped ...
+            "{1,2,3}.partition(is(gt(1)), ?2 => id(), ?3 => id())                                  % {2,3}",
+            // ... as a typed zero is ({0}1 is an int's zero) ...
+            "{1,2}.partition(map({0}1), _ => plus(10))                                             % noobj",
+            // A KEY NO ROUTE ADMITS FAILS THE CALL: 2 keys 2, and no route admits it ...
+            "{1,2,3}.partition(mod(3), ?0 => id(), ?1 => id())                                     % <ERROR>",
+            // ... and the same call with a ?2 route answers
+            "{1,2,3}.partition(mod(3), ?0 => id(), ?1 => id(), ?2 => id())                         % {3,1,2}",
+            // a bool keys as any value does
+            "{1,2}.partition(gt(1), ?true => plus(10), ?false => plus(20))                         % {12,21}",
             // a partition of nothing is nothing
-            "noobj.partition(mod(2), <0> => plus(10), <1> => plus(20))                            % noobj",
+            "noobj.partition(mod(2), ?0 => plus(10), ?1 => plus(20))                               % noobj",
     }, delimiter = '%')
     void testPartition(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
@@ -123,7 +113,7 @@ public class PartitionTest extends AbstractMetatronTest {
         try {
             // | blocks the instruction, so the write stores mod(2) itself, not what it answers applied to nothing
             Machine.evaluate("|mod(2).to(/partition/pf)");
-            checkCodeParseApply(LOG, "{1,2,3,4}.partition(*/partition/pf, <0> => plus(10), <1> => plus(20))", "{12,14,21,23}");
+            checkCodeParseApply(LOG, "{1,2,3,4}.partition(*/partition/pf, ?0 => plus(10), ?1 => plus(20))", "{12,14,21,23}");
         } finally {
             Machine.evaluate("noobj.to(/partition/pf)");
         }

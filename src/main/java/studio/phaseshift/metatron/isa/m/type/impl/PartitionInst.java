@@ -29,39 +29,47 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.HASH_FURI;
 import static studio.phaseshift.metatron.Tokens.HOP;
+import static studio.phaseshift.metatron.Tokens.LHS;
 import static studio.phaseshift.metatron.Tokens.TIMEOUT;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * PARTITION — routes each member of its lhs to the lane its partition function keys, where {@link BranchInst}
- * routes every member to every lane (the code ring's {@code +}). It means a branch whose lanes are guarded by the
- * fibers of one function,
- * <pre>
- *   partition(p, k_1 => c_1, …, k_n => c_n)  =  branch(k_1 => filter(p.eq(k_1)).c_1, …, k_n => filter(p.eq(k_n)).c_n)
- * </pre>
- * so the branch's laws hold of it, and its body evaluates p once per member where the guarded branch would evaluate
- * every guard on every member: a switch, not a chain of tests.
+ * PARTITION — routes each member of its lhs down the FIRST route that admits it, where {@link BranchInst} routes every
+ * member to every lane (the code ring's {@code +}). Routing is the walk join of the rec algebra
+ * ({@link studio.phaseshift.metatron.isa.m.type.Rec#mult}): the
+ * routes are one table, {@code [k_1 => v_1, …, k_n => v_n]}, a member's key {@code k} is lifted into the relation
+ * {@code [# => k]}, and the walks {@code [# => k] * table} are the routes that admit it, in written order (Marko,
+ * 2026-11-27). A partition keeps the first walk, as {@code ==[_ => take(1)]} keeps the first path of a composition.
  * <ul>
- *     <li>THE PARTITION FUNCTION is applied to each member, and what it answers is applied to the member in turn: a
- *     value answers itself, and a stored function ({@code *xyz}, an instruction, a code or a key template) keys the
- *     member. So {@code mod(2)}, a key template {@code <${mod(2)}>} and {@code *xyz} all key a member. A key is a uri,
- *     or an int read as its decimal spelling.</li>
- *     <li>A LANE'S KEY IS ITS PLACE OR ITS LABEL: a hosted key ({@code //a}) is a place, and the lane is the cut its
- *     program runs in there, as a keyed branch's lane is, timed and budgeted by its key's {@code ?timeout} and
- *     {@code ?hop}; any other key ({@code <0>}) is a label, and the lane runs here. A key naming two lanes names their branch, and the member goes to each. A {@code <#>} lane takes every
- *     member no other key names; with none, such a member fails the call. A member keyed noobj goes to each lane whose
- *     key is zeroable ({@code {?}//a}, {@code {*}<a>}); with none, it fails the call too.</li>
+ *     <li>THE KEY is what the SELECTOR, the first argument, answers for the member ({@code partition(mod(2), ?0 => …)},
+ *     and {@code _} for the member itself): the selector is applied to the member once, and what it answers is applied
+ *     to the member in turn, so a stored function ({@code *xyz}) keys it too. A key of noobj forms no relation
+ *     ({@code [k => noobj]} is {@code [=>]}), so its member is dropped; {@code none} is a key like any other.</li>
+ *     <li>A ROUTE'S KEY ADMITS A KEY as the walk join admits an end: a value by address ({@code 0}, {@code <0>},
+ *     {@code //a}), a type its instances ({@code int::T}), a predicate what it holds for ({@code ?>2}), and {@code _}
+ *     every key, so {@code _} written last is the {@code else}. A key no route admits fails the call.</li>
+ *     <li>A WALK RUNS ITS CODE AT THE LAST PLACE IT PASSES: {@code 0 => //ginger => plus(1)} runs {@code plus(1)} at
+ *     {@code //ginger}, a hosted route key ({@code //1 => code}) is the place of its own lane, and a selector that
+ *     answers a place ({@code <//${mod(2)}>}) runs the code its route names there, unless the route brings it home
+ *     ({@code _ => <~> => code}). The place's {@code ?timeout} times the lane's cut, and its {@code ?hop} rides with it.
+ *     A walk that passes no place runs here.</li>
  *     <li>A PARTITION IS A BARRIER INSTRUCTION (Marko, 2026-11-27): its dom, {@code {*}} by default, gathers the whole
  *     lhs once, so each lane receives its share once, where a branch's default is one member at a time. A smaller
  *     maximum makes it a lazy barrier: {@code {n}} buckets a page of n, and {@code {?}} routes one member at a time. A
@@ -77,64 +85,107 @@ public class PartitionInst extends MInst {
     }
 
     /**
-     * THE LANES, one per route {@code key => program} in the order written: a hosted key's lane is the cut its program
-     * runs in at that place, and any other key's a home lane. Each lane's weight is one, a dealt lane's, as a reader of
-     * a layout reads it: a lane receives its key's share, never the whole lhs (a weight of zero).
+     * THE LANES a reader of the layout reads (BranchInst#isLayout, Topology), one per route in written order, each at
+     * the last place its walk passes: a place in the route ({@code k => //a => code}, a hosted {@code k}), else the
+     * selector's when it names one (a hosted key template), else here. Each lane's weight is one, a dealt lane's: a lane
+     * receives its routes' share, never the whole lhs.
      */
     public static List<BranchInst.Lane> lanes(final Inst partition) {
-        // the routes, every argument after the partition function
-        return partition.args().<Obj>elements().skip(1).map(Obj::asRel).map(route -> {
-            // THE ROUTE'S COEFFICIENT IS ITS KEY'S: it says whether the lane takes noobj (a zeroable key, {?}//a), and a rel
-            // multiplies it into both its sides, so the place is read at one and the program runs as written
-            final fURI key = route.first().uriValue().one();
-            final List<Inst> program = BranchInst.program(route.c(cInt.ONE()).asRel().second());
-            final Obj tail = program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst();
-            if (!key.hasHost())
-                return new BranchInst.Lane(null, program, 1L, tail);
-            // A HOSTED LANE IS TIMED AND BUDGETED AS A KEYED BRANCH'S (BranchInst#lanes): the key's ?timeout is its cut's,
-            // and its ?hop rides with its place
-            final fURI place = null == key.q(HOP) ? key.qLess() : key.qLess().q(HOP, key.q(HOP));
-            return new BranchInst.Lane(place, program, 1L, instB(null == key.q(TIMEOUT) ? CUT_INST_TID : CUT_INST_TID.q(TIMEOUT, key.q(TIMEOUT)),
-                    lst(uri(Machine.Helper.align(Machine.current(), place)), tail)));
+        final List<Obj> args = partition.args().<Obj>elements().filter(arg -> !uri(LHS).equals(arg)).toList();
+        final Obj selector = args.isEmpty() || args.getFirst().isRel() ? null : args.getFirst();
+        final fURI selected = null != selector && selector.isUri() && selector.uriValue().hasHost() ? selector.uriValue() : null;
+        return args.stream().filter(Obj::isRel).map(Obj::asRel).filter(route -> !uri(LHS).equals(route.first())).map(route -> {
+            final List<Obj> walk = walk(route);
+            final fURI place = Optional.ofNullable(place(walk)).orElse(selected);
+            return lane(place, walk.getLast());
         }).toList();
     }
 
     /**
-     * THE BODY: key each member once, bucket it into the lane its key names, and run each lane on its bucket, every
-     * lane submitted before any is awaited ({@link BranchInst#await}).
+     * THE BODY: key each member once, take the first walk that admits its key, bucket the member into the lane that walk
+     * names, and run each lane on its bucket, every lane submitted before any is awaited ({@link BranchInst#await}).
      */
     public Obj route(final Obj lhs) {
-        final Obj function = this.arg(0);
-        final List<Rel> routes = this.args().<Obj>elements().skip(1).map(Obj::asRel).toList();
-        // keys compare at coefficient one and without their query: a bulked member's key carries its count, and a lane's
-        // key may carry its cut's ?timeout and ?hop
-        final List<fURI> keys = routes.stream().map(route -> route.first().uriValue().one().qLess()).toList();
-        // every <#> lane takes the rest, as every lane a key names takes its members
-        final int[] rest = IntStream.range(0, keys.size()).filter(r -> HASH_FURI.equals(keys.get(r))).toArray();
-        final List<List<Obj>> shares = keys.stream().map(key -> (List<Obj>) new ArrayList<Obj>()).toList();
+        final List<Obj> args = this.args().<Obj>elements().filter(arg -> !uri(LHS).equals(arg)).toList();
+        final Obj selector = args.isEmpty() || args.getFirst().isRel() ? null : args.getFirst();
+        final List<Rel> routes = args.stream().filter(Obj::isRel).map(Obj::asRel).filter(route -> !uri(LHS).equals(route.first())).toList();
+        // THE LANES, one per route and place a member's walk reaches, in the order members first reach them: a lane is its
+        // route, so routes that run the same code fold their shares apart
+        final Map<List<Obj>, List<Obj>> shares = new LinkedHashMap<>();
         for (final Obj member : lhs.stream().toList()) {
-            // what the function answers is applied to the member in turn: a value answers itself, and a stored function
+            // what the selector answers is applied to the member in turn: a value answers itself, and a stored function
             // (*xyz: an instruction, a code or a key template) keys the member
-            final Obj answer = function.apply(member).apply(member);
-            if (!answer.isNoObj() && !answer.isUri() && !answer.isInt())
-                throw MTronException.of("a partition key is a uri or an int: %s keys %s as %s", function, member, answer);
-            // a typed zero (a uri's noobj, an int's) is noobj too: it keys nothing
-            final fURI key = answer.isNoObj() ? null
-                    : answer.isUri() ? answer.uriValue().one().qLess()
-                    : fURI.Singleton.f(answer.intValue().toString());
-            // A KEY NAMING TWO LANES NAMES THEIR BRANCH: the member goes to each, as the guarded branch sends it. A MEMBER
-            // KEYED NOOBJ goes to each lane whose key is zeroable, {?}//a or {*}<a> (Marko, 2026-11-27)
-            final int[] named = IntStream.range(0, keys.size())
-                    .filter(r -> null == key ? routes.get(r).first().c().isZeroable() : keys.get(r).equals(key)).toArray();
-            if (0 == named.length && null == key)
-                throw MTronException.of("no lane of the partition is zeroable ({?}//a): %s keys %s noobj", function, member);
-            if (0 == named.length && 0 == rest.length)
-                throw MTronException.of("no lane of the partition is keyed %s: %s keys %s so, and no <#> lane takes the rest", answer, function, member);
-            IntStream.of(0 == named.length ? rest : named).forEach(r -> shares.get(r).add(member));
+            final Obj key = null == selector ? member : selector.apply(member).apply(member);
+            // A KEY OF NOOBJ FORMS NO RELATION ([k => noobj] is [=>]): the member is dropped
+            if (key.isNoObj())
+                continue;
+            // THE FIRST ROUTE THAT ADMITS THE KEY, in written order: an acting key (?k, a type, a guard, _) as the walk join
+            // admits an end ([# => k] * [route]), and a value as ? on it does, by equality, its count and query aside
+            final Map.Entry<Integer, List<Obj>> admitted = IntStream.range(0, routes.size()).boxed()
+                    .map(r -> Map.entry(r, routes.get(r).first().isObjCall() || routes.get(r).first().isType()
+                            ? rec(uri(HASH_FURI), key).mult(rec(routes.get(r).first(), routes.get(r).second())).elements()
+                            .flatMap(arrow -> arrow.secondDirect().stream()).findFirst()
+                            : Optional.of((Obj) rel(key, routes.get(r).second())).filter(walk -> equal(key, routes.get(r).first()))))
+                    .filter(walk -> walk.getValue().isPresent())
+                    .map(walk -> Map.entry(walk.getKey(), walk(walk.getValue().get())))
+                    .findFirst()
+                    .orElseThrow(() -> MTronException.of("no route of the partition admits %s: %s keys %s so", key, selector, member));
+            final fURI place = place(admitted.getValue());
+            // THE PROGRAM IS THE ROUTE'S, never the walk's copy: the join multiplies the member's count onto the range it
+            // reaches, and the member carries that count into its lane already
+            shares.computeIfAbsent(List.of(jnt(admitted.getKey()), null == place ? noobj() : uri(place), walk(routes.get(admitted.getKey())).getLast()),
+                    lane -> new ArrayList<>()).add(member);
         }
-        final List<BranchInst.Lane> lanes = lanes(this);
-        return BranchInst.await(IntStream.range(0, lanes.size())
-                .mapToObj(r -> shares.get(r).isEmpty() ? noobj() : BranchInst.lane(lanes.get(r), objs(shares.get(r))))
-                .toList());
+        return BranchInst.await(shares.entrySet().stream().map(share -> BranchInst.lane(lane(
+                share.getKey().get(1).isNoObj() ? null : share.getKey().get(1).uriValue(), share.getKey().get(2)), objs(share.getValue()))).toList());
+    }
+
+    /**
+     * WHETHER A VALUE KEY ADMITS A KEY, as ? on it does: by equality, a uri's count and query aside.
+     */
+    private static boolean equal(final Obj key, final Obj route) {
+        return key.isUri() && route.isUri()
+                ? key.uriValue().one().qLess().equals(route.uriValue().one().qLess())
+                : key.c(cInt.ONE()).equals(route.c(cInt.ONE()));
+    }
+
+    /**
+     * A WALK as the objects it steps through, a nested rel unrolled: {@code k => //a => code} is {@code [k, //a, code]},
+     * its last the code its lane runs.
+     */
+    private static List<Obj> walk(final Obj arrow) {
+        final List<Obj> walk = new ArrayList<>();
+        Obj step = arrow;
+        while (step.isRel()) {
+            walk.add(step.asRel().first());
+            step = step.asRel().second();
+        }
+        walk.add(step);
+        return walk;
+    }
+
+    /**
+     * THE LAST PLACE A WALK PASSES before its code, or null for here: a hosted uri on it, or home ({@code <~>},
+     * {@code <.>}), which brings the lane back here past a place a selector answered ({@code _ => <~> => code}).
+     */
+    private static fURI place(final List<Obj> walk) {
+        return walk.subList(0, walk.size() - 1).stream()
+                .filter(step -> step.isUri() && (step.uriValue().hasHost() || BranchInst.home(step.uriValue())))
+                .reduce((first, second) -> second).map(Obj::uriValue).filter(at -> !BranchInst.home(at)).orElse(null);
+    }
+
+    /**
+     * A LANE running {@code code} at {@code place} or here: at a place, the cut its program runs in, timed by the
+     * place's {@code ?timeout} as a keyed branch's lane is (BranchInst#lanes), the place's {@code ?hop} riding with it.
+     * A place a key template computes per member is drawn as written.
+     */
+    private static BranchInst.Lane lane(final fURI place, final Obj code) {
+        final List<Inst> program = BranchInst.program(code);
+        final Obj tail = program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst();
+        if (null == place)
+            return new BranchInst.Lane(null, program, 1L, tail);
+        final fURI at = null == place.q(HOP) ? place.qLess() : place.qLess().q(HOP, place.q(HOP));
+        return new BranchInst.Lane(at, program, 1L, instB(null == place.q(TIMEOUT) ? CUT_INST_TID : CUT_INST_TID.q(TIMEOUT, place.q(TIMEOUT)),
+                lst(uri(place.hasTemplates() ? at : Machine.Helper.align(Machine.current(), at)), tail)));
     }
 }

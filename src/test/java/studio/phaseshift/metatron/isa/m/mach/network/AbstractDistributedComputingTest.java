@@ -905,10 +905,14 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum()))                 % {113,115,223,225}",
             // ... and one obj at a time, a lazy barrier, each sent alone
             "{1,2,3,4}.partition?<=int{?}(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum()))       % {223,113,225,115}",
-            // the rest runs here, beside a place: the odds key //2, which no lane names, and read this machine's {7,8}
-            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), <#> => plus(*/n/data.sum()))                 % {113,115,16,18}",
-            // a zeroable place takes the objs keyed noobj: the odds, which the narrowed map leaves nothing, run at peer 2
-            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=A(<//1>), //1 => plus(*/n/data.sum()), {?}//2 => plus(*/n/data.sum()))  % {113,115,223,225}",
+            // _ takes the odds, keyed //2, and a walk runs its code at the last place it passes: the key's ...
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), _ => plus(*/n/data.sum()))                   % {113,115,223,225}",
+            // ... unless the route brings it home, where the odds read this machine's {7,8}
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), _ => <~> => plus(*/n/data.sum()))            % {113,115,16,18}",
+            // TAG => PLACE => CODE: a route names its place after its key (Marko, 2026-11-27) ...
+            "{1,2,3,4}.partition(mod(2), ?0 => //1 => plus(*/n/data.sum()), ?1 => //2 => plus(*/n/data.sum()))                    % {113,115,223,225}",
+            // ... and a guard does too, the first route that admits an obj taking it
+            "{1,2,3,4}.partition(_, is(mod(2).eq(0)) => //1 => plus(*/n/data.sum()), _ => //2 => plus(*/n/data.sum()))            % {113,115,223,225}",
             // the lanes' answers fold at home
             "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => count(), //2 => count()).sum()                         % 6",
             // a place no name reaches fails the call (3 keys //3), as the same call keyed by a reached one answers
