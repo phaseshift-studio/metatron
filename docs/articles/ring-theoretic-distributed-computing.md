@@ -160,6 +160,24 @@ The rewrite never names a combiner: it reads the fold's declared laws and comput
 [To be written: the computed combiner in full (self-combining, by derivation, pointwise for a keyed fold), and what a
 fold that declares neither law does (it stays home).]
 
+**An address is a seed whose parts are named.** A read whose address names machines needs no deal: the address's own
+sum is the partition the identity asks for, as the uri algebra's sum is the stream's,
+$\mathrm{from}(p_1 + \cdots + p_k) = \mathrm{from}(p_1) + \cdots + \mathrm{from}(p_k)$. Each owner reads its own part
+where it lives, the run and the fold ship with the read, and home recombines through $C(r)$: the code moves to the data
+(B). A sum of names, `//{0,1}/p`, every name in the prefix table, `//+/p`, and a root branch of terms all read so, and
+one owner is the authority push-down (C), the fold run where the data lives. Here each peer holds three members of its
+own at `/n/data`:
+
+```mtron_pre
+[HIDDEN]branch(<//0> => start({1,10,100}).to?<=int{*}(/n/data), <//1> => start({2,20,200}).to?<=int{*}(/n/data))
+*//{0,1}/n/data.count()
+*//{0,1}/n/data.count().explain()>>format
+*//0/n/data.count()
+```
+
+An owner no peer answers fails the read, by the address it named: its part lives at no other place, so no lane is
+dropped and nothing is dealt elsewhere.
+
 **A cut absorbs the prefix its combiner respects.** A fold may be followed by a projection that its combiner commutes
 with. Write $t_k$ for the select that keeps the first $k$ positions of a lst, `==[{k}_]` in mtron: a positional select
 keeps only the positions its pattern covers, and the span lays $k$ identity slots along its bracket. A combiner is
@@ -521,6 +539,36 @@ every instruction in it is pure, and so is every code it is handed, so a filter 
 between two runs brings the members home, where it runs once over the merged bag, and the run after it goes out
 again on a branch of its own.
 
+The shuffle begins with a partition. `partition(p, k => c, …)` sends each member to the lane its key $p(x)$ names,
+where a branch sends it to every lane. It is the branch whose lanes are guarded by the fibres of $p$,
+$\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i \mathrm{filter}(p = k_i)\,c_i$, so the branch's laws hold of it,
+and $p$ runs once per member rather than once per guard. When the keys cover $p$'s image and every lane is one program
+$c$, the fibres sum to the stream, $\sum_i \mathrm{filter}(p = k_i)\,c = c$: the free example, written as a
+partition, answers as it did. A fold in each lane and one after the partition is the shuffle's own shape, partition
+by key, reduce, gather, and it answers what the star does:
+
+```mtron_pre
+{1,2,3,4,5,6,7,8}.partition(mod(2), <0> => plus(1).mult(2), <1> => plus(1).mult(2))
+{1,2,3,4,5,6,7,8}.partition?<=int{*}(mod(2), <0> => plus(1).mult(2).sum(), <1> => plus(1).mult(2).sum()).sum()
+{1,2,3,4,5,6,7,8}.plus(1).mult(2).sum()
+```
+
+A key that names a place, `//a`, runs its lane there, so each place is sent its share alone, and the key function
+moves one program between patterns. A key computed from the member distributes the data, each peer folding its key's
+fibre:
+
+```mtron_pre
+{1,2,3,4,5,6,7,8}.partition?<=int{*}(<//${mod(2)}>, //0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()).sum()
+{1,2,3,4,5,6,7,8}.partition?<=int{*}(<//${mod(2)}>, //0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()).explain()>>ext/topology/format
+```
+
+A key that names where a member's data lives co-locates the two. Keyed by the places themselves, the partition is the
+data-local read of *The Shard Identity* again, its owners named by the keys rather than by the address:
+
+```mtron_pre
+{0,1}.partition(<//${_}>, //0 => */n/data.count(), //1 => */n/data.count()).sum()
+```
+
 ## Bookkeeping Data Structures
 
 A fold need not be a monoid to distribute. It is enough that it *keeps books*: a summary of each part that combines as
@@ -590,13 +638,14 @@ Every distribution pattern metatron names is an instance of one of these laws, a
 floatable law alone: O carries a constant along, and W, embarrassingly parallel, has no cut at all. Most entries are
 stars, refinements of the shard identity (A, E, G, J, K, L, H). D, S and V are orthogonal: they multiply any fan-out,
 through the transport, the master's own share, and the run's own coefficients. The rest place the work (B, C, Q, P, T)
-or compose the others (N, R, M, I).
+or compose the others (N, R, M, I). X, a partition by key, is the shuffle's first step: its $\checkmark$ is the
+instruction's, as a program writes it, and no planner emits one yet.
 
 |       |              | pattern                   | law                                                                                                                                | description                                                                                                                            |
 |-------|--------------|---------------------------|------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
 | **A** | $\checkmark$ | homomorphism shard        | $h(a \uplus b) = h(a) \oplus h(b)$                                                                                                 | each place folds its part; the master recombines the partials through the computed combiner                                            |
-| **B** |              | data-local shard          | $\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)$                                                                                     | the code moves to the data: each authority folds what it holds                                                                         |
-| **C** |              | authority push-down       | $\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}$                                                                | B with one owner: the fold runs where the data lives, natively (Theorem 5 and a pure chain)                                            |
+| **B** | $\checkmark$ | data-local shard          | $\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)$                                                                                     | the code moves to the data: each authority folds what it holds                                                                         |
+| **C** | $\checkmark$ | authority push-down       | $\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}$                                                                | B with one owner: the fold runs where the data lives, natively (Theorem 5 and a pure chain)                                            |
 | **D** | $\checkmark$ | parallel fan-out          | $\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b$                                                                  | the transport, not a new fold: every lane is submitted before any is awaited, so the master pays the longest round trip, not their sum |
 | **E** | $\checkmark$ | tree reduction            | $(a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C$                                          | each interior node re-plans its part and recombines a level; under a whole-frontier `repeat`, every pass does (N)                      |
 | **F** |              | ordered fold              | $a \cdot (b \cdot c) = (a \cdot b) \cdot c$                                                                                        | associativity alone: a list-partitioned fold carries the running total (streams never shard)                                           |
@@ -617,6 +666,7 @@ or compose the others (N, R, M, I).
 | **U** | $\checkmark$ | profile collation         | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$                                                                               | each shard's profile ships home, and the master collates one report                                                                    |
 | **V** | $\checkmark$ | generative run            | $a^{[m,n]} = \sum_{k=m}^{n} a^k$                                                                                                   | a span range or a point is an index set: the lanes split the unrolls by work, or the copies evenly                                     |
 | **W** | $\checkmark$ | embarrassingly parallel   | $(a + b) \cdot f = a \cdot f + b \cdot f$                                                                                          | no cut: each place runs the floatable run on its share, and the branch's merge brings it all home                                      |
+| **X** | $\checkmark$ | partition by key          | $\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i \mathrm{filter}(p = k_i)\,c_i$                                                | each obj to the lane its key names: a hosted key is a place, so each place is sent its share alone                                     |
 
 [To be written: the menu as a tree of these laws, a figure.]
 
@@ -640,6 +690,9 @@ or compose the others (N, R, M, I).
   metatron interpolates between them: a program moves along the axes by its query parameters, and for a floatable pass
   its answer does not move with it.
 - A coefficient is an index set: a span splits by its exponent, a point by its copies.
+- An address whose terms name machines is a seed already partitioned: each owner folds what it holds (B, C). A
+  partition is the shuffle's first step, the branch guarded by a key's fibres, $\sum_i \mathrm{filter}(p = k_i)\,c_i$;
+  a key that names a place sends that place its share alone (X), and keyed by the owners it is B again.
 - [To be written: what is open — the shuffle and pipeline shapes, and the laws a fold would declare to reach them.]
 
 # References
