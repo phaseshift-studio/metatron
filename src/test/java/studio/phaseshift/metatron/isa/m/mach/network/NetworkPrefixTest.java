@@ -134,6 +134,9 @@ public class NetworkPrefixTest extends AbstractMetatronTest {
             "//{{2}other,self}/a        % <{{2}loop://other/a,loop://self/a}>",
             "//{other,nobody}/a         % <{//nobody/a,loop://other/a}>",
             "//{other}/a                % loop://other/a",
+            // ONLY A BRANCH IS A SUM: a brace the uri algebra reads as a coefficient (a range) names no one, and is
+            // answered as written, as an unbound name is -- never a hostless read of this machine's /a
+            "//{0,1}/a                  % //{0,1}/a",
     })
     void testTheNameResolvesTheWholeTail(final String written, final String resolved) {
         assertEquals(f(resolved), Machine.Helper.align(Machine.current(), f(written)), written);

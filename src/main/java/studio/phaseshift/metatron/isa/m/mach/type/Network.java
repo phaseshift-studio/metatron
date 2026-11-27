@@ -282,12 +282,15 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         // A SUM OF NAMES DENOTES THE SUM OF WHAT EACH NAMES (Marko, 2026-11-26): //{ginger,chibi}/a is //ginger/a +
         // //chibi/a, and //+/a is that sum over every name this level sees, so the spelling aligns to the sum of the
         // origins, which a read and a write take term by term. The host's branch is read by the uri algebra, a point on
-        // a name included ({{2}ginger,chibi}), and an unbound name in the sum is answered as written, as it is alone
+        // a name included ({{2}ginger,chibi}), and an unbound name in the sum is answered as written, as it is alone.
+        // ONLY A BRANCH IS A SUM: a brace the algebra reads as a coefficient ({0,1}, a range) names no one, so it is
+        // looked up as the label it is spelled as, and fails closed downstream like any unbound name
         final String host = vid.host();
-        if (fURI.isOnePattern(host) || '{' == host.charAt(0))
-            return fURI.Helper.sum((fURI.isOnePattern(host)
+        final fURI names = '{' == host.charAt(0) ? f(host) : null;
+        if (fURI.isOnePattern(host) || (null != names && names.hasBranches()))
+            return fURI.Helper.sum((null == names
                     ? Component.Prefix.Helper.effectivePrefixes(this).keys().filter(Obj::isUri).map(Obj::uriValue)
-                    : f(host).branches())
+                    : names.branches())
                     .map(name -> this.alignPrefix(vid.host(name.d(cInt.ONE()).toString()).d(vid.d().mult(name.d())))));
         // THE SHADOWING LOOKUP, not this level's table: the meaning of a name is the nearest declaration above the
         // machine the caller stands in, so a frame that declares nothing still resolves the root's vocabulary.
