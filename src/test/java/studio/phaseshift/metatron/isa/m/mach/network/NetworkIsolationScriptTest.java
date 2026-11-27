@@ -114,13 +114,13 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
     }
 
     /**
-     * A uri cannot make itself a peer. Addressing a stranger answers {@code noobj} and leaves the roster exactly as
+     * A uri cannot make itself a peer. Addressing a stranger fails by its address and leaves the roster exactly as
      * it was — the fail-closed rule, observed rather than asserted in Java.
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "[ROSTER_CLEAR]",
-            "[STATE] *<ws://never-declared:19999/x>        [-- address a host nobody declared --]",
+            "*<ws://never-declared:19999/x> % <ERROR>      [-- address a host nobody declared: the read fails --]",
             "[PROBE_MACHINES]",
             "*/m/networkProbe/machines % 0               [-- addressing it did not declare it --]",
             "[PROBE_PEER ws://never-declared:19999/x]",

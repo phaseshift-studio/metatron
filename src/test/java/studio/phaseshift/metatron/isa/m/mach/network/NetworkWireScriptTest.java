@@ -487,13 +487,14 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     }
 
     /**
-     * NOTHING IS EMERGENT ON THE WIRE EITHER: an undialed scheme answers noobj and mints nothing, and a dial to
-     * a scheme with no default dialer and no handler answers noobj too — reach is always explicit.
+     * NOTHING IS EMERGENT ON THE WIRE EITHER: a read of an undialed authority fails by its address and mints nothing
+     * (Marko, 2026-11-26: "the user should know that their expression fails"; it answered noobj, as if nothing were
+     * there), and a dial to a scheme with no default dialer and no handler answers noobj — reach is always explicit.
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
-            "*<ws://never-dialed:19999/t/x> % noobj          [-- addressing an undialed authority answers nothing --]",
+            "*<ws://never-dialed:19999/t/x> % <ERROR>        [-- addressing an undialed authority fails by its address --]",
             "[PROBE_PEERS]",
             "*/m/networkProbe/peers % 0                      [-- and mints nothing --]",
             "[CONNECT xyz://unknown:1/x]",
