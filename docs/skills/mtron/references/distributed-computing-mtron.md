@@ -336,10 +336,12 @@ the fold ships over the bag it hands on. A read is untyped (`#`) on the planning
 at int and real) or a sum (a str sum is not commutative) over one stays home; `count` and `order` recombine through
 derivations that hold at any carrier. At the owner, the lane is compiled there, so a database space holding `/p` can
 take the fold natively (C's `native_count`). Pinned by the B and C rows of `AbstractDistributedComputingTest`.
-`X` done 2026-11-27 — `partition(p, k => c, …)`, the branch whose lanes are guarded by the fibers of `p`, which runs
-once per obj: each obj goes to the lane its key names. A key naming two lanes sends it to both, an unmatched key goes
-to `<#>`, an obj keyed noobj goes to each zeroable lane (`{?}//a`), and an obj no lane takes fails the call. A hosted
-key is a place, and its lane is the cut its program runs in there, so each place is sent its share alone (data
+`X` done 2026-11-27 — `partition(p, k => c, …)` routes each obj down the FIRST route its key admits, by the walk join
+of the rec algebra (`Rec#mult`): `p` keys each obj once, `[# => p(x)] * [k => v, …]` gives the routes that admit the key
+in written order, and the first is kept. `?` on a value admits its equal, on a type its instances, a guard what it
+holds for, and `_` everything, so `_` written last is the else; a key of noobj forms no relation and drops its obj, and
+an obj no route admits fails the call. A walk runs its code at the last place it passes (`?0 => //east => code`, a
+hosted key `//1 => code`, or the place a selector answers), so each place is sent its share alone (data
 distribution); a key that names where its data lives co-locates the two, so B and C hold by key as by address. It is
 a barrier instruction: its dom gathers the whole lhs by default, and a smaller maximum makes it a lazy barrier. A
 partition with a hosted key is a layout, so `law_shard` leaves its
@@ -722,37 +724,45 @@ instruction is still bare when `law_shard` runs, before resolution, so it stays 
 
 ### X — partition by key (the shuffle)
 
-`partition(p, k_1 => c_1, …)` sends each obj to the lane its key names, where a branch sends it to every lane. It is
-the branch whose lanes are guarded by the fibers of `p`, $\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i
-\mathrm{filter}(p = k_i)\,c_i$, so the branch's laws hold of it, and `p` runs once per obj where the guarded branch
-runs every guard. What `p` answers is applied to the obj in turn, so a stored function (`*/pf`: an instruction, a code
-or a key template) keys it as `mod(2)` does; a key is a uri, or an int read as its decimal spelling.
+`partition(p, k_1 => c_1, …)` sends each obj down the first route its key admits, where a branch sends it to every
+lane. Routing is the walk join of the rec algebra (`Rec#mult`): the selector `p` keys each obj once (`_` for the obj
+itself), the routes are one table, and `[# => p(x)] * [k_i => c_i]` gives the routes that admit the key in written
+order, of which the first is kept. With disjoint keys it is the branch whose lanes are guarded by the fibers of `p`,
+$\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i \mathrm{filter}(p = k_i)\,c_i$, with `p` run once per obj where
+the guarded branch runs every guard. What `p` answers is applied to the obj in turn, so a stored function (`*/pf`: an
+instruction, a code or a key template) keys it as `mod(2)` does.
 
 ```mtron_pre
-{1,2,3,4}.partition(mod(2), <0> => plus(10), <1> => plus(20))
+{1,2,3,4}.partition(mod(2), ?0 => plus(10), ?1 => plus(20))
 {1,2,3,4}.partition(<${mod(2)}>, <0> => plus(10), <1> => plus(20))
-{1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100))
-{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=A(<even>), <even> => plus(10), {?}<odd> => plus(20))
+{1,2,3}.partition(mod(3), ?0 => id(), _ => plus(100))
+{1,2,3,4}.partition(_, ?>2 => plus(10), _ => plus(20))
+{1,2,3,4}.partition(_, ?int::T => map(<int>), _ => map(<other>))
 ```
 
-A key naming two lanes sends the obj to both, `<#>` takes every key no other lane names, and an obj keyed noobj goes to
-each lane whose key is zeroable (`{?}<odd>`, any coefficient that holds zero). An obj no lane takes fails the call.
+`?` on a value admits its equal, on a type its instances, and a guard what it holds for; `_` admits every key, so
+written last it is the else. The first route that admits a key takes it, so overlapping guards route each obj once. A
+key of noobj forms no relation, so its obj is dropped, `none` is a key like any other, and an obj no route admits fails
+the call.
 A partition is a barrier instruction (Marko, 2026-11-27): its dom, `{*}` by default, gathers the whole lhs, so a
 lane's fold folds its whole share once, where a branch's default is one obj at a time. A smaller maximum makes it a
 lazy barrier, `{n}` a page of n and `{?}` one obj at a time:
 
 ```mtron_pre
-{1,2,3,4}.partition(mod(2), <0> => sum(), <1> => sum())
-{1,2,3,4}.partition?<=int{2}(mod(2), <0> => sum(), <1> => sum())
-{1,2,3,4}.partition?<=int{?}(mod(2), <0> => sum(), <1> => sum())
+{1,2,3,4}.partition(mod(2), ?0 => sum(), ?1 => sum())
+{1,2,3,4}.partition?<=int{2}(mod(2), ?0 => sum(), ?1 => sum())
+{1,2,3,4}.partition?<=int{?}(mod(2), ?0 => sum(), ?1 => sum())
 ```
 
-A hosted key is a place: its lane is the cut its program runs in there, so each place is sent its share alone, where a
-branch sends every lane the whole bag. That is DATA DISTRIBUTION. A key that names where its data lives is
-CO-LOCATION: each lane reads its keys where they are held, which is B and C by key:
+A walk runs its code at the last place it passes: a route may name its place after its key (`?0 => //a => code`), a
+hosted key is its own lane's place (`//a => code`), a selector that answers a place runs its route's code there, and a
+route that passes home (`_ => <~> => code`) runs here. So each place is sent its share alone, where a branch sends every
+lane the whole bag. That is DATA DISTRIBUTION. A key that names where its data lives is CO-LOCATION: each lane reads its
+keys where they are held, which is B and C by key:
 
 ```mtron
 */data.partition(*/pf, //a => sum(), //b => sum()).sum()
+{1,2,3,4}.partition(mod(2), ?0 => //a => sum(), ?1 => //b => sum()).sum()
 {1,2}.partition(<//${_}>, //1 => *</kv/${_}>.sum(), //2 => *</kv/${_}>.sum())
 ```
 

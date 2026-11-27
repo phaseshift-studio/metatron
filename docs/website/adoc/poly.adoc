@@ -240,7 +240,7 @@ So overlapping guards still route each obj exactly once.
 --
 
 Read a table's middle element as a machine, and selection is distribution: the alternatives are lanes, and their locations are the places the lanes run.
-metatron's `branch` sends an obj down every lane, as composition keeps every path, and its `partition` sends each obj down the lane its key names, a table of values (link:../articles/ring-theoretic-distributed-computing.html[Ring Theoretic Distributed Computing]).
+metatron's `branch` sends an obj down every lane, as composition keeps every path, and its `partition` keeps the first walk, as `==[_ \=> take(1)]` does (link:../articles/ring-theoretic-distributed-computing.html[Ring Theoretic Distributed Computing]).
 The algebra above needs neither instruction: flow control is a composition of relations, and the table is a value that can be built, stored, composed and rewritten like any other.
 
 [discrete]

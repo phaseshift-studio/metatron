@@ -379,16 +379,19 @@ Distributes elements:
 
 ### partition (`partition(p, k => c, …)`)
 
-Each member goes to the lane its key names, where a branch sends it to every lane: `p` keys each member once (a uri, or
-an int read as its decimal spelling), `<#>` takes the members no key names, and a zeroable lane (`{?}<a>`) takes the
-members keyed noobj. A partition is a barrier: its dom gathers the whole lhs by default, and a smaller maximum makes it
+Each member goes down the first route its key admits, where a branch sends it to every lane: the selector `p` keys
+each member once (`_` for the member itself), and the routes are matched as the rec algebra joins a walk (`[# => p(x)] *
+[k => v, …]`, the first walk kept). `?` on a value admits its equal, on a type its instances, a guard what it holds for,
+and `_` everything, so `_` written last is the else. A key of noobj forms no relation and drops its member, and a member
+no route admits fails the call. A partition is a barrier: its dom gathers the whole lhs by default, and a smaller maximum makes it
 a lazy barrier (`?<=int{2}` a page, `?<=int{?}` one member at a time). A key that names a place (`//a`) runs its lane
 there: see menu entry X of the [distributed computing reference](distributed-computing-mtron.md).
 
 ```mtron_pre
-{1,2,3,4}.partition(mod(2), <0> => plus(10), <1> => plus(20))     [-- the evens to <0>, the odds to <1> --]
-{1,2,3,4}.partition(mod(2), <0> => sum(), <1> => sum())           [-- {6,4}  (each lane folds its whole share) --]
-{1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100))          [-- 3 keys <0>, and the rest takes 1 and 2 --]
+{1,2,3,4}.partition(mod(2), ?0 => plus(10), ?1 => plus(20))       [-- the evens down ?0, the odds down ?1 --]
+{1,2,3,4}.partition(mod(2), ?0 => sum(), ?1 => sum())             [-- {6,4}  (each route folds its whole share) --]
+{1,2,3}.partition(mod(3), ?0 => id(), _ => plus(100))             [-- 3 keys 0, and _ takes 1 and 2 --]
+{1,2,3,4}.partition(_, ?>2 => plus(10), _ => plus(20))            [-- a guard, then the else --]
 ```
 
 ### conditional branch: `-<|[?pred=>a, _=>b]`

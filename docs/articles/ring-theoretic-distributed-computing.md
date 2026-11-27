@@ -602,10 +602,10 @@ alike, one member at a time, and a fold in each lane recombines to the star's an
 
 ```mtron_pre
 {1,2,3,4,5,6,7,8}.branch(filter(mod(2).eq(0)).plus(10), filter(mod(2).eq(1)).plus(20))
-{1,2,3,4,5,6,7,8}.partition?<=int{?}(mod(2), <0> => plus(10), <1> => plus(20))
-{1,2,3,4}.partition?<=int{?}(mod(2), <0> => plus(1), <1> => plus(1))
+{1,2,3,4,5,6,7,8}.partition?<=int{?}(mod(2), ?0 => plus(10), ?1 => plus(20))
+{1,2,3,4}.partition?<=int{?}(mod(2), ?0 => plus(1), ?1 => plus(1))
 {1,2,3,4}.branch(plus(1), plus(1))
-{1,2,3,4,5,6,7,8}.partition(mod(2), <0> => plus(1).mult(2).sum(), <1> => plus(1).mult(2).sum()).sum()
+{1,2,3,4,5,6,7,8}.partition(mod(2), ?0 => plus(1).mult(2).sum(), ?1 => plus(1).mult(2).sum()).sum()
 {1,2,3,4,5,6,7,8}.plus(1).mult(2).sum()
 ```
 
@@ -626,10 +626,12 @@ A partition evaluates $p$ once per member and routes the member to its lane:
 lane's head as a guard, finding one function $p$ under all of them, and proving the guards orthogonal and complete:
 that means looking into code the user wrote for other reasons, and taking on proof obligations the branch never
 states. A partition states $p$ and its keys, so its fibers are orthogonal by construction, as each member has one key,
-and the layout is read off the call. What the guarded reading leaves implicit becomes a rule of the instruction. A
-member whose key no lane names fails the call unless a `<#>` lane takes the rest. A member keyed nothing goes to every
-lane whose key is zeroable, `{?}//a`. And the routed member is its lane's input, so the lane can name it,
-`*</data/${_}>`.
+and the layout is read off the call. What the guarded reading leaves implicit is the rec algebra's own. The routes
+are a table, and a member's key is joined to it as a walk, $[\# \Rightarrow p(x)] * [k_i \Rightarrow c_i]$, with
+the first walk kept. `_` written last takes the rest, a key of noobj forms no relation and its member is
+dropped, `none` names a miss as any key does, and a member no route admits fails the call. The routed member is its
+lane's input, so the lane can name it, `*</data/${_}>`, and a route may name its place after its key,
+`?0 => //east => code`.
 
 </aside>
 
