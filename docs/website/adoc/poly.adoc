@@ -95,6 +95,154 @@ This is due to the fact that `<+/#>` is the stack's pattern, and therefore, matc
 [discrete]
 === Control Structures
 
+Most languages choose a path with keywords: `if`/`else`, `switch`/`case`, `match`, `cond`. Each is a construct of its own, with its own rules for what is tested, in what order, and what happens when nothing matches.
+In metatron, choosing is done with data. A `rec` is a relation, and the `rec` algebra already holds every one of those constructs.
+`+` gathers alternatives into a table.
+`*` composes relations: each path of the left grows at its last element by every pair of the right whose key admits that element.
+Composition distributes over `+`, so composing with a table is composing with each of its alternatives and gathering what results.
+
+latexmath:[R + S = R \cup S \qquad R * S = \{\, p \Rightarrow c \mid p \in R,\ \mathrm{last}(p) \Rightarrow c \in S \,\} \qquad R * (S + T) = R * S + R * T]
+
+[mtron]
+----
+a=>b=>c=>d                                    [-- <1> --]
+[a=>b] + [b=>c] + [c=>a] + [c=>d] + [d=>b]    [-- <2> --]
+[a=>b] * [b=>c]                               [-- <3> --]
+----
+<1> `\=>` associates to the right, so a chain of relations is a path.
+<2> `+` unions relations, and pairs that share a key bulk under it.
+<3> `*` grows the path `a\=>b` at `b` by `b\=>c`.
+
+To select with this algebra, an obj is made the end of a path, and a table of alternatives is composed onto it.
+A table's pairs read `key \=> location \=> code`: the key says which objs the alternative admits, the location where its code runs, and the code what runs.
+Here the locations and codes are names; a location may be a machine and a code a program.
+
+[mtron]
+----
+3.-<[|# => _]                                 [-- <1> --]
+1.plus(2).-<[|# => _] * [1 => a => codeA, /
+                         2 => b => codeB, /
+                         3 => c => codeC]     [-- <2> --]
+1.plus(2).-<[|# => _] * [1 => a => codeA, /
+                         2 => b => codeB, /
+                         3 => c => codeC].{3}>>    [-- <3> --]
+----
+<1> splitting (`-<`) an obj into a `rec` lifts it into a relation. The key `|#` is the pattern `#` (any obj), blocked so it stays as written, and `_` is the obj itself.
+<2> composition matches `3` against the table's keys, and the path grows by the alternative `3` names: a location, `c`, and a code, `codeC`.
+<3> three steps (`.\{3}>>`) walk the path to its code.
+
+[discrete]
+==== guards, the first match, and the default
+
+A key need not be a value. A predicate is a key that admits every obj it holds for, and a type is a key that admits its instances.
+Composition takes every key that admits the obj, so a table of guards sends an obj down every guard it passes.
+Projecting each path onto its first, `==[_ \=> take(1)]`, keeps the first guard in written order.
+
+[mtron]
+----
+1.plus(1).-<[|# => _] * [?>0 => a => codeA, ?>1 => b => codeB, ?>2 => c => codeC].{3}>>                    [-- <1> --]
+1.plus(1).-<[|# => _] * [?>0 => a => codeA, ?>1 => b => codeB, ?>2 => c => codeC]==[_ => take(1)].{3}>>    [-- <2> --]
+5.-<[|# => _] * [int::T => a => codeA, str::T => b => codeB].{3}>>                                           [-- <3> --]
+'five'.-<[|# => _] * [int::T => a => codeA, str::T => b => codeB].{3}>>                                      [-- <4> --]
+----
+<1> `2` passes `?>0` and `?>1`: two paths, two codes.
+<2> the first path alone, an `if`/`else if` chain.
+<3> a type admits its instances: `5` is an `int` ...
+<4> ... and `'five'` is a `str`.
+
+The key `_` admits every obj. Alone it is a fallback, and with the first match, written last, it is an `else`.
+
+[mtron]
+----
+7.-<[|# => _] * [1 => a => codeA, 2 => b => codeB, _ => d => codeD].{3}>>                                  [-- <1> --]
+2.-<[|# => _] * [1 => a => codeA, 2 => b => codeB, _ => d => codeD].{3}>>                                  [-- <2> --]
+2.-<[|# => _] * [1 => a => codeA, 2 => b => codeB, _ => d => codeD]==[_ => take(1)].{3}>>                  [-- <3> --]
+{-3,0,5}.-<[|# => _] * [?<0 => negative, ?=0 => zero, _ => positive]==[_ => take(1)].{2}>>                [-- <4> --]
+----
+<1> no key names `7`, so `_` takes it.
+<2> `_` admits `2` as well, beside the key `2`.
+<3> written last and projected onto the first match, `_` is an `else`.
+<4> a `cond`: each obj of the stream takes its own first match, two steps from its answer.
+
+[discrete]
+==== nothing, and no match
+
+A relation with `noobj` on either side never forms: `noobj` is nothing, not a key.
+So an obj whose selection yields `noobj` reaches no alternative at all.
+A selection that must name its miss uses the sentinel `none`, which is a key like any other.
+
+[mtron]
+----
+[x => noobj] * [1 => a => codeA, none => d => codeD]            [-- <1> --]
+[x => none] * [1 => a => codeA, none => d => codeD]             [-- <2> --]
+8.-<[|# => _] * [?>9 => a => codeA, ?>10 => b => codeB].{3}>>   [-- <3> --]
+----
+<1> the relation `x\=>noobj` never forms, and the composition is the empty `rec`.
+<2> `none` is matched like any key.
+<3> no guard admits `8`, and nothing is selected.
+
+[discrete]
+==== many keys, every key
+
+What selects need not answer one key. An obj related to several keys reaches the alternative of each.
+A table whose alternatives all sit under `_` sends every obj to all of them.
+
+[mtron]
+----
+[x => {2,3}] * [1 => a => codeA, 2 => b => codeB, 3 => c => codeC].{3}>>    [-- <1> --]
+5.-<[|# => _] * [_ => {a => codeA, b => codeB}].{3}>>                        [-- <2> --]
+----
+<1> the obj reaches the alternatives of `2` and `3`.
+<2> `_` admits every obj, and both alternatives sit under it: a broadcast.
+
+[discrete]
+==== composing tables
+
+Because composition grows a path at its last element, tables chain.
+A map from keys to locations, composed with a map from locations to code, keeps where a choice runs apart from what runs, and either map can be stored and reused.
+
+[mtron]
+----
+1.-<[|# => _] * [1 => east, 2 => west] * [east => codeA, west => codeB]   [-- <1> --]
+[1 => east, 2 => west]@placement                                            [-- <2> --]
+2.-<[|# => _] * *placement * [east => codeA, west => codeB].{3}>>           [-- <3> --]
+----
+<1> `1` is placed `east`, and `east` runs `codeA`.
+<2> the placement is a value at an address.
+<3> moving work means rewriting the placement, not the program.
+
+[.card]
+--
+[discrete,.center]
+==== selection is composition
+
+Every construct above is one composition, latexmath:[(\# \Rightarrow x) * T], of an obj latexmath:[x] with a table latexmath:[T = \sum_i k_i \Rightarrow c_i].
+What differs is what the keys are, what the selection answers, and whether the paths are projected onto the first.
+
+[cols="2,3,2,3,2",options="header"]
+|===
+| selection | the keys | projection | the obj reaches | known elsewhere as
+| by value | values (`3`) | | the alternative its key names | `switch`, a lookup
+| by guard | predicates (`?>1`) | | every alternative whose guard holds | guarded commands
+| first guard | predicates, in written order | `==[_ \=> take(1)]` | the first alternative whose guard holds | `if`/`else if`, `cond`
+| by type | types (`int::T`) | | the alternative its type names | a type `match`
+| fallback | `_`, beside other keys | | the alternative its key names and the alternative of `_` | a fallback
+| else | `_`, written last | `==[_ \=> take(1)]` | the alternative no earlier key took | `else`, `default`
+| many keys | the selection answers `{2,3}` | | an alternative per key | multicast
+| every key | `_` over a bag of alternatives | | every alternative | broadcast
+| no match | `none` | | the alternative of `none` | an explicit miss
+| nothing | (`noobj`) | | nothing: the relation never forms | the zero
+|===
+
+The first match is a projection, not a construct of its own.
+With latexmath:[\phi_i] the test of the latexmath:[i]-th key, in written order, the latexmath:[i]-th alternative receives latexmath:[\phi_i \prod_{j<i} (1 - \phi_j)] of the stream.
+So overlapping guards still route each obj exactly once.
+--
+
+Read a table's middle element as a machine, and selection is distribution: the alternatives are lanes, and their locations are the places the lanes run.
+metatron's `branch` sends an obj down every lane, as composition keeps every path, and its `partition` sends each obj down the lane its key names, a table of values (link:../articles/ring-theoretic-distributed-computing.html[Ring Theoretic Distributed Computing]).
+The algebra above needs neither instruction: flow control is a composition of relations, and the table is a value that can be built, stored, composed and rewritten like any other.
+
 [discrete]
 === Code Structures
 
