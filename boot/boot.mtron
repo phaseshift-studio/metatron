@@ -38,7 +38,13 @@ import(/m/db/tble);
  fsspace::[pattern    => local:#,
             route     => [local:=><~/>]]@~/memory/space/fs/home;
  http_server::[origin => !*boot/args/web/http/origin,
-               route  => [/ => <metatronfs:docs/website>]];
+               route  => [/portal    => <metatronfs:boot/space/web>,
+                          /css       => <metatronfs:docs/website/css>,
+                          /js        => <metatronfs:docs/website/js>,
+                          /highlight => <metatronfs:docs/website/highlight>,
+                          /images    => <metatronfs:docs/website/images>,
+                          /docs      => <metatronfs:docs/website>,
+                          /          => <metatronfs:boot/space/home>]];
  http_client::[host   => <http://#>];
  http_client::[host   => <https://#>];
  ws_server::[origin   => !*boot/args/web/ws/origin,

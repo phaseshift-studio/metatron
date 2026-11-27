@@ -484,7 +484,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
    <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/splash"
+               href="http://localhost:8777/portal"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
@@ -707,7 +707,7 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 ==&gt;boot=&gt;[args=&gt;[
      log=&gt;info,
      boot=&gt;&lt;boot/docs.mtron&gt;,
-     local=&gt;booger],
+     local=&gt;&lt;01a5502ee172&gt;],
     file=&gt;&lt;boot/docs.mtron&gt;@boot/file]
 ==&gt;v1=&gt;[name=&gt;'marko',
     age=&gt;29,
@@ -969,7 +969,7 @@ mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(throw()),max=&gt;
 mtron&gt; 15.band(10,20)     ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)     ​7​
-==&gt;fail::[noobj]@/processor/fail/5
+==&gt;fail::[noobj]@/processor/fail/4
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(-100),max=&gt;?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
 mtron&gt; 15.band(10,20)     ​8​
 ==&gt;15

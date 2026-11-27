@@ -1,4 +1,4 @@
-/* ── the browser's copy of a splash page ──────────────────────────────────
+/* ── the browser's copy of a portal page ──────────────────────────────────
    a page edited in the layout sidepanel lives in the grid, not on the machine until
    save as…: this keeps that layout in the browser's own database (IndexedDB) so the
    next visit restores it. a record remembers the machine page it came from by the
@@ -11,7 +11,7 @@
    every call answers a promise; a browser without IndexedDB simply refuses, and the
    callers treat that as "no copy". */
 
-const DB_NAME = "metatron-splash";
+const DB_NAME = "metatron-portal";
 const STORE = "pages";
 const VERSION = 1;
 

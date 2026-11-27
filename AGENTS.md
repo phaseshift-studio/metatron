@@ -411,7 +411,7 @@ Reach for `stream()` whenever you are unsure of the source, rather than branchin
    expressions in CSV rows; leverage `checkCodeParseApply`/`checkCodeEvaluate`/`checkEquality` from
    `AbstractMetatronTest`; use `@SkipInheritedTests` for selective skipping
 5. **Docker**: Image built & published to GHCR via `.github/workflows/docker.yml` (not part of the Maven build).
-6. **mtron files**: name a new `.mtron` file `<name>.<usage>.mtron` (`drstynx.boot.mtron`, `default.splash.mtron`,
+6. **mtron files**: name a new `.mtron` file `<name>.<usage>.mtron` (`drstynx.boot.mtron`, `default.portal.mtron`,
    `mach.instset.mtron`). Existing files keep their names until Marko migrates them, so a neighboring file's name is
    not an example.
 

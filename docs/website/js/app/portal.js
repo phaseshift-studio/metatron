@@ -86,6 +86,63 @@ function withTimeout(ms) {
     return {signal: ctrl.signal, done: () => clearTimeout(timer)};
 }
 
+/* ── the brand's pulse: is the machine on screen reachable? ────────────────
+   the ring beside "metatron" reports the WEBSOCKET, not the page's mood: one
+   x-mtron socket to the active instance, green when it opens, red the moment it
+   closes, and a retry every few seconds while the page is visible — taking a server
+   down used to leave the ring green until the page was reloaded. */
+let pulseSocket = null;
+let pulseAt = null;
+let pulseRetry = null;
+
+function pulseMark(state, name) {
+    const dot = $("#pulse-dot");
+    const note = $("#pulse");
+    if (dot) setDot(dot, state);
+    if (note) {
+        note.textContent = state === "up" ? "connected to " + name
+            : (state === "busy" ? "connecting to " + name : "not reachable: " + name);
+    }
+}
+
+function watchPulse(instance) {
+    if (!instance) return;
+    if (pulseAt === instance && pulseSocket && pulseSocket.readyState <= 1) return;
+    pulseAt = instance;
+    clearTimeout(pulseRetry);
+    if (pulseSocket) {
+        try { pulseSocket.close(); } catch (ignored) { }
+    }
+    pulseSocket = null;
+    const connect = () => {
+        if (instance !== active) return;
+        pulseMark("busy", instance.name);
+        let socket = null;
+        try {
+            socket = new WebSocket(codecUrl(instance.wsBase, "application/x-mtron", "application/x-mtron"));
+        } catch (ignored) {
+            pulseMark("bad", instance.name);
+            return;
+        }
+        pulseSocket = socket;
+        socket.addEventListener("open", () => {
+            if (instance === active) pulseMark("up", instance.name);
+        });
+        socket.addEventListener("error", () => {
+            if (instance === active) pulseMark("bad", instance.name);
+        });
+        socket.addEventListener("close", () => {
+            if (instance !== active) return;
+            pulseMark("bad", instance.name);
+            clearTimeout(pulseRetry);
+            pulseRetry = setTimeout(() => {
+                if (!document.hidden && instance === active) connect();
+            }, 4000);
+        });
+    };
+    connect();
+}
+
 function setDot(el, state) {
     if (!el) return;
     el.classList.remove("down", "busy", "up", "warn", "bad");
@@ -95,10 +152,10 @@ function setDot(el, state) {
 const ms = (n) => n + " ms";
 
 /* ── card span ──────────────────────────────────────────────────────────
-   a splash_card's span is [col=>n,row=>n]; a field the page leaves out is
+   a obj_card's span is [col=>n,row=>n]; a field the page leaves out is
    the UI's choice (1). the grid is 4 columns, so col is clamped to it. */
 /* a PlatonicObj collapsed to a plain JS value (uris -> strings, recs -> objects).
-   the page config (splash_page/card) is consumed through this; the browsed objs
+   the page config (portal_page/card) is consumed through this; the browsed objs
    stay PlatonicObj. */
 function plain(obj) {
     if (obj == null) return undefined;
@@ -1887,6 +1944,7 @@ function renderIdentity() {
     active.wsEp.textContent = active.wsBase;
     active.wsEp.title = active.wsUrl;
     paintBoot(active);
+    watchPulse(active);
     const instanceEl = $("#instance");
     if (instanceEl) {
         instanceEl.textContent = active.name || "this machine";
@@ -2307,7 +2365,7 @@ if (homeSource) {
     /* no source in the url: load the saved default page, falling back to the static page.
        a failure MUST be said out loud: an empty grid with no message is indistinguishable
        from a page still loading, and it hid a real one (a grouped card that failed the
-       splash_card type check, so the default page parsed nowhere on a machine whose typer
+       obj_card type check, so the default page parsed nowhere on a machine whose typer
        checks type predicates) */
     home.page.loadPage(home.page.PAGE).catch((error) => {
         line("err", "page load: " + (error && error.message ? error.message : error));
@@ -2337,7 +2395,7 @@ document.addEventListener("click", (ev) => {
 });
 
 /* ── the page object: one per instance ────────────────────────────────────
-   each machine wears its own splash_page, so the layout and its save follow the
+   each machine wears its own portal_page, so the layout and its save follow the
    instance a tab stands for. the chrome (the topbar view tabs, the save button,
    the save dialog, the mtron/json view) is the shell's, and always describes the
    ACTIVE instance. ?vid=<vid> or ?page=<url with ?vid=> loads a named page. */
@@ -2433,7 +2491,7 @@ function createPage(instance) {
     function suggestPage() {
         const value = String(page.PAGE == null ? "" : page.PAGE).replace(/^</, "").replace(/>$/, "");
         const cut = value.lastIndexOf("/");
-        return (cut > 0 ? value.slice(0, cut + 1) : "mfs:boot/") + "my_splash_page.mtron";
+        return (cut > 0 ? value.slice(0, cut + 1) : "mfs:boot/") + "my_portal_page.mtron";
     }
 
     function saveFail(message) {
@@ -2585,7 +2643,7 @@ function createPage(instance) {
         return cards;
     }
 
-    /* a layout entry: a leaf splash_card (tid/vid) or a group (card => [cards]) */
+    /* a layout entry: a leaf obj_card (tid/vid) or a group (card => [cards]) */
     function mountLayoutCard(rec, parent) {
         if (!rec) return null;
         if (Array.isArray(rec.card)) return mountMultiCard(rec, parent);
@@ -2698,7 +2756,7 @@ function createPage(instance) {
                 if (!sourceText || sourceText === "noobj" || /^fail::/.test(sourceText))
                     throw new Error(sourceText || "noobj");
                 const value = plain(MtronIO.read(sourceText));
-                if (!value || !value.layout) throw new Error("no splash_page object at " + attempt.vid);
+                if (!value || !value.layout) throw new Error("no portal_page object at " + attempt.vid);
                 config = value;
                 loaded = attempt;
                 break;
@@ -2750,7 +2808,7 @@ function createPage(instance) {
         });
     }
 
-    /* a leaf card or a group back to its splash_card::[…] spelling */
+    /* a leaf card or a group back to its obj_card::[…] spelling */
     function serializeCard(card) {
         if (card.card) {
             const parts = [];
@@ -2762,7 +2820,7 @@ function createPage(instance) {
                 parts.push("span=>[" + sp.join(",") + "]");
             }
             parts.push("card=>[" + card.card.map(serializeCard).join(",") + "]");
-            return "splash_card::[" + parts.join(",") + "]";
+            return "obj_card::[" + parts.join(",") + "]";
         }
         const parts = ["tid=><" + card.tid + ">"];
         if (card.vid) parts.push("vid=><" + card.vid + ">");
@@ -2774,7 +2832,7 @@ function createPage(instance) {
             if (card.row != null) sp.push("row=>" + card.row);
             parts.push("span=>[" + sp.join(",") + "]");
         }
-        return "splash_card::[" + parts.join(",") + "]";
+        return "obj_card::[" + parts.join(",") + "]";
     }
 
     async function savePage(destination) {
@@ -2787,7 +2845,7 @@ function createPage(instance) {
             const layout = pageCards().map(serializeCard);
             const value = "[title=>'" + String(page.title).replace(/'/g, "\\'") + "',layout=>[" + layout.join(",") + "]]";
             const target = String(vid).charAt(0) === "<" ? String(vid) : "<" + vid + ">";
-            const expr = target + " -> splash_page::" + value;
+            const expr = target + " -> portal_page::" + value;
             const result = await pageEval(expr);
             const text = String(result == null ? "" : result);
             if (/^fail::/.test(text)) throw new Error(text);

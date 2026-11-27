@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  ~ metatron splash — boot/space/web/index.html
+  ~ metatron portal — boot/space/web/index.html
   ~
   ~ served as the default page of the http_server mounted in boot/space/web/http.mtron:
   ~     route => [/mcp       => mcp_mtron,
@@ -54,7 +54,7 @@
   ~    metatron:root   the fs root this page is served from (fallback detection)
   ~    metatron:boot   the boot file named in the footer
   ~    metatron:highlight  where highlight.min.js + languages/mtron.min.js live (/highlight/)
-  ~    metatron:style      where splash.css lives (/css/splash.css)
+  ~    metatron:style      where portal.css lives (/css/portal.css)
   ~
   ~ no external requests beyond its own origin: the page is one file, and the
   ~ mtron syntax colour is an optional two-script load from a boot-mounted path
@@ -74,11 +74,11 @@
     <title>metatron — PhaseShift Studio</title>
     <link rel="icon"
           href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='11' r='7' fill='none' stroke='%23970207' stroke-width='2'/%3E%3Ccircle cx='12' cy='19' r='7' fill='none' stroke='%23c9d1d9' stroke-width='2'/%3E%3Ccircle cx='20' cy='19' r='7' fill='none' stroke='%238b949e' stroke-width='2'/%3E%3C/svg%3E">
-    <meta name="metatron:style" content="/css/splash.css">
+    <meta name="metatron:style" content="/css/portal.css">
     <meta name="metatron:page" content="">
-    <link id="metatron-style" rel="stylesheet" href="/css/splash.css">
+    <link id="metatron-style" rel="stylesheet" href="/css/portal.css">
     <script>
-        /* one place for the design: docs/website/css/splash.css. ?css= or the meta
+        /* one place for the design: docs/website/css/portal.css. ?css= or the meta
            tag can point elsewhere; the critical block below keeps the page readable
            if the stylesheet's mount is absent. */
         (function () {
@@ -90,7 +90,7 @@
         })();
     </script>
     <style>
-        /* critical only — the design lives in /css/splash.css */
+        /* critical only — the design lives in /css/portal.css */
         body {
             margin: 0;
             background: #0b0e13;
@@ -130,7 +130,7 @@
         </div>
         <div class="topbar-right">
             <div class="status-line">
-                <span class="page-name">splash_page</span>
+                <span class="page-name">portal_page</span>
                 <span class="page-vid">mfs:boot/space/web/default.mtron</span>
                 <button type="button" class="page-save" id="page-open" title="open a page from this machine's file systems">open…</button>
                 <button type="button" class="page-save" id="page-save">save as…</button>
@@ -151,11 +151,8 @@
         <div class="grid" aria-label="surfaces">
         </div>
         <!-- ── 2. console ────────────────────────────────────── -->
-        <section class="card wide" id="console-card" data-tid="console" data-label="console" data-col="4" data-row="2"
-                 aria-labelledby="h-console">
+        <section class="card wide" id="console-card" data-tid="console" data-label="console" data-col="4" data-row="2">
             <div class="console-head">
-                <span class="dot up" id="d-console"></span>
-                <h2 id="h-console">console</h2>
                 <span class="hl-note" id="hl-note">syntax: loading</span>
                 <span class="meta" id="m-console">one message is one expression</span>
                 <span class="mimes" title="the codecs this console speaks: in reads a frame, out writes an answer">
@@ -210,7 +207,7 @@
         <div class="brand">
             <a href="http://phaseshift.studio" target="_blank" rel="noopener">PhaseShift Studio</a> presents
             <a href="http://metatron.phaseshift.studio" target="_blank" rel="noopener">metatron</a>
-            server splash
+            server portal
         </div>
         <div class="license">AGPL3</div>
     </footer>
@@ -253,7 +250,7 @@
             <p>the default page is read-only — choose where this page should live.</p>
             <label class="sr" for="save-as-vid">save location</label>
             <input id="save-as-vid" type="text" spellcheck="false" autocapitalize="off"
-                   placeholder="mfs:boot/space/web/my_splash_page.mtron">
+                   placeholder="mfs:boot/space/web/my_portal_page.mtron">
             <p class="save-as-error" id="save-as-error" hidden></p>
         </div>
         <div class="actions">
@@ -313,6 +310,6 @@
     </div>
 </noscript>
 
-<script type="module" src="/js/app/splash.js"></script>
+<script type="module" src="/js/app/portal.js"></script>
 </body>
 </html>

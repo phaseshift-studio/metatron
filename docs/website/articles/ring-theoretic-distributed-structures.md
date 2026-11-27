@@ -110,7 +110,8 @@ mtron> </a/{b,c}/d> * </e>
 ==></a/{b,c}/d/e>
 ```
 In mtron, a uri is written in angle brackets, and a branch `{b,c}` inside a path is a factored sum. `plus` and `mult`
-are $+$ and $\cdot$, the empty uri `<>` is $\varepsilon$, and `noobj` is $0$.
+are $+$ and $\cdot$, the empty uri `<>` is $\varepsilon$, and $0$ is `<noobj>`, the uri of a hole (`{1}noobj`), as
+the list ring's is `[noobj]`: `noobj` itself is a zero address, the stream's zero, which flows nothing.
 
 **Claim 1 (points multiply along a path).** $(c\,u)(d\,v) = (cd)\,uv$, so a coefficient on any segment of a path is a
 coefficient on the whole path.
@@ -748,6 +749,12 @@ share an index, not a past, and superposing them by index reads time as space.
   `[noobj]`, and it absorbs a product, `[1,2] * [noobj]` is `[noobj]`. Any list through a hole holds no word, so it
   is the zero too: `[1,2] * [noobj,noobj]` is `[noobj]`. A record can name it, so mtron declares the
   list ring, its additive group and its monoids, as it does the record ring's.
+- *The reference ring's zero.* Settled (Marko, 2026-11-25): as with lists, noobj is not in the carrier; `<noobj>`,
+  the uri of a hole (`{1}noobj`), is. It adds nothing to a sum, a sum whose terms cancel answers it,
+  `</a/b/c> + </a/{-1}b/c>` is `<noobj>`, and it absorbs a product on either side. A point on any segment negates
+  its term, so the ring's inverses are in the points. Only the uri written `noobj` alone is the hole: a path through
+  a segment named noobj is an address. A record can name it, so mtron declares the reference ring, its additive group and its
+  monoids.
 - *Spans on nested lists.* The span after an inner list's bracket is that list's power, so `[[1,2]{2}]` is
   `[[1,2,1,2]]`, and the outer list's span repeats it, `[[1,2]]{2}` is `[[1,2],[1,2]]`. Is the bracket the span
   follows always the one whose ring takes the power?

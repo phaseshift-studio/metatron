@@ -78,11 +78,10 @@ RUN chmod +x /app/entrypoint.sh
 COPY --chown=metatron:metatron docs/website/skills/mtron /app/.metatron/skills/mtron
 COPY --chown=metatron:metatron docs/website/skills/metatron /app/.metatron/skills/metatron
 
-# splash page assets — the http routes /css, /js and /highlight mount these
-# (fs:docs/website/…), so the page renders styled + interactive, not bare HTML.
-COPY --chown=metatron:metatron docs/website/css /app/docs/website/css
-COPY --chown=metatron:metatron docs/website/js /app/docs/website/js
-COPY --chown=metatron:metatron docs/website/highlight /app/docs/website/highlight
+# the docs site, and the assets the portal draws from the same tree: the http routes
+# /css, /js, /highlight, /images and /docs mount fs:docs/website/…, so /portal renders
+# styled + interactive and /docs is the language reference, skills and articles.
+COPY --chown=metatron:metatron docs/website /app/docs/website
 
 USER metatron
 

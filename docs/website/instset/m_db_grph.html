@@ -484,7 +484,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
    <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/splash"
+               href="http://localhost:8777/portal"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
@@ -531,7 +531,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">5</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">13</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">11</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             
-            <span class="instset-built">built November 25, 2026</span>
+            <span class="instset-built">built November 27, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -1134,7 +1134,7 @@ maps an obj to objs (rng_c = {0,})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/gremlin_count?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s count()-reducer for vrtx/edge collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s count()-reducer for vrtx, edge and label collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -1149,7 +1149,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/gremlin_dedup?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s dedup()-by for vrtx collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s dedup()-by for vrtx, edge and label collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -1164,7 +1164,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/gremlin_limit?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s limit()-barrier for vrtx/edge collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s limit()-barrier for vrtx, edge and label collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -1179,7 +1179,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/gremlin_order?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s order()-by for vrtx collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s order()-by for vrtx, edge and label collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -1209,7 +1209,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/gremlin_skip?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s skip()-barrier for vrtx/edge collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s skip()-barrier for vrtx, edge and label collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -1239,7 +1239,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/gremlin_sum?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s sum()-reducer over a vertex property
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s sum()-reducer over an element property
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -1254,7 +1254,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/gremlin_where?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s has()-filtering for vrtx collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s has()-filtering for vrtx, edge and label collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -1269,7 +1269,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/gremlin_where_count?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s has().count() filtering-reduction for vrtx collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s has().count() filtering-reduction for vrtx, edge and label collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -1284,7 +1284,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/gremlin_where_limit?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s has().limit() filtering-barrier for vrtx collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s has().limit() filtering-barrier for vrtx, edge and label collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>

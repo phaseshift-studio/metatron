@@ -14,15 +14,7 @@ target/*
 !dist/docker/Dockerfile
 !docs/
 !docs/website/
-!docs/website/css/
-!docs/website/css/**
-!docs/website/js/
-!docs/website/js/**
-!docs/website/highlight/
-!docs/website/highlight/**
-!docs/website/skills/
-!docs/website/skills/mtron/
-!docs/website/skills/metatron/
+!docs/website/**
 !bin/
 !bin/wsplus
 # wsplus's sibling package (bin/wsplus does `from lib.nanorc_highlight import ...`),

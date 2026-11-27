@@ -415,34 +415,34 @@ pre code.hljs {
    Splash / index page card grid
    ========================================================================== */
 
-.splash-card {
+.instset-card {
     background: var(--maincolor);
     border: 1px solid var(--mdarkgray);
     border-radius: 4px;
     transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
 }
 
-.splash-card:hover {
+.instset-card:hover {
     border-color: var(--mred);
     box-shadow: 0 0 18px rgba(151, 2, 7, 0.25);
     transform: translateY(-2px);
 }
 
-.splash-icon {
+.instset-card-icon {
     width: 28px;
     height: 28px;
     flex-shrink: 0;
     filter: brightness(0) saturate(100%) invert(1);
 }
 
-.splash-title {
+.instset-card-title {
     font-size: 1.15rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.splash-desc {
+.instset-card-desc {
     font-size: 0.85rem;
     line-height: 1.45;
     margin-bottom: 0.35rem;
@@ -452,7 +452,7 @@ pre code.hljs {
     overflow: hidden;
 }
 
-.splash-stats {
+.instset-card-stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1px 14px;
@@ -461,7 +461,7 @@ pre code.hljs {
     margin-top: auto;
 }
 
-.splash-stats > div {
+.instset-card-stats > div {
     display: flex;
     justify-content: space-between;
     font-size: 0.78rem;

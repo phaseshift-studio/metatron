@@ -1,5 +1,5 @@
 /*
- * mathjax — lazy MathJax v4 for the splash page. a str::T carrying \(…\) (inline)
+ * mathjax — lazy MathJax v4 for the portal page. a str::T carrying \(…\) (inline)
  * or \[…\] (display) is typeset in place; the ~1.5MB engine loads only when a
  * rendered value actually carries math. mirrors the docs loader (same CDN, same
  * tex-mml-chtml build) but typesets on demand, for content added after load.
@@ -10,7 +10,7 @@
 const CDN = "https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js";
 let pending = null;
 
-/* MathJax's own delimiters — the splash page gets \(…\) already serialized, so
+/* MathJax's own delimiters — the portal page gets \(…\) already serialized, so
    there is no authored $…$ translation (that is MarkdownMath.java's job, on the
    docs/markdown side). */
 export function hasMath(text) {

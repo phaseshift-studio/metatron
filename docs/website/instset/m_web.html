@@ -484,7 +484,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
    <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/splash"
+               href="http://localhost:8777/portal"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
@@ -531,7 +531,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">53</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">13</span><span class="instset-stat-l">consts</span></div><div class="instset-stat"><span class="instset-stat-n">20</span><span class="instset-stat-l">defined elsewhere</span></div></div>
         <div class="instset-meta-foot">
             
-            <span class="instset-built">built November 25, 2026</span>
+            <span class="instset-built">built November 27, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -627,16 +627,16 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               serializer::T@/m/web/serializer/obj_zip,
               rec::T[?[
                {?}tid=&gt;uri::T,
-               {?}card=&gt;lst[splash_card{*}]::T,
+               {?}card=&gt;lst[obj_card{*}]::T,
                {?}vid=&gt;uri::T,
                {?}label=&gt;str::T,
                {?}view=&gt;union(mtron,json,panel),
                {?}span=&gt;[
                 {?}col=&gt;is(gte(1)).is(lte(4)),
-                {?}row=&gt;is(gte(1))]]]@/m/web/splash_page/splash_card,
+                {?}row=&gt;is(gte(1))]]]@/m/web/portal_page/obj_card,
               rec::T[?[
                title=&gt;str::T,
-               layout=&gt;lst[splash_card{*}]::T]]@/m/web/splash_page,
+               layout=&gt;lst[obj_card{*}]::T]]@/m/web/portal_page,
               listener::T[?[
                {?}keystore=&gt;&lt;#&gt;::T,
                {?}pass=&gt;&lt;#&gt;::T,
@@ -833,6 +833,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </a><a href="#__m__web__mtron" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mtron</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__web__portal_page" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">portal_page</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__web__protocol" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">protocol</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -841,9 +844,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__web__serializer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">serializer</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__web__splash_page" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">splash_page</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__web__sse" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sse</span>
@@ -929,6 +929,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </a><a href="#__m__web__mime__yaml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">yaml</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">portal_page</small></div><div class="d-flex flex-wrap"><a href="#__m__web__portal_page__obj_card" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">obj_card</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">serializer</small></div><div class="d-flex flex-wrap"><a href="#__m__web__serializer__obj_bson" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_bson</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -949,9 +952,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__web__serializer__obj_zip" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_zip</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">splash_page</small></div><div class="d-flex flex-wrap"><a href="#__m__web__splash_page__splash_card" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">splash_card</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">ws</small></div><div class="d-flex flex-wrap"><a href="#__m__web__ws__mtron_ws" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mtron_ws</span>
@@ -1385,12 +1385,12 @@ http_server::[host=&gt;&lt;https://0.0.0.0:8443&gt;,keystore=&gt;&lt;conf/server
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp client type specification" class="text-info">an mcp client type specification</a> <span class="text-light">=&gt;</span> <a href="#a connection to an existing mcp server" class="text-success">a connection to an existing mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
-  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
-  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'the tools__functions available for use on the mcp server'" class="text-info">functions available for use on the mcp server&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'the tools__functions available for use on the mcp server'" class="text-info">functions available for use on the mcp server&#39;</a>
   <a href="#{?}env" class="text-light">{?}env</a> <span class="text-light">=&gt;</span> <a href="#'environment variables for the stdio server process'" class="text-info">&#39;environment variables for the stdio server process&#39;</a>
   <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the current status of the mcp client__server connection'" class="text-info">server connection&#39;</a>
   <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
+  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
+  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1515,9 +1515,9 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp server specification" class="text-info">an mcp server specification</a> <span class="text-light">=&gt;</span> <a href="#a transport-agnostic mcp server" class="text-success">a transport-agnostic mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'a collection of inst::T, tool::T, or skill::T objs'" class="text-info">&#39;a collection of inst::T, tool::T, or skill::T objs&#39;</a>
-  <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
   <a href="#{?}prompt" class="text-light">{?}prompt</a> <span class="text-light">=&gt;</span> <a href="#'a collection of prompts (various obj types handled accordingly'" class="text-info">&#39;a collection of prompts (various obj types handled accordingly&#39;</a>
+  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'a collection of inst::T, tool::T, or skill::T objs'" class="text-info">&#39;a collection of inst::T, tool::T, or skill::T objs&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__web__mcp__mcp_stdio">
@@ -1739,6 +1739,25 @@ the session ends at EOF on stdin, which is how a client shuts the server down.
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">a serializer for converting objs to/from raw byte buffers
 obj_bytebuffer::[=&gt;]</code></pre>
 </div>
+</div><div class="card mb-3" id="__m__web__portal_page__obj_card">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">obj_card::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/web/portal_page/obj_card</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}tid=&gt;uri::T,
+         {?}card=&gt;lst[obj_card{*}]::T,
+         {?}vid=&gt;uri::T,
+         {?}label=&gt;str::T,
+         {?}view=&gt;union(mtron,json,panel),
+         {?}span=&gt;[
+          {?}col=&gt;is(gte(1)).is(lte(4)),
+          {?}row=&gt;is(gte(1))]]]@/m/web/portal_page/obj_card</code></pre></div>
+    
+    
+    
 </div><div class="card mb-3" id="__m__web__serializer__obj_mtron">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1844,6 +1863,19 @@ obj_bytebuffer::[=&gt;]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the zip serializer — writes an obj as mtron source inside a zip archive and reads it back, and zips a file or directory an obj names rather than an obj of the file: \(\mathrm{zip} \leadsto \mathrm{obj} \leadsto \mathrm{zip}\)</p>
 </div>
+</div><div class="card mb-3" id="__m__web__portal_page">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">portal_page::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/web/portal_page</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[title=&gt;str::T,
+         layout=&gt;lst[obj_card{*}]::T]]@/m/web/portal_page</code></pre></div>
+    
+    
+    
 </div><div class="card mb-3" id="__m__web__protocol">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1931,38 +1963,6 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         <small class="text-muted code">/m/web/serializer</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T</code></pre></div>
-    
-    
-    
-</div><div class="card mb-3" id="__m__web__splash_page__splash_card">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">splash_card::T</span>
-            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
-        </span>
-        <small class="text-muted code">/m/web/splash_page/splash_card</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}tid=&gt;uri::T,
-         {?}card=&gt;lst[splash_card{*}]::T,
-         {?}vid=&gt;uri::T,
-         {?}label=&gt;str::T,
-         {?}view=&gt;union(mtron,json,panel),
-         {?}span=&gt;[
-          {?}col=&gt;is(gte(1)).is(lte(4)),
-          {?}row=&gt;is(gte(1))]]]@/m/web/splash_page/splash_card</code></pre></div>
-    
-    
-    
-</div><div class="card mb-3" id="__m__web__splash_page">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">splash_page::T</span>
-            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
-        </span>
-        <small class="text-muted code">/m/web/splash_page</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[title=&gt;str::T,
-         layout=&gt;lst[splash_card{*}]::T]]@/m/web/splash_page</code></pre></div>
     
     
     

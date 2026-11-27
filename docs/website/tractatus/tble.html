@@ -484,7 +484,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
    <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/splash"
+               href="http://localhost:8777/portal"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
@@ -579,9 +579,11 @@ mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'marko'
 ==&gt;'grant'
+==&gt;'alex'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;2</code></pre>
+==&gt;2
+==&gt;3</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -625,7 +627,21 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; *lite:+</code></pre>
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; *lite:+
+==&gt;rec::T[?[trophy=&gt;str::T,
+            recipient=&gt;isa(person/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
+==&gt;rec::T[?[name=&gt;str::T,
+            age=&gt;int::T,
+            {?}skill=&gt;uri::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
+==&gt;rec::T[?[player=&gt;str::T,
+            points=&gt;int::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
+==&gt;rec::T[?[name=&gt;str::T,
+            {?}parent=&gt;&lt;#&gt;::T,
+            location=&gt;isa(area:V/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -635,7 +651,21 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
 ==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
-mtron&gt; *lite:+</code></pre>
+mtron&gt; *lite:+
+==&gt;rec::T[?[trophy=&gt;str::T,
+            recipient=&gt;isa(person/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
+==&gt;rec::T[?[name=&gt;str::T,
+            age=&gt;int::T,
+            {?}skill=&gt;uri::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
+==&gt;rec::T[?[player=&gt;str::T,
+            points=&gt;int::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
+==&gt;rec::T[?[name=&gt;str::T,
+            {?}parent=&gt;&lt;#&gt;::T,
+            location=&gt;isa(area:V/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
 </div>
 </div>
 </div>
@@ -738,13 +768,6 @@ code''' └────────────────┘ └────�
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; *lite:person/+/+.?[age=&gt;?&lt;30]     ​1​
-==&gt;[name=&gt;'marko',
-    age=&gt;29]@lite:person/noobj
-==&gt;[name=&gt;'grant',
-    age=&gt;25]@lite:person/noobj
-==&gt;[name=&gt;'alex',
-    age=&gt;25,
-    skill=&gt;graph]@lite:person/noobj
 mtron&gt; *lite:person/+/name.count()     ​2​
 ==&gt;3
 mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
@@ -832,8 +855,6 @@ mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
 ==&gt;[player=&gt;'grant',points=&gt;99]
 mtron&gt; *lite:score/+/+.?[player=&gt;'marko']     ​4​
-==&gt;[player=&gt;'marko',
-    points=&gt;42]@lite:score/noobj
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     ​5​
 ==&gt;[name=&gt;'marko',age=&gt;29,points=&gt;42]
 ==&gt;[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>

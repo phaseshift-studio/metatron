@@ -484,7 +484,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
    <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/splash"
+               href="http://localhost:8777/portal"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
@@ -1794,9 +1794,9 @@ mtron&gt; *v1     ​2​
     created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; *v1.out(knows)     ​3​
 mtron&gt; *v1.out(knows).out(created)     ​4​
-==&gt;fail::[a gremlin suffix needs a graph element, not [name=&gt;'marko',age=&gt;29,outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]]@/processor/fail/3
+==&gt;fail::[a gremlin suffix needs a graph element, not [name=&gt;'marko',age=&gt;29,outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]]@/processor/fail/2
 mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​
-==&gt;fail::[a gremlin suffix needs a graph element, not [name=&gt;'marko',age=&gt;29,outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]]@/processor/fail/4</code></pre>
+==&gt;fail::[a gremlin suffix needs a graph element, not [name=&gt;'marko',age=&gt;29,outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]]@/processor/fail/3</code></pre>
 </div>
 </div>
 </div>

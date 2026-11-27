@@ -484,7 +484,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
    <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/splash"
+               href="http://localhost:8777/portal"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
@@ -528,19 +528,19 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div class="row g-2"><div class="col-xl-4 col-md-6">
     <a href="m.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/mtron-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/mtron-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m</span>
                 </div>
-                <p class="text-muted splash-desc">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">52</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">3</span></div>
-                    <div><span class="stat-label">insts</span><span class="stat-val">363</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">365</span></div>
                     <div><span class="stat-label">defined&nbsp;elsewhere</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">rewrites</span><span class="stat-val">24</span></div>
                 </div>
@@ -549,15 +549,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_sys.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/sys-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/sys-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/sys</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/sys</span>
                 </div>
-                <p class="text-muted splash-desc">the machine bridge of metatron — terminal i/o, process execution, and raw file operations</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">the machine bridge of metatron — terminal i/o, process execution, and raw file operations</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">4</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">2</span></div>
@@ -570,15 +570,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_dev_dckr.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/dckr-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/dckr-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/dev/dckr</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/dev/dckr</span>
                 </div>
-                <p class="text-muted splash-desc">an instruction set to manipulate docker and docker compose</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">an instruction set to manipulate docker and docker compose</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">8</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
@@ -591,15 +591,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_mach.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/mach-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/mach-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/mach</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/mach</span>
                 </div>
-                <p class="text-muted splash-desc">the machine instruction set for nesting machines and their components instset, compiler, memory, network, processor</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">the machine instruction set for nesting machines and their components instset, compiler, memory, network, processor</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">41</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
@@ -612,15 +612,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_math.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/math-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/math-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/math</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/math</span>
                 </div>
-                <p class="text-muted splash-desc">the collection of mathematical instructions, algebraic and numeric data types, and associated constants</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">the collection of mathematical instructions, algebraic and numeric data types, and associated constants</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">2</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">33</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
@@ -633,15 +633,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_math_cat.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/cat-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/cat-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/math/cat</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/math/cat</span>
                 </div>
-                <p class="text-muted splash-desc">categorical realization of types and insts as objects and morphisms</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">categorical realization of types and insts as objects and morphisms</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">7</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
@@ -654,15 +654,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_math_geo.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/geo-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/geo-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/math/geo</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/math/geo</span>
                 </div>
-                <p class="text-muted splash-desc">the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithms, and the GeoJSON/WKT encodings</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithms, and the GeoJSON/WKT encodings</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">7</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
@@ -675,15 +675,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_sys_ui.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/ui-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/ui-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/sys/ui</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/sys/ui</span>
                 </div>
-                <p class="text-muted splash-desc">terminal widgets to spruce up the metatron</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">terminal widgets to spruce up the metatron</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">19</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
@@ -696,15 +696,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_web.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/web-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/web-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/web</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/web</span>
                 </div>
-                <p class="text-muted splash-desc">the world of the web widens metatron</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">the world of the web widens metatron</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">13</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">53</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
@@ -717,15 +717,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_iot.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/iot-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/iot-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/iot</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/iot</span>
                 </div>
-                <p class="text-muted splash-desc">mqtt, esp32, home assistant, and more accessible within the metatron</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">mqtt, esp32, home assistant, and more accessible within the metatron</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">9</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
@@ -738,15 +738,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_ai_llm.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/llm-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/llm-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/ai/llm</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/ai/llm</span>
                 </div>
-                <p class="text-muted splash-desc">large language model think and reason within the metatron</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">large language model think and reason within the metatron</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">45</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
@@ -759,15 +759,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_db_tble.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/tble-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/tble-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/db/tble</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/db/tble</span>
                 </div>
-                <p class="text-muted splash-desc">relational tables, typed rows, and SQL rewrites within the metatron</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">relational tables, typed rows, and SQL rewrites within the metatron</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
@@ -780,15 +780,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_db_dcmnt.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/dcmnt-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/dcmnt-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/db/dcmnt</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/db/dcmnt</span>
                 </div>
-                <p class="text-muted splash-desc">nested documents, typed collections, and schema-enforced writes — all within metatron</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">nested documents, typed collections, and schema-enforced writes — all within metatron</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">1</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
@@ -801,15 +801,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_db_grph.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/grph-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/grph-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/db/grph</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/db/grph</span>
                 </div>
-                <p class="text-muted splash-desc">from vertex to vertex, the edge of the metatron is traversed</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">from vertex to vertex, the edge of the metatron is traversed</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">5</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
@@ -822,15 +822,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_db_vec.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/vec-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/vec-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/db/vec</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/db/vec</span>
                 </div>
-                <p class="text-muted splash-desc">vector spaces for embeddings, similarity search, and tensor operations</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">vector spaces for embeddings, similarity search, and tensor operations</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">4</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
@@ -843,15 +843,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </a>
 </div><div class="col-xl-4 col-md-6">
     <a href="m_dev_ide.html" class="text-decoration-none">
-        <div class="splash-card card">
+        <div class="instset-card card">
             <div class="card-body d-flex flex-column p-2">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <img src="../images/icons/space/ide-icon.svg" alt="" class="splash-icon"
+                    <img src="../images/icons/space/ide-icon.svg" alt="" class="instset-card-icon"
                          onerror="this.style.display='none'">
-                    <span class="code text-primary fw-bold splash-title">/m/dev/ide</span>
+                    <span class="code text-primary fw-bold instset-card-title">/m/dev/ide</span>
                 </div>
-                <p class="text-muted splash-desc">the agent ide — project::T definition, build result::T and the links between them.</p>
-                <div class="splash-stats">
+                <p class="text-muted instset-card-desc">the agent ide — project::T definition, build result::T and the links between them.</p>
+                <div class="instset-card-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">4</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
@@ -866,7 +866,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <div class="py-3 text-center mt-4">
         <hr class="border-secondary">
         <small class="text-muted">
-            metatron instset doc generator &mdash; last built November 25, 2026<br>
+            metatron instset doc generator &mdash; last built November 27, 2026<br>
             &copy; PhaseShift Studio, LLC
         </small>
     </div>

@@ -2186,15 +2186,15 @@ public class InstSetDocGenerator {
             cards.append("""
                     <div class="col-xl-4 col-md-6">
                         <a href="%s" class="text-decoration-none">
-                            <div class="splash-card card">
+                            <div class="instset-card card">
                                 <div class="card-body d-flex flex-column p-2">
                                     <div class="d-flex align-items-center gap-2 mb-1">
-                                        <img src="%s" alt="" class="splash-icon"
+                                        <img src="%s" alt="" class="instset-card-icon"
                                              onerror="this.style.display='none'">
-                                        <span class="code text-primary fw-bold splash-title">%s</span>
+                                        <span class="code text-primary fw-bold instset-card-title">%s</span>
                                     </div>
-                                    <p class="text-muted splash-desc">%s</p>
-                                    <div class="splash-stats">
+                                    <p class="text-muted instset-card-desc">%s</p>
+                                    <div class="instset-card-stats">
                                         <div><span class="stat-label">consts</span><span class="stat-val">%d</span></div>
                                         <div><span class="stat-label">types</span><span class="stat-val">%d</span></div>
                                         <div><span class="stat-label">spaces</span><span class="stat-val">%d</span></div>

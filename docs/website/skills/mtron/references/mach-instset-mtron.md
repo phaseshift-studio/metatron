@@ -121,15 +121,27 @@ after which instruction memory answers the address.
 ```mtron
 mtron> */m/mach/component/compiler?docq
 ==>docs::[obj=>component::T[?[
-     {?}parser=>parser::T,
-     {?}rewriter=>rewriter::T,
-     {?}resolver=>resolver::T,
-     {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
+     {?}parser=>component::T@/m/mach/component/parser,
+     {?}rewriter=>component::T@/m/mach/component/rewriter,
+     {?}resolver=>component::T[?[
+      {?}selector=>component::T@/m/mach/component/selector,
+      {?}binder=>component::T@/m/mach/component/binder]]@/m/mach/component/resolver,
+     {?}typer=>component::T[?[
+      {?}check=>[
+       {?}inst_dom=>bool::T,
+       {?}inst_rng=>bool::T,
+       {?}type_pred=>bool::T,
+       {?}code_resolve=>bool::T,
+       {?}obj_write=>bool::T],
+      {?}unfold=>[
+       {?}uri=>int::T,
+       {?}lst=>int::T,
+       {?}rec=>int::T]]][ctor?typer<=(#{*}::T){<j>}]@/m/mach/component/typer]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
-           {?}resolver=>'the third stage — the walk that th...',
-           {?}rewriter=>'the second stage — the code::T to ...',
+           {?}typer=>'the fourth stage — the per-machine...',
            {?}parser=>'the first stage — source text to o...',
-           {?}typer=>'the fourth stage — the per-machine...'],
+           {?}rewriter=>'the second stage — the code::T to ...',
+           {?}resolver=>'the third stage — the walk that th...'],
           desc=>'the compiler contract of machine::...',
           example=>[
            'compiler::[rewriter=>fixpoint_rewr...',
@@ -293,12 +305,19 @@ mtron> */m/mach/component/processor?docq
 ==>docs::[obj=>component::T[?[
      {?}state=>union(stop,run,pause),
      {?}result=><#{*}>::T,
-     {?}tracer=>tracer::T,
-     {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
+     {?}tracer=>component::T[?[{?}stack=>[{?}mtron_stack=>bool::T,
+                                          {?}java_stack=>bool::T]]][ctor?tracer<=(#{*}::T){<j>}]@/m/mach/component/processor/tracer,
+     {?}analyzer=>component::T[?[
+      {?}analysis=><#>::T,
+      {?}step=>int::T,
+      {?}profile=>bool::T,
+      {?}mute=><#>::T,
+      {?}cap=><#>::T,
+      {?}request=><#>::T]][ctor?analyzer<=(#{*}::T){<j>}]@/m/mach/component/analyzer]]@/m/mach/component/processor,
           args=>[
-           {?}result=>'the objs the last evaluation produ...',
-           {?}analyzer=>"the processor's statistics (analyz...",
            {?}state=>'the run state: stop, run or pause',
+           {?}analyzer=>"the processor's statistics (analyz...",
+           {?}result=>'the objs the last evaluation produ...',
            {?}tracer=>"the processor's diagnostics (trace...",
            computer=>'the computers this processor minte...',
            fail=>"the machine's fail stack: an uncau..."],
@@ -315,8 +334,9 @@ separate axes of a machine.
 | `tracer::T`                        | the processor's diagnostics, in the typer's form: trace points at `~/processor/tracer/stack` (`mtron_stack`, `java_stack`), all off by default, overridden by a boot profile's `tracer/stack => […]`; a pushed machine's processor carries a copy of its parent's                                                                                     |
 | `analyzer::T`                      | any component's statistics at `~/<component>/analyzer`: a live `analysis::T` of `counter::T` (a `nat`, non-negative), `gauge::T` and `timer::T` meters, plus the settings `step`/`profile`; `noobj` written at it switches it off, at `analysis/<probe>` mutes that probe; producers record in Java (`incr`/`record`/`set`); a derived `!` field (a custom aggregate) may be attached beside the analysis (see *analyzer*) |
 
-Each evaluation runs in a computer the processor mints at `~/processor/computer/<n>`. The processor holds the fail
-stacks: an evaluation's uncaught fail is filed at `~/processor/computer/<n>/fail/<k>`, a fail raised outside any
+Each evaluation runs in a computer the processor mints at `~/processor/computer/<n>`; the processor keeps every running
+computer and the newest 100 of the rest (one minted and not yet started among them), so an older computer, its fails and
+profile with it, reads `noobj`. The processor holds the fail stacks: an evaluation's uncaught fail is filed at `~/processor/computer/<n>/fail/<k>`, a fail raised outside any
 evaluation at `~/processor/fail/<k>`. A fail read from a stack is still uncaught, so it is used as a value through
 `catch(_)`. A read with `@` keeps each fail's address, so catching it removes it; `*` returns a detached copy.
 
@@ -404,12 +424,12 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}result=>'the last result produced by the th...',
-           {?}state=>'current state of the thread',
-           {?}timeout=>'how long a read of rhs waits for t...',
-           {?}loop=>'delay to repeat code evaluation (d...',
-           {?}time=>'the datetime::T when the thread wa...',
            code=>"the thread's executing code",
+           {?}time=>'the datetime::T when the thread wa...',
+           {?}loop=>'delay to repeat code evaluation (d...',
+           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}state=>'current state of the thread',
+           {?}result=>'the last result produced by the th...',
            {?}runtime=>"computes the thread's current runn..."],
           desc=>'the thread base type']
 ```
@@ -423,7 +443,10 @@ mtron> */m/mach/thread?docq
 | `result`  | the last result                              |
 
 `thread::T` is the base, and `core::T` (a platform thread) and `virtual::T` (a virtual thread) are its strategies, e.g.
-`core::[code=>…,loop=>second::1.0]@~/sys/thread/…`. Evaluation runs on virtual threads by default.
+`core::[code=>…,loop=>second::1.0]@~/sys/thread/…`. Evaluation runs on virtual threads by default. The executor lists
+the running threads under `/sys/thread/executor/run` and the ended ones under `/sys/thread/executor/stop`, which keeps the
+newest 100 whose vid was minted (`~/sys/thread/<id>`) and every thread made at an address of its own; a minted thread
+dropped from it is deleted at its vid, its doc with it.
 
 ## memory (data memory)
 
@@ -466,11 +489,11 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}analyzer=>"the network's statistics (analyzer...",
-           {?}roster=>'what the system knows, connectionl...',
-           {?}status=>'the health method — an auto inst c...',
-           {?}listener=>'the sockets this machine serves th...',
            {?}pattern=>'the branch this network answers as...',
+           {?}listener=>'the sockets this machine serves th...',
+           {?}status=>'the health method — an auto inst c...',
+           {?}roster=>'what the system knows, connectionl...',
+           {?}analyzer=>"the network's statistics (analyzer...",
            {?}peer=>"machine's own connections, one per..."],
           desc=>"a machine's network: the endpoints...",
           example=>[
@@ -583,17 +606,17 @@ network as `memspace::[pattern=>xyz/#]` indexes into memory.
 
 ```mtron
 mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
-==>ws_client::[pattern=>ws://localhost:8555/mtron,
-               host=>ws://localhost:8555/mtron,
-               send=>λ(){<j>},
-               send_recv=>λ(){<j>},
-               inst=>[
-                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-                /m/inst/from=>*uri::T,
-                /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
-               status=>!λstatus?bool<=(){<j>},
-               close=>λ(){<j>},
-               ...(1 more)]
+==>[pattern=>ws://localhost:8555/mtron,
+    host=>ws://localhost:8555/mtron,
+    send=>λ(){<j>},
+    send_recv=>λ(){<j>},
+    inst=>[
+     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+     /m/inst/from=>*uri::T,
+     /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
+    status=>!λstatus?bool<=(){<j>},
+    close=>λ(){<j>},
+    ...(1 more)]
 ```
 A client's `inst` is a mini-instset of overrides with the native signatures: `from(<uri>)` reads, `obj.to(<uri>)` writes
 its lhs, and `eval(code)` ships a program for the far side to run. A `ws_client` declares all three, and so does an
@@ -685,7 +708,6 @@ mtron> *~.vid()
 mtron> /.>>
 ==>/xyz/
 ==>/sys/
-==>/m/
 ==>/pattern/
 ==>/q/
 ==>/memory/
@@ -801,7 +823,7 @@ service authority.
 
 ```mtron
 mtron> *~/network/host
-==>booger
+==>debd73bdfc6c
 ```
 ## appendix — registered types
 

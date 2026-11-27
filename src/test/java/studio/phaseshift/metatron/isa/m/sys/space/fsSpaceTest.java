@@ -463,7 +463,7 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
     /**
      * A DIRECTORY IS A LAZY TREE (Marko, 2026-11-21): it is laid out from the names alone, each file a reference
      * ({@code !*<file>}) that reads the file only when its own key is called, so reading a directory runs no program in
-     * it -- the splash page's {@code GET /} read its web root, and so evaluated every boot helper there. A reference is
+     * it -- the portal page's {@code GET /} read its web root, and so evaluated every boot helper there. A reference is
      * the same data as the file's obj, rendered differently: {@code atDirect} walks the tree past it, {@code at} reads
      * it as a direct read of the file does. Drawing it reads nothing. A listing ({@code +/}) names each file by its
      * reference; a read of values one wildcard step deep ({@code +}, {@code #}) reads every file it reaches, in the

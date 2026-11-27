@@ -484,7 +484,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
    <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/splash"
+               href="http://localhost:8777/portal"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
@@ -610,7 +610,8 @@ mtron&gt; &lt;/a/{b,c}/d&gt; * &lt;/e&gt;
 ==&gt;&lt;/a/{b,c}/d/e&gt;
 </code></pre>
 <p>In mtron, a uri is written in angle brackets, and a branch <code>{b,c}</code> inside a path is a factored sum. <code>plus</code> and <code>mult</code>
-are \(+\) and \(\cdot\), the empty uri <code>&lt;&gt;</code> is \(\varepsilon\), and <code>noobj</code> is \(0\).</p>
+are \(+\) and \(\cdot\), the empty uri <code>&lt;&gt;</code> is \(\varepsilon\), and \(0\) is <code>&lt;noobj&gt;</code>, the uri of a hole (<code>{1}noobj</code>), as
+the list ring's is <code>[noobj]</code>: <code>noobj</code> itself is a zero address, the stream's zero, which flows nothing.</p>
 <p><strong>Claim 1 (points multiply along a path).</strong> \((c\,u)(d\,v) = (cd)\,uv\), so a coefficient on any segment of a path is a
 coefficient on the whole path.</p>
 <!-- quarry: Proposition 1, with its live proof -->
@@ -1142,6 +1143,12 @@ runs through a hole, so the list of one hole is the sum of nothing and of words 
 <code>[noobj]</code>, and it absorbs a product, <code>[1,2] * [noobj]</code> is <code>[noobj]</code>. Any list through a hole holds no word, so it
 is the zero too: <code>[1,2] * [noobj,noobj]</code> is <code>[noobj]</code>. A record can name it, so mtron declares the
 list ring, its additive group and its monoids, as it does the record ring's.</li>
+<li><em>The reference ring's zero.</em> Settled (Marko, 2026-11-25): as with lists, noobj is not in the carrier; <code>&lt;noobj&gt;</code>,
+the uri of a hole (<code>{1}noobj</code>), is. It adds nothing to a sum, a sum whose terms cancel answers it,
+<code>&lt;/a/b/c&gt; + &lt;/a/{-1}b/c&gt;</code> is <code>&lt;noobj&gt;</code>, and it absorbs a product on either side. A point on any segment negates
+its term, so the ring's inverses are in the points. Only the uri written <code>noobj</code> alone is the hole: a path through
+a segment named noobj is an address. A record can name it, so mtron declares the reference ring, its additive group and its
+monoids.</li>
 <li><em>Spans on nested lists.</em> The span after an inner list's bracket is that list's power, so <code>[[1,2]{2}]</code> is
 <code>[[1,2,1,2]]</code>, and the outer list's span repeats it, <code>[[1,2]]{2}</code> is <code>[[1,2],[1,2]]</code>. Is the bracket the span
 follows always the one whose ring takes the power?</li>

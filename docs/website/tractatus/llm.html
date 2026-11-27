@@ -484,7 +484,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
    <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/splash"
+               href="http://localhost:8777/portal"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
@@ -553,12 +553,18 @@ mtron&gt; http_server::[origin     =&gt; http://localhost:8777,
                      pattern  =&gt; &lt;http://#&gt;,
                      route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                    /       =&gt; &lt;&gt;]]
-==&gt;fail::[parse error at line 1, col 1: unable to construct http_server::T: fail::['inst apply failure: unable to bind http://localhost:8777: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]']
-   	while parsing: http_server::[origin     =&gt; http://localhost:8777,
-                        q        =&gt; [mimeq::[=&gt;]],
-                        pattern  =&gt; &lt;http://#&gt;,
-                        route    =&gt; [/mcp     =&gt; mcp_mtron_http,
-                                      /       =&gt; &lt;&gt;]]]
+==&gt;http_server::[origin=&gt;http://localhost:8777,
+                 route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;],
+                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+                 q=&gt;[
+                  analq::[
+                   pattern=&gt;analq,
+                   pre_read=&gt;inst(uri::T){&lt;j&gt;},
+                   pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+                   qless_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+                   qless_read=&gt;inst(uri::T,#::T){&lt;j&gt;},
+                   obj=&gt;analyzer::[analysis=&gt;!λ(#{*}::T){&lt;j&gt;},mute=&gt;!λ(#{*}::T){&lt;j&gt;},cap=&gt;[=&gt;]]],
+                  mimeq::[pattern=&gt;mimeq,post_read=&gt;inst(uri::T,#::T){&lt;j&gt;}]]]
 mtron&gt; ws_server::[host     =&gt; ws://localhost:8555,
                    pattern  =&gt; &lt;ws://#&gt;,
                    q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
@@ -649,24 +655,22 @@ Two example models are provided below.</p>
                protocol =&gt; ollama,
                host     =&gt; http://localhost:11434,
                llm      =&gt; &lt;qwen3.5:4b&gt;]
-==&gt;model::[skill=&gt;[completion,vision,tools,thinking],
-           size=&gt;gB::3.1571,
-           context=&gt;262144,
-           provider=&gt;ollama,
-           protocol=&gt;ollama,
-           host=&gt;http://localhost:11434,
-           llm=&gt;&lt;qwen3.5:4b&gt;]
+==&gt;fail::[parse error at line 1, col 1: unable to construct model::T: fail::['inst apply failure: java.net.ConnectException (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]']['java.net.ConnectException [SocketChannelImpl&lt;204&gt;]']['fail']['fail']['fail']
+   	while parsing: model::[provider =&gt; ollama,
+                  protocol =&gt; ollama,
+                  host     =&gt; http://localhost:11434,
+                  llm      =&gt; &lt;qwen3.5:4b&gt;]]
 mtron&gt; model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
                api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
                provider =&gt; deepseek,
                protocol =&gt; openai,
                llm      =&gt; &lt;deepseek-v4-pro&gt;]
-==&gt;model::[name=&gt;deepseek-v4-pro,
-           host=&gt;&lt;https://api.deepseek.com/v1&gt;,
-           api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
-           provider=&gt;deepseek,
-           protocol=&gt;openai,
-           llm=&gt;deepseek-v4-pro]</code></pre>
+==&gt;fail::[parse error at line 1, col 1: unable to construct model::T: fail::['inst apply failure: {"error":{"message":"Authentication Fails (auth header format should be Bearer sk-...) (request_id: aa2cc1e8-7260-40e8-9993-e5f95c2a7d12)","type":"authentication_error","param":null,"code":"invalid_request_error"}} (at /m/inst/ctor) [JdkHttpClient&lt;112&gt;]']['{"error":{"message":"Authentication Fails (auth header format should be Bearer sk-...) (request_id: aa2cc1e8-7260-40e8-9993-e5f95c2a7d12)","type":"authentication_error","param":null,"code":"invalid_request_error"}} [JdkHttpClient&lt;112&gt;]']
+   	while parsing: model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
+                  api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
+                  provider =&gt; deepseek,
+                  protocol =&gt; openai,
+                  llm      =&gt; &lt;deepseek-v4-pro&gt;]]</code></pre>
 </div>
 </div>
 <!--
@@ -1058,69 +1062,8 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>mcp_client::[host=>ws://localhost:8555/mcp,
-                status=>!λstatus?bool<=(){<j>},
-                tool=>[
-                 m_web_mcp_mcp_mtron_write_memory=>tool::[
-                  inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                             previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                  name=>m_web_mcp_mcp_mtron_write_memory,
-                  desc=>'(experimental) returns a memory re...',
-                  arg=>[
-                   current_memory=>'the memory to remember -- e.g. a s...',
-                   previous_memory=>'a previous memory vid to chain cur...']],
-                 m_web_mcp_mcp_mtron_read_memory=>tool::[
-                  inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                  name=>m_web_mcp_mcp_mtron_read_memory,
-                  desc=>'(experimental) returns the result ...',
-                  arg=>[memory_vid=>'the vid of the memory to read']],
-                 m_web_mcp_mcp_mtron_eval_mtron=>tool::[
-                  inst=>inst(code=>'/m/code',mime=>'/m/uri'){<j>},
-                  name=>m_web_mcp_mcp_mtron_eval_mtron,
-                  desc=>'<no description>',
-                  arg=>[code=>'/m/code',mime=>'/m/uri']],
-                 m_web_mcp_mcp_mtron_list_space=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_list_space,
-                  desc=>'[filter] returns a rec identifying...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_machine_info=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_machine_info,
-                  desc=>'[filter] returns what the running ...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_find_inst=>tool::[
-                  inst=>inst(pattern=>'the inst tid to match',
-                             dom=>'the dom of inst to match (can be added to pattern arg)',
-                             rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                  name=>m_web_mcp_mcp_mtron_find_inst,
-                  desc=>'[filter] returns a lst of all inst...',
-                  arg=>[
-                   pattern=>'the inst tid to match',
-                   dom=>'the dom of inst to match (can be a...',
-                   rng=>'the rng of inst to match (can be a...']],
-                 m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
-                  inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                             on_message=>'the function to evaluate on every received message'){<j>},
-                  name=>m_web_mcp_mcp_mtron_spawn_wsclient,
-                  desc=>'create a websocket client with pro...',
-                  arg=>[
-                   host=>'the full ws:// uri of the websocke...',
-                   on_message=>'the function to evaluate on every ...']],
-                 ...(1 more)],
-                inst=>[
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_write_memory=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                                                                       previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_read_memory=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=>inst(code=>'/m/code',mime=>'/m/uri'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_list_space=>inst(){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_machine_info=>inst(){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_find_inst=>inst(pattern=>'the inst tid to match',
-                                                                    dom=>'the dom of inst to match (can be added to pattern arg)',
-                                                                    rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                                                                         on_message=>'the function to evaluate on every received message'){<j>},
-                 ...(4 more)]]@/usr/ai/mcp/mtron
+==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]']['java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]']['fail']['fail']
+   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
@@ -1148,27 +1091,6 @@ And since, metatron is able to map common data formats to `obj`, its possible to
 [source,mtron]
 ----
 mtron> *<fs:skills/mtron/SKILL.md>
-==>
-   markdown::"---
-   name: mtron
-   description: understanding the language used to control metatron
-   ---
-
-   # mtron: traversing the metatron graph
-
-   mtron is a functional, fluent, monadic language that manipulates the metatron environment.
-
-   To understand mtron, it's necessary to first understand how language, structure, and process are organized in metatron.
-
-   metatron's **structure** is abstractly defined as a [split graph](https://en.wikipedia.org/wiki/Split_graph) composed of
-   two vertex sets:
-   $V = U \cup O$. The set $U$ is the set of [uris](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) (**uniform
-   resource identifiers**) and they maintain an _intra-edge_ set defined by uri **path adjacency**. The set $O$ is the set
-   of objs (objects) whose _intra-edge_ set denote **shared/coupled state**. Finally, there exists a bi-directional
-   **inter-edge** set linking the uris in $U$ to
-   the objs in $O$ in a **reference/referent** relationship.
-
-   ...
 ----
 
 [discrete]
@@ -1308,7 +1230,7 @@ mtron> *a
 mtron> 1.at(a) + 2 + 3
 ==>6@a
 mtron> *a
-==>1
+==>6
 ----
 
 <1> `.to()` saves a snapshot at `a` but the `@vid` is **not** carried through the chain.

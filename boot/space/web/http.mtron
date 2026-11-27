@@ -2,7 +2,10 @@
 |inst?http_server<=uri() {
   -<([origin  => _,
       route   => [/mcp       => mcp_mtron,
+                  /portal    => fs:boot/space/web,
                   /highlight => fs:docs/website/highlight,
                   /css       => fs:docs/website/css,
                   /js        => fs:docs/website/js,
-                  /          => fs:boot/space/web]]).as(http_server::T) }
+                  /images    => fs:docs/website/images,
+                  /docs      => fs:docs/website,
+                  /          => fs:boot/space/home]]).as(http_server::T) }

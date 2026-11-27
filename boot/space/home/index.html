@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>metatron</title>
+<link rel="icon" href="/docs/images/favicon.ico">
+<!-- the standard distribution's front door: who this machine is, the doors it serves,
+     and what it is listening on. the portal itself is /portal; this page only points. -->
+<style>
+    :root {
+        --bg: #070a0f;
+        --panel: #0d1117;
+        --line: #21262d;
+        --line-hi: #30363d;
+        --fg: #c9d1d9;
+        --faint: #8b949e;
+        --red: #970207;
+        --mred: #7a2518;
+        --ok: #3fb950;
+        --bad: #f85149;
+        --warn: #d29922;
+        --link: #58a6ff;
+        --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", "Cascadia Mono", "Fira Code", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+        /* the panel sits in the middle of the window, both ways: the page is one card
+           of facts about a machine, not a document that starts at the top */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        min-height: 100dvh;
+        margin: 0;
+        padding: 2rem 0;
+        background: var(--bg);
+        color: var(--fg);
+        font: 14px/1.6 var(--mono);
+    }
+    main {
+        width: min(760px, 100% - 3rem);
+        margin: 0;
+        padding: 0;
+    }
+    header {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--line);
+    }
+    header img { width: 26px; height: 26px; flex: none; }
+    header h1 {
+        margin: 0;
+        color: var(--mred);
+        font: 600 26px/1.15 var(--mono);
+    }
+    header .tag {
+        color: var(--faint);
+        font-size: 12.5px;
+    }
+    .where {
+        margin-left: auto;
+        text-align: right;
+        color: var(--faint);
+        font-size: 10.5px;
+        line-height: 1.5;
+    }
+    .where .boot { color: var(--mred); }
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--faint);
+        display: inline-block;
+        flex: none;
+    }
+    .dot.up { background: var(--ok); }
+    .dot.bad { background: var(--bad); }
+    .dot.busy { background: var(--warn); }
+    .door {
+        display: inline-block;
+        margin: 1.4rem 0 .4rem;
+        padding: .35rem .75rem;
+        border: 1px solid var(--line-hi);
+        border-radius: 7px;
+        background: var(--panel);
+        color: var(--fg);
+        text-decoration: none;
+    }
+    .door:hover { border-color: var(--mred); }
+    .door b { color: var(--fg); }
+    table {
+        width: 100%;
+        margin-top: 1.6rem;
+        border-collapse: collapse;
+        font-size: 12.5px;
+    }
+    th {
+        padding: 0 .4rem .25rem 0;
+        border-bottom: 1px solid var(--line);
+        color: var(--faint);
+        font-weight: normal;
+        text-align: left;
+        font-size: 10px;
+        letter-spacing: .08em;
+    }
+    td {
+        padding: .22rem .4rem .22rem 0;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+    }
+    td:first-child { width: 12rem; white-space: nowrap; color: var(--mred); }
+    td a { color: var(--mred); text-decoration: none; }
+    td a:hover { text-decoration: underline; }
+    td.desc { color: var(--faint); }
+    p.note {
+        margin: .7rem 0 .2rem;
+        color: var(--faint);
+        font-size: 11px;
+        text-align: center;
+    }
+    #listeners td {
+        padding: .3rem .4rem .3rem 0;
+        font-size: 14px;
+    }
+
+    #listener-table th {
+        padding-bottom: .3rem;
+        font-size: 11.5px;
+    }
+
+    h2 {
+        margin: 2.2rem 0 0;
+        color: var(--fg);
+        font: 13px/1.4 var(--mono);
+        letter-spacing: .08em;
+        font-weight: normal;
+    }
+    footer {
+        margin-top: 3rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--line);
+        color: var(--faint);
+        font-size: 10.5px;
+        text-align: center;
+    }
+    footer code { color: var(--mred); }
+    footer a { color: var(--mred); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<main>
+    <header>
+        <img src="/docs/images/favicon.ico" alt="">
+        <h1>metatron</h1>
+        <span class="tag">: a ring-based virtual machine and language.</span>
+        <div class="where">
+            <div><span class="dot busy" id="pulse"></span> <span id="where">ws://…</span></div>
+            <div class="boot" id="boot" title="the boot file this server was started with">…</div>
+        </div>
+    </header>
+
+    <a class="door" href="/portal"><b>open portal</b></a>
+
+    <table aria-label="the endpoints this machine serves">
+        <tbody>
+        <tr><td><a href="/portal">/portal</a></td><td class="desc">the machine's page: console, cards, layout</td></tr>
+        <tr><td><a href="/mcp">/mcp</a></td><td class="desc">the machine's tools over MCP (streamable http)</td></tr>
+        <tr data-probe="/docs/index.html"><td><a href="/docs">/docs</a></td><td class="desc">the language reference, skills and articles</td></tr>
+        <tr data-probe="/docker?mimeq=application/json"><td><a href="/docker?mimeq=application/json" title="/docker?mimeq=application/json">/docker</a></td><td class="desc">the container API, when the machine has one</td></tr>
+        </tbody>
+    </table>
+
+    <p class="note">urls carry <code>?mimeq=application/json</code> for browser compatibility</p>
+
+    <h2>listeners</h2>
+    <table id="listener-table" aria-label="the sockets this machine is listening on">
+        <thead><tr><th>origin</th><th>server</th></tr></thead>
+        <tbody id="listeners">
+        <tr><td colspan="2" class="desc">reading the listener table…</td></tr>
+        </tbody>
+    </table>
+
+    <footer>
+        served by <code>http_server::T</code> · boot <span id="footboot">…</span> ·
+        <a href="https://metatron.phaseshift.studio" target="_blank" rel="noopener">PhaseShift Studio</a>
+    </footer>
+</main>
+<script>
+/* the ring is the websocket: one x-mtron socket, green when it opens, red when it closes,
+   retried while the page is visible. the page names itself and its listeners from that
+   socket's answers — a static page cannot know where it runs, and must not pretend to. */
+(() => {
+    const params = new URLSearchParams(location.search);
+    const ws = params.get("ws") || ((location.protocol === "https:" ? "wss://" : "ws://") + location.hostname + ":8555/mtron");
+    const pulse = document.getElementById("pulse");
+    const where = document.getElementById("where");
+    const boot = document.getElementById("boot");
+    const listeners = document.getElementById("listeners");
+    where.textContent = ws;
+    where.title = ws;
+    const mark = (state) => {
+        pulse.className = "dot " + state;
+    };
+    let socket = null;
+    let retry = null;
+    const ask = (expr) => new Promise((resolve) => {
+        let settled = false;
+        const finish = (text) => {
+            if (settled) return;
+            settled = true;
+            socket.removeEventListener("message", once);
+            clearTimeout(timer);
+            resolve(text);
+        };
+        const once = (event) => finish(String(event.data == null ? "" : event.data));
+        const timer = setTimeout(() => finish(""), 4000);
+        socket.addEventListener("message", once);
+        socket.send(expr);
+    });
+    const row = (origin, kind) => {
+        const tr = document.createElement("tr");
+        const originCell = document.createElement("td");
+        originCell.textContent = origin;
+        tr.appendChild(originCell);
+        const kindCell = document.createElement("td");
+        kindCell.className = "desc";
+        kindCell.textContent = kind;
+        tr.appendChild(kindCell);
+        return tr;
+    };
+    const open = () => {
+        mark("busy");
+        try {
+            socket = new WebSocket(ws + "?in=application/x-mtron&out=application/x-mtron");
+        } catch (ignored) {
+            mark("bad");
+            return;
+        }
+        socket.addEventListener("open", async () => {
+            mark("up");
+            try {
+                /* `*boot/file` is the boot argument the machine was started with */
+                const bootText = await ask("*boot/file");
+                const match = /<([^>]+)>/.exec(bootText);
+                if (match) {
+                    const path = match[1];
+                    const name = path.split("/").filter(Boolean).pop() || path;
+                    boot.textContent = name;
+                    boot.title = path;
+                    document.getElementById("footboot").textContent = name;
+                }
+                /* the sockets this machine holds open, as the machine itself lists them:
+                   `origin` is where it binds, `server` is the kind that answers there */
+                const listenerText = await ask("*/network/listener/+");
+                const found = [];
+                const pattern = /origin=><([^>]+)>,server=>([A-Za-z_]+)::/g;
+                let hit = null;
+                while ((hit = pattern.exec(listenerText)) !== null) found.push([hit[1], hit[2]]);
+                listeners.textContent = "";
+                if (!found.length) {
+                    listeners.appendChild(row("none", "no listener table"));
+                } else {
+                    found
+                        .sort((left, right) => left[0].localeCompare(right[0]))
+                        .forEach(([origin, kind]) => listeners.appendChild(row(origin, kind)));
+                }
+            } catch (ignored) {
+                /* the ring still reports the connection; the names stay unknown */
+            }
+        });
+        socket.addEventListener("error", () => mark("bad"));
+        socket.addEventListener("close", () => {
+            mark("bad");
+            clearTimeout(retry);
+            retry = setTimeout(() => { if (!document.hidden) open(); }, 4000);
+        });
+    };
+    /* a door that does not answer is not shown: the docker image ships no docs site, and a
+       machine without docker has no /docker. the server refuses HEAD for every path, so the
+       probe asks for the page and cancels it as soon as the status is known. */
+    const present = async (url) => {
+        const controller = new AbortController();
+        try {
+            const answer = await fetch(url, {signal: controller.signal});
+            return answer.ok;
+        } catch (ignored) {
+            return false;
+        } finally {
+            controller.abort();
+        }
+    };
+    document.querySelectorAll("[data-probe]").forEach(async (row) => {
+        if (!(await present(row.dataset.probe))) row.hidden = true;
+    });
+    open();
+})();
+</script>
+</body>
+</html>

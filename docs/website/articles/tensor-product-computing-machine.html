@@ -484,7 +484,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
    <!-- <div>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1"
-               href="http://localhost:8777/splash"
+               href="http://localhost:8777/portal"
                title="the metatron web console — served by this machine">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
@@ -646,8 +646,8 @@ is applied like any other.</p>
 rejects its object gives the empty stream, \(f_i(x) = 0\), and the monad it would have made is zero.</p>
 <p><strong>Live proof.</strong> A filter keeps 2 and 3, and the monad that held 1 is gone.</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}.is(gt(1))
-==&gt;3
 ==&gt;2
+==&gt;3
 </code></pre>
 <p>The machine also walks a dead monad into its next instruction when that instruction's domain admits zero, and applies
 the instruction to the empty stream. That is how an initial instruction gives its seed, and for a linear instruction
@@ -823,8 +823,8 @@ and two monads that reach the same object bulk however they got there. A barrier
 <p><strong>Live proof.</strong> A chain of two maps halts at three objects.</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}.plus(1).mult(2)
 ==&gt;4
-==&gt;8
 ==&gt;6
+==&gt;8
 </code></pre>
 <p>In metatron, a halted monad's objects are handed to the computer's halt hook (<code>BasicSwarmComputer.makeOnHalt</code>), which
 appends them to the halted pool. The result is <code>objs(halted)</code>, which bulks as it is built.</p>

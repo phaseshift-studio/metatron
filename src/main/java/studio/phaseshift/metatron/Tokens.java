@@ -538,7 +538,7 @@ public final class Tokens {
     public static final String REFERENCES = "references";
     public static final String URI = "uri";
     public static final String LABEL = "label";
-    // the splash page's group key: a card that names its CHILD CARDS instead of an object's type
+    // the portal page's group key: a card that names its CHILD CARDS instead of an object's type
     public static final String CARD = "card";
     public static final String VERTEX = "vertex";
     public static final String EDGE = "edge";
