@@ -170,7 +170,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
 
     protected static PeerCluster cluster;
     /**
-     * the names peers 1 and 2 are called by in this machine's prefix table
+     * the names peers 1 and 2 are called by in this machine's prefix table, while an addressed row runs ({@link #named})
      */
     private static final List<fURI> NAMES = List.of(f("//east"), f("//west"));
     private static Protocol protocol;
@@ -215,15 +215,10 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             clients.add(protocol.dial(i));
         assertEquals(2L, Machine.current().network().peers().elements().count(),
                 "this machine holds peers 1 and 2 alone: " + Machine.current().network().peers());
-        // THE NAMES the addressed rows spell their owners by: //east and //west, every name //+ sums. Letters, as a
-        // numeric branch in a host reads as a coefficient ({1,2} is a range)
-        for (int i = 1; i <= 2; i++)
-            Machine.current().network().registerPrefix(NAMES.get(i - 1), protocol.endpoint(i));
     }
 
     @AfterAll
     static void stopPeers() {
-        NAMES.forEach(name -> Machine.current().network().unregisterPrefix(name));
         Machine.write(f("/n/data"), noobj());
         for (final AutoCloseable client : clients)
             try {
@@ -296,6 +291,22 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
     }
 
+    /**
+     * THE NAMES AN ADDRESSED ROW SPELLS ITS OWNERS BY, bound around the row and unbound after it: {@code //east} and
+     * {@code //west} (peers 1 and 2), every name {@code //+} sums. Letters, as a numeric branch in a host reads as a
+     * coefficient ({@code {0,1}} is a range). No other row binds them: a name is how a profile and a topology name a
+     * place, and the rows that assert those names expect this machine to name its peers nothing.
+     */
+    private static void named(final Runnable row) {
+        for (int i = 1; i <= 2; i++)
+            Machine.current().network().registerPrefix(NAMES.get(i - 1), protocol.endpoint(i));
+        try {
+            row.run();
+        } finally {
+            NAMES.forEach(name -> Machine.current().network().unregisterPrefix(name));
+        }
+    }
+
     // ================================================================================================
     // B — data-local shard: from(p) = Σ_a from_a(p). An address that names machines -- a sum of names
     // (//{1,2}), every name (//+), a root branch of terms -- is read where each part lives: one lane per owner
@@ -312,7 +323,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "*<{/n/data,//east/n/data}>.count() % branch(from(</n/data>).count(),from(</n/data>).count()).sum()     % 5",
     }, delimiter = '%')
     void test_B_data_local_shard(final String code, final String expectedRewriteForm, final String expectedResult) {
-        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+        named(() -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
     }
 
     /**
@@ -325,7 +336,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "*//west/n/data.order()             % branch(from(</n/data>).order()).kmerge()   % [2,20,200]",
     }, delimiter = '%')
     void test_C_authority_push_down(final String code, final String expectedRewriteForm, final String expectedResult) {
-        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+        named(() -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
     }
 
     /**
@@ -341,7 +352,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "*//{east,west}/n/data.mean()                       % from(<//{east,west}/n/data>).mean()              % 55.5",
     }, delimiter = '%')
     void test_B_what_an_addressed_read_keeps_home(final String code, final String expectedRewriteForm, final String expectedResult) {
-        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+        named(() -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
     }
 
     /**
@@ -354,7 +365,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "*//nobody/n/data.count()          % <ERROR>",
     }, delimiter = '%')
     void test_B_an_owner_no_peer_answers_fails(final String code, final String expected) {
-        checkCodeParseApply(LOG, code, expected);
+        named(() -> checkCodeParseApply(LOG, code, expected));
     }
 
     // ================================================================================================
