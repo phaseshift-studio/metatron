@@ -1489,9 +1489,10 @@ public final class mInsts {
                         // time. A smaller maximum makes it a lazy barrier: {n} a page of n, {?} one obj at a time
                         .dom(A.maybeSome(), "the whole lhs, gathered once: a barrier (`{n}` a page, a lazy barrier; `{?}` one obj at a time)")
                         .rng(B.maybeSome(), "what the lanes answer, merged")
-                        // THE ROUTES ARE KEYED BY URI, as a keyed branch's lanes are, and their programs are of any type: never the
-                        // dom's A, which bound every arg to the lhs and compiled the partition function and each lane against the
-                        // barrier (int{*}), so mod(2) was handed a bulk (Marko, 2026-11-27)
+                        // THE ARGS ARE OPEN-KEYED (Inst.Helper.isOpenArgs): the caller's keys are kept as written, and the resolver
+                        // does not hold them to the declared uri, so a code, a type or a value keys a route too. Their programs
+                        // are of any type: never the dom's A, which bound every arg to the lhs and compiled the partition function
+                        // and each lane against the barrier (int{*}), so mod(2) was handed a bulk (Marko, 2026-11-27)
                         .args(rec(URI_TYPE, T(ALL.maybeSome())))
                         .desc("""
                                 a partitioning function: each obj of the lhs goes down the FIRST route that admits it,
@@ -1499,10 +1500,17 @@ public final class mInsts {
                                 the routes are one table [k => v, …], an obj's key k is lifted into [# => k], and the walks
                                 [# => k] * table are the routes that admit it, in written order; a partition keeps the
                                 first, as ==[_ => take(1)] keeps the first path of a composition.
-                                the key is what the selector, the first argument, answers for the obj (partition(mod(2),
-                                ?0 => …), and _ for the obj itself); what the selector answers is applied to the obj in turn,
-                                so a stored function (*xyz) keys it too. a key of noobj forms no relation, and its obj is
-                                dropped; none is a key like any other.
+                                the args are varargs of relations, in written order. a relation's key SELECTS or GUARDS. a
+                                selector computes (mod(2), a key template <${mod(2)}>): applied to an obj once, as
+                                written, what it answers is the obj's key, looked up in the table its value holds
+                                (mod(2) => {?0 => …, ?1 => …}). a guard answers its obj or nothing (a type, ?k, _, is,
+                                isa, filter): one that admits an obj opens its whole table, or its one lane
+                                (?>2 => plus(10), _ => plus(20)). a value admits its equal. written paths factor their
+                                common key, so mod(2) => ?0 => x, mod(2) => ?1 => y is mod(2) => {?0 => x, ?1 => y}.
+                                the positional partition(f, k => v, …) is f => {k => v, …} with f a selector whatever it
+                                is, so _ keys each obj by itself there, where _ as a key guards.
+                                a selector's key of noobj forms no relation, and its obj is dropped; none is a key like
+                                any other.
                                 a route's key admits a key as the walk join admits an end: ? on a value its equal (?0), ? on
                                 a type its instances (?int::T), a predicate what it holds for (?>2), a hosted uri the place
                                 it spells (//a), and _ every key, so _ written last is the else. a key no route admits fails

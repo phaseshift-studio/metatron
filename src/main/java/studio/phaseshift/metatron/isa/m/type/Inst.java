@@ -930,6 +930,10 @@ public interface Inst extends Call {
             // never checked, and repeat(code=>plus(1).print(_)) answered pure (Marko, 2026-11-22: repeat is pure)
             if (arg.isRel())
                 return isPure(arg.asRel().first()) && isPure(arg.asRel().second());
+            // A BAG OF ARGUMENTS IS ITS MEMBERS: a partition's table {k => v, …} is an objs, and read as a plain value the
+            // code its routes hold was never checked, so mod(2) => {<0> => plus(1), <1> => print(_)} answered pure
+            if (arg.isObjs())
+                return arg.stream().allMatch(Helper::isPure);
             return true;
         }
 

@@ -34,11 +34,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.HASH_FURI;
 import static studio.phaseshift.metatron.Tokens.HOP;
 import static studio.phaseshift.metatron.Tokens.LHS;
 import static studio.phaseshift.metatron.Tokens.TIMEOUT;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FILTER_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.IS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
@@ -46,8 +50,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -57,11 +59,20 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * routes are one table, {@code [k_1 => v_1, …, k_n => v_n]}, a member's key {@code k} is lifted into the relation
  * {@code [# => k]}, and the walks {@code [# => k] * table} are the routes that admit it, in written order (Marko,
  * 2026-11-27). A partition keeps the first walk, as {@code ==[_ => take(1)]} keeps the first path of a composition.
+ * The join is computed here, by hand, until {@code >>} matches hosted keys ({@code //0}, {@code //1}) (Marko,
+ * 2026-11-27: "do the selection manually").
  * <ul>
- *     <li>THE KEY is what the SELECTOR, the first argument, answers for the member ({@code partition(mod(2), ?0 => …)},
- *     and {@code _} for the member itself): the selector is applied to the member once, and what it answers is applied
- *     to the member in turn, so a stored function ({@code *xyz}) keys it too. A key of noobj forms no relation
- *     ({@code [k => noobj]} is {@code [=>]}), so its member is dropped; {@code none} is a key like any other.</li>
+ *     <li>THE ARGS ARE VARARGS OF RELATIONS (Marko, 2026-11-27), whose keys SELECT or GUARD (see {@code selects}). A
+ *     selector's key is what it answers for the member ({@code mod(2) => {?0 => …, ?1 => …}}), looked up in the table
+ *     under it: the selector is applied to the member once, as written, and what it answers is the key, never
+ *     unwrapped or applied again, so a blocked {@code |mod(2)} keys by the code it blocks and a read {@code *xyz} by
+ *     what it reads. A guard that admits the member opens its whole table
+ *     ({@code ?>2 => plus(10), _ => plus(20)}). Written paths factor their common key ({@code mod(2) => ?0 => x,
+ *     mod(2) => ?1 => y} is {@code mod(2) => {?0 => x, ?1 => y}}), and {@code partition(f, k => v, …)} is
+ *     {@code f => {k => v, …}} with {@code f} a selector whatever it is, so {@code _} keys each member by itself there,
+ *     where {@code _} as a key guards. The processor hands a blocking instruction its keys raw, so each is applied here, per
+ *     member, never to the gathered lhs. A selector's key of noobj forms no relation ({@code [k => noobj]} is
+ *     {@code [=>]}), so its member is dropped; {@code none} is a key like any other.</li>
  *     <li>A ROUTE'S KEY ADMITS A KEY as the walk join admits an end: a value by address ({@code 0}, {@code <0>},
  *     {@code //a}), a type its instances ({@code int::T}), a predicate what it holds for ({@code ?>2}), and {@code _}
  *     every key, so {@code _} written last is the {@code else}. A key no route admits fails the call.</li>
@@ -80,6 +91,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class PartitionInst extends MInst {
 
+    /**
+     * the filters, whose code answers its input or nothing: a key made of them guards
+     */
+    private static final List<fURI> FILTERS = List.of(ID_INST_TID, IS_INST_TID, ISA_INST_TID, FILTER_INST_TID);
+
     public PartitionInst(final Tuple.Triplet<Poly, Inst.f, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
@@ -91,62 +107,134 @@ public class PartitionInst extends MInst {
      * receives its routes' share, never the whole lhs.
      */
     public static List<BranchInst.Lane> lanes(final Inst partition) {
-        final List<Obj> args = partition.args().<Obj>elements().filter(arg -> !uri(LHS).equals(arg)).toList();
-        final Obj selector = args.isEmpty() || args.getFirst().isRel() ? null : args.getFirst();
-        final fURI selected = null != selector && selector.isUri() && selector.uriValue().hasHost() ? selector.uriValue() : null;
-        return args.stream().filter(Obj::isRel).map(Obj::asRel).filter(route -> !uri(LHS).equals(route.first())).map(route -> {
-            final List<Obj> walk = walk(route);
-            final fURI place = Optional.ofNullable(place(walk)).orElse(selected);
-            return lane(place, walk.getLast());
+        return relations(partition).stream().flatMap(relation -> {
+            final fURI selected = relation.selects() && relation.key().isUri() && relation.key().uriValue().hasHost() ? relation.key().uriValue() : null;
+            final List<Rel> table = table(relation.value());
+            final Stream<List<Obj>> chains = table.isEmpty() ? Stream.of(walk(relation.value())) : table.stream().map(PartitionInst::walk);
+            return chains.map(chain -> lane(Optional.ofNullable(place(chain)).orElse(selected), chain.getLast()));
         }).toList();
     }
 
     /**
-     * THE BODY: key each member once, take the first walk that admits its key, bucket the member into the lane that walk
-     * names, and run each lane on its bucket, every lane submitted before any is awaited ({@link BranchInst#await}).
+     * THE BODY: take each member's first walk (BranchInst routes down every one), bucket the member into the lane that
+     * walk names, and run each lane on its bucket, every lane submitted before any is awaited ({@link BranchInst#await}).
      */
     public Obj route(final Obj lhs) {
-        final List<Obj> args = this.args().<Obj>elements().filter(arg -> !uri(LHS).equals(arg)).toList();
-        final Obj selector = args.isEmpty() || args.getFirst().isRel() ? null : args.getFirst();
-        final List<Rel> routes = args.stream().filter(Obj::isRel).map(Obj::asRel).filter(route -> !uri(LHS).equals(route.first())).toList();
+        final List<Relation> relations = relations(this);
         // THE LANES, one per route and place a member's walk reaches, in the order members first reach them: a lane is its
         // route, so routes that run the same code fold their shares apart
         final Map<List<Obj>, List<Obj>> shares = new LinkedHashMap<>();
         for (final Obj member : lhs.stream().toList()) {
-            // what the selector answers is applied to the member in turn: a value answers itself, and a stored function
-            // (*xyz: an instruction, a code or a key template) keys the member
-            final Obj key = null == selector ? member : selector.apply(member).apply(member);
-            // A KEY OF NOOBJ FORMS NO RELATION ([k => noobj] is [=>]): the member is dropped
-            if (key.isNoObj())
+            // each selector's key for the member, as its walk computed it: a selector runs once per member
+            final Obj[] keys = new Obj[relations.size()];
+            final Optional<Walk> first = walks(relations, member, keys).findFirst();
+            // A KEY OF NOOBJ FORMS NO RELATION ([k => noobj] is [=>]): a member a selector keys nothing is dropped, and a
+            // member no route admits otherwise fails the call
+            if (first.isEmpty() && Stream.of(keys).anyMatch(key -> null != key && key.isNoObj()))
                 continue;
-            // THE FIRST ROUTE THAT ADMITS THE KEY, in written order: an acting key (?k, a type, a guard, _) as the walk join
-            // admits an end ([# => k] * [route]), and a value as ? on it does, by equality, its count and query aside
-            final Map.Entry<Integer, List<Obj>> admitted = IntStream.range(0, routes.size()).boxed()
-                    .map(r -> Map.entry(r, routes.get(r).first().isObjCall() || routes.get(r).first().isType()
-                            ? rec(uri(HASH_FURI), key).mult(rec(routes.get(r).first(), routes.get(r).second())).elements()
-                            .flatMap(arrow -> arrow.secondDirect().stream()).findFirst()
-                            : Optional.of((Obj) rel(key, routes.get(r).second())).filter(walk -> equal(key, routes.get(r).first()))))
-                    .filter(walk -> walk.getValue().isPresent())
-                    .map(walk -> Map.entry(walk.getKey(), walk(walk.getValue().get())))
-                    .findFirst()
-                    .orElseThrow(() -> MTronException.of("no route of the partition admits %s: %s keys %s so", key, selector, member));
-            final fURI place = place(admitted.getValue());
-            // THE PROGRAM IS THE ROUTE'S, never the walk's copy: the join multiplies the member's count onto the range it
-            // reaches, and the member carries that count into its lane already
-            shares.computeIfAbsent(List.of(jnt(admitted.getKey()), null == place ? noobj() : uri(place), walk(routes.get(admitted.getKey())).getLast()),
+            final Walk walk = first.orElseThrow(() -> MTronException.of("no route of the partition admits %s: %s", member, this.args()));
+            final fURI place = place(walk.steps());
+            shares.computeIfAbsent(List.of(jnt(walk.relation()), jnt(walk.route()), null == place ? noobj() : uri(place), walk.steps().getLast()),
                     lane -> new ArrayList<>()).add(member);
         }
         return BranchInst.await(shares.entrySet().stream().map(share -> BranchInst.lane(lane(
-                share.getKey().get(1).isNoObj() ? null : share.getKey().get(1).uriValue(), share.getKey().get(2)), objs(share.getValue()))).toList());
+                share.getKey().get(2).isNoObj() ? null : share.getKey().get(2).uriValue(), share.getKey().get(3)), objs(share.getValue()))).toList());
     }
 
     /**
-     * WHETHER A VALUE KEY ADMITS A KEY, as ? on it does: by equality, a uri's count and query aside.
+     * A RELATION of the args, {@code key => value}, and whether its key selects: what a selecting key answers for a
+     * member is looked up in the table its value holds, where any other key admits the member or not, as a guard.
      */
-    private static boolean equal(final Obj key, final Obj route) {
-        return key.isUri() && route.isUri()
-                ? key.uriValue().one().qLess().equals(route.uriValue().one().qLess())
-                : key.c(cInt.ONE()).equals(route.c(cInt.ONE()));
+    private record Relation(Obj key, Obj value, boolean selects) {
+    }
+
+    /**
+     * ONE WALK a member takes: the relation and the route it took (-1 for a relation with no table) and the objects it
+     * steps through, its last the code its lane runs.
+     */
+    private record Walk(int relation, int route, List<Obj> steps) {
+    }
+
+    /**
+     * THE RELATIONS a partition routes by, its args, varargs of relations in written order. A first argument that is no
+     * relation is a selector over the relations after it, whatever it is: partition(f, k => v, …) is f => {k => v, …}
+     * with f selecting, where f as a key may guard ({@code _}, {@code ?>2}).
+     */
+    private static List<Relation> relations(final Inst partition) {
+        final List<Obj> args = partition.args().<Obj>elements().filter(arg -> !uri(LHS).equals(arg)).toList();
+        if (!args.isEmpty() && !args.getFirst().isRel())
+            return List.of(new Relation(args.getFirst(), objs(args.subList(1, args.size())), true));
+        return args.stream().map(Obj::asRel).filter(relation -> !uri(LHS).equals(relation.first()))
+                .map(relation -> new Relation(relation.first(), relation.second(), selects(relation.first()))).toList();
+    }
+
+    /**
+     * WHETHER A KEY SELECTS (Marko, 2026-11-27): a key template, or a call that computes, so what it answers is a key the
+     * table under it is looked up by ({@code <//${mod(2)}> => {//0 => …, //1 => …}}). A GUARD answers its input or
+     * nothing: a type, or a code whose every instruction is a filter ({@code _}, {@code is}, {@code isa},
+     * {@code filter}), and a guard that admits a member opens its whole table.
+     */
+    private static boolean selects(final Obj key) {
+        return (key.isUri() && key.uriValue().hasTemplates())
+                || (key.isObjCall() && !key.asCall().insts().stream().allMatch(inst -> FILTERS.contains(inst.tid().basePath())));
+    }
+
+    /**
+     * THE WALKS a member takes, lazily and in written order: a selecting relation's routes whose keys admit what it
+     * answers, and a guarding relation's whole table (or its one lane) once its key admits the member. Each selector's
+     * key is kept in {@code keys}, at its relation's index, as it is computed.
+     */
+    private static Stream<Walk> walks(final List<Relation> relations, final Obj member, final Obj[] keys) {
+        return IntStream.range(0, relations.size()).boxed().flatMap(r -> {
+            final Relation relation = relations.get(r);
+            final List<Rel> table = table(relation.value());
+            if (relation.selects()) {
+                // THE KEY IS WHAT THE SELECTOR ANSWERS, applied to the member once as written (Marko, 2026-11-27): never
+                // unwrapped, never applied again, so |mod(2) keys by the code it blocks. A key of noobj forms no relation.
+                final Obj key = keys[r] = relation.key().apply(member);
+                return key.isNoObj() ? Stream.empty() : IntStream.range(0, table.size())
+                        .filter(t -> admits(table.get(t).first(), key))
+                        .mapToObj(t -> new Walk(r, t, steps(key, table.get(t).second())));
+            }
+            if (!admits(relation.key(), member))
+                return Stream.empty();
+            return table.isEmpty() ? Stream.of(new Walk(r, -1, steps(member, relation.value())))
+                    : IntStream.range(0, table.size()).mapToObj(t -> new Walk(r, t, steps(member, table.get(t))));
+        });
+    }
+
+    /**
+     * WHETHER A KEY ADMITS AN OBJ: a type its instances, a guard what it answers something for ({@code ?k}, {@code _}),
+     * a predicate what it holds for ({@code gt(2)}), and a value its equal. A guard answers its input, so the false it
+     * answers for false admits it ({@code ?false}), where a predicate's false refuses.
+     */
+    private static boolean admits(final Obj key, final Obj obj) {
+        if (key.isType())
+            return obj.test(key);
+        // a value admits its equal, as ? on it does, a uri's count and query aside
+        if (!key.isObjCall())
+            return key.isUri() && obj.isUri()
+                    ? obj.uriValue().one().qLess().equals(key.uriValue().one().qLess())
+                    : obj.c(cInt.ONE()).equals(key.c(cInt.ONE()));
+        final Obj answer = key.apply(obj);
+        return !answer.isNoObj() && !(selects(key) && answer.isBool() && !answer.boolValue());
+    }
+
+    /**
+     * A TABLE of routes: a rec's, a bag of relations ({k => v, …}), or one relation; anything else holds none.
+     */
+    private static List<Rel> table(final Obj value) {
+        return value.isRec() ? value.asRec().<Rel>elements().toList() : value.stream().filter(Obj::isRel).map(Obj::asRel).toList();
+    }
+
+    /**
+     * A WALK'S STEPS from {@code first}: it, then the objects {@code rest} steps through.
+     */
+    private static List<Obj> steps(final Obj first, final Obj rest) {
+        final List<Obj> steps = new ArrayList<>();
+        steps.add(first);
+        steps.addAll(walk(rest));
+        return steps;
     }
 
     /**

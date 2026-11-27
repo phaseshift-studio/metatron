@@ -52,6 +52,32 @@ public class PartitionTest extends AbstractMetatronTest {
     @CsvSource(value = {
             // EACH OBJ DOWN THE FIRST ROUTE ITS KEY ADMITS: ? on a value admits that value (Marko, 2026-11-27)
             "{1,2,3,4}.partition(mod(2), ?0 => plus(10), ?1 => plus(20))                          % {12,14,21,23}",
+            // VARARGS OF RELATIONS (Marko, 2026-11-27): the selector keys the table its routes form, f => {k => v, …} ...
+            "{1,2,3,4}.partition(mod(2) => {?0 => plus(10), ?1 => plus(20)})                      % {12,14,21,23}",
+            // ... which the written paths form themselves, the rec's + factoring their common selector
+            "{1,2,3,4}.partition(mod(2) => ?0 => plus(10), mod(2) => ?1 => plus(20))              % {12,14,21,23}",
+            // THE KEYS STAY RAW: a partition gathers its lhs and applies each key to each member itself, so a key template
+            // spells each member's key, not the gathered lhs's ...
+            "{1,2,3,4}.partition(<${mod(2)}> => {<0> => plus(10), <1> => plus(20)})                % {12,14,21,23}",
+            // ... where a call that is not blocking has its keys computed against its lhs (Marko's inst: ?>0 keys 2 by 2)
+            "2.inst(?>0 => a => x){*args>>*lhs}                                                   % a=>x",
+            // THE KEY IS WHAT THE SELECTOR ANSWERS, applied to each obj once as written (Marko, 2026-11-27): 64 keys by 0 ...
+            "64.partition(mod(2) => {0 => plus(1), _ => plus(2)})                                  % 65",
+            "{64,65}.partition(mod(2) => {?0 => plus(1), ?1 => plus(2)})                           % {65,67}",
+            // ... and a blocked key is a block, never unwrapped or applied again: 64.|mod(2) is the code mod(2), its key
+            "64.partition(|mod(2) => {0 => plus(1), _ => plus(2)})                                 % 66",
+            // A GUARD answers its input or nothing, so it admits a member or not, and a guard that admits opens its table
+            "{1,2,3,4}.partition(?>2 => plus(10), _ => plus(20))                                   % {13,14,21,22}",
+            "{1,2,3}.partition(?>1 => {a => plus(10), b => plus(20)}, _ => plus(100))              % {101,12,13}",
+            // ... so _ as a key opens its whole table, its first route taking every obj, where the positional _ selects
+            "{1,2,3,4}.partition(_ => {?>2 => plus(10), _ => plus(20)})                            % {11,12,13,14}",
+            "{1,2,3,4}.partition(_, ?>2 => plus(10), _ => plus(20))                                % {13,14,21,22}",
+            // ... and a member no guard admits is a member no route admits, which fails the call
+            "{1,2,3}.partition(?>2 => plus(10))                                                    % <ERROR>",
+            // a value admits its equal, and a type its instances, each obj tested (5 and 6 both int)
+            "{1,2,7}.partition(1 => plus(10), 2 => plus(20), _ => plus(100))                       % {11,22,107}",
+            "5.partition(int::T => map(<int>), str::T => map(<str>))                               % int",
+            "{5,6,true}.partition(int::T => map(<int>), bool::T => map(<bool>))                    % {{2}int,bool}",
             // ... and a value route admits its equal too, as ? on it does
             "{1,2,3,4}.partition(mod(2), 0 => plus(10), 1 => plus(20))                            % {12,14,21,23}",
             // ... which is what the guarded branch its derivation names answers, every guard evaluated on every obj
@@ -97,6 +123,10 @@ public class PartitionTest extends AbstractMetatronTest {
             "{1,2,3}.partition(mod(3), ?0 => id(), ?1 => id(), ?2 => id())                         % {3,1,2}",
             // a bool keys as any value does
             "{1,2}.partition(gt(1), ?true => plus(10), ?false => plus(20))                         % {12,21}",
+            "{1,2,3}.partition(gt(1) => {true => plus(10), false => plus(20)})                     % {21,12,13}",
+            // A GUARD ADMITS FALSE, as it answers its input, where a predicate's false refuses
+            "{true,false}.partition(?true => map(<yes>), _ => map(<no>))                           % {yes,no}",
+            "{1,2,3}.partition(_, gt(1) => plus(10), _ => plus(20))                                % {21,12,13}",
             // a partition of nothing is nothing
             "noobj.partition(mod(2), ?0 => plus(10), ?1 => plus(20))                               % noobj",
     }, delimiter = '%')
@@ -105,38 +135,41 @@ public class PartitionTest extends AbstractMetatronTest {
     }
 
     /**
-     * A STORED PARTITION FUNCTION ({@code *xyz}) keys each obj: what the read answers is an instruction, which is applied
-     * to the obj in turn.
+     * A READ KEYS BY WHAT IT READS, as is (Marko, 2026-11-27: "don't unwrap it, don't double apply it"): a stored value
+     * keys every obj by itself, and a stored instruction keys every obj by the instruction, not by what it answers.
      */
     @Test
-    void testAStoredPartitionFunctionKeysEachObj() {
+    void testAReadKeysByWhatItReads() {
         try {
-            // | blocks the instruction, so the write stores mod(2) itself, not what it answers applied to nothing
-            Machine.evaluate("|mod(2).to(/partition/pf)");
-            checkCodeParseApply(LOG, "{1,2,3,4}.partition(*/partition/pf, ?0 => plus(10), ?1 => plus(20))", "{12,14,21,23}");
+            Machine.evaluate("0.to(/partition/key)");
+            checkCodeParseApply(LOG, "{1,2,3,4}.partition(*/partition/key, ?0 => plus(10), _ => plus(20))", "{11,12,13,14}");
+            // | blocks the instruction, so the write stores mod(2) itself, and its read, the code, is no 0
+            Machine.evaluate("|mod(2).to(/partition/key)");
+            checkCodeParseApply(LOG, "{1,2,3,4}.partition(*/partition/key, 0 => plus(10), _ => plus(20))", "{21,22,23,24}");
         } finally {
-            Machine.evaluate("noobj.to(/partition/pf)");
+            Machine.evaluate("noobj.to(/partition/key)");
         }
     }
 
     /**
-     * THE PARTITION FUNCTION RUNS ONCE PER OBJ: four objs, four calls, whatever the number of lanes. The guarded branch
-     * its derivation names would run one guard per lane per obj.
+     * THE PARTITION FUNCTION RUNS ONCE PER OBJ: five objs, five calls, whatever the number of lanes, the obj it keys
+     * nothing (5) included, which is dropped. The guarded branch its derivation names would run one guard per lane per
+     * obj.
      */
     @Test
     void testThePartitionFunctionRunsOncePerObj() {
         final AtomicInteger calls = new AtomicInteger();
         final Obj counting = MInst.instLambda((lhs, inst) -> {
             calls.incrementAndGet();
-            return uri(f(String.valueOf(lhs.intValue().longValue() % 3)));
+            return 5L == lhs.intValue().longValue() ? noobj() : uri(f(String.valueOf(lhs.intValue().longValue() % 3)));
         });
-        final Obj answer = start_(objs(jnt(1), jnt(2), jnt(3), jnt(4)))
+        final Obj answer = start_(objs(jnt(1), jnt(2), jnt(3), jnt(4), jnt(5)))
                 .addInsts(java.util.List.of(instB(PARTITION_INST_TID, lst(counting,
                         rel(uri(f("0")), ObjmtronSerializer.parse("plus(10)")),
                         rel(uri(f("1")), ObjmtronSerializer.parse("plus(20)")),
                         rel(uri(f("2")), ObjmtronSerializer.parse("plus(30)"))))))
                 .apply(noobj());
         checkEquality(LOG, ObjmtronSerializer.parse("{13,21,24,32}"), answer, true);
-        assertEquals(4, calls.get(), "one call per obj, not one per lane per obj");
+        assertEquals(5, calls.get(), "one call per obj, not one per lane per obj, nor a second for the obj it drops");
     }
 }

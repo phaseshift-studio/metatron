@@ -104,8 +104,10 @@ public interface Processor extends Component {
 
         /**
          * computeArgs — compute the inst's arguments against the runtime lhs. Blocking insts
-         * return their args raw (thunks applied lazily by the inst's function); every other arg
-         * is applied to the lhs.
+         * return their args raw (thunks applied lazily by the inst's function), a keyed call's KEYS
+         * too: a partition gathers its whole lhs and applies each key to each member itself, so a key
+         * applied here, to the gathered lhs, was no member's key (mod(2) on {1,2,3,4}). Every other
+         * arg is applied to the lhs.
          */
         public static Inst applyArgs(final Obj lhs, final Inst inst) {
             final boolean blocking = inst.isBlocking();
@@ -137,9 +139,7 @@ public interface Processor extends Component {
                             }).toList()) :
                     rec(inst.args().recValue().entrySet()
                             .stream()
-                            .map(kv -> rel(kv.getKey().apply(lhs), blocking ?
-                                    kv.getValue() :
-                                    kv.getValue().apply(lhs))))
+                            .map(kv -> blocking ? rel(kv.getKey(), kv.getValue()) : rel(kv.getKey().apply(lhs), kv.getValue().apply(lhs))))
                             .plus(rec(LHS, lhs));
             return inst.args(cargs);
         }

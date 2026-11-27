@@ -909,6 +909,10 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), _ => plus(*/n/data.sum()))                   % {113,115,223,225}",
             // ... unless the route brings it home, where the odds read this machine's {7,8}
             "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), _ => <~> => plus(*/n/data.sum()))            % {113,115,16,18}",
+            // VARARGS OF RELATIONS: the selector keys a table of places, f => {//1 => …, //2 => …} (Marko, 2026-11-27) ...
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}> => {//1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum())})            % {113,115,223,225}",
+            // ... and a route with no place of its own runs at the place its key template spells
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}> => {_ => plus(*/n/data.sum())})                                            % {113,115,223,225}",
             // TAG => PLACE => CODE: a route names its place after its key (Marko, 2026-11-27) ...
             "{1,2,3,4}.partition(mod(2), ?0 => //1 => plus(*/n/data.sum()), ?1 => //2 => plus(*/n/data.sum()))                    % {113,115,223,225}",
             // ... and a guard does too, the first route that admits an obj taking it
@@ -923,6 +927,9 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('─►//1─[{]0,4[}]─[{]1[}]─┐').count() % 1",
             "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('─►//2─[{]0,4[}]─[{]1[}]─┘').count() % 1",
             "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('├─►//local─[{]2[}]').count()        % 1",
+            // ... and the rec form draws the same places: its table's hosted keys are its lanes'
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => sum(), //2 => sum()}).explain()>>ext/topology/format.has('─►//1─[{]0,4[}]─[{]1[}]─┐').count() % 1",
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => sum(), //2 => sum()}).explain()>>ext/topology/format.has('─►//2─[{]0,4[}]─[{]1[}]─┘').count() % 1",
     }, delimiter = '%')
     void test_X_partition_by_key(final String code, final String expected) {
         named(NUMBERS, () -> checkCodeParseApply(LOG, code, expected));
@@ -941,16 +948,17 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     }
 
     /**
-     * X AS DATA DISTRIBUTION IS SPELLED, {@code *large_data.partition(*partition_function, //a => …, //b => …)}: this
-     * machine's {7,8} routed by a stored function, 8 to peer 1 and 7 to peer 2.
+     * A READ KEYS BY WHAT IT READS (Marko, 2026-11-27: a key is applied once, as written, never applied again): a place
+     * stored at /n/pf sends this machine's {7,8} there whole, 15 plus peer 1's 111. A stored template would key each obj
+     * by the template itself, unexpanded.
      */
     @Test
-    void test_X_partition_by_a_stored_function() {
+    void test_X_partition_by_a_stored_key() {
         named(NUMBERS, () -> {
             try {
-                Machine.write(f("/n/pf"), Machine.parse("<//${mod(2).plus(1)}>"));
+                Machine.write(f("/n/pf"), Machine.parse("//1"));
                 checkCodeParseApply(LOG, "*/n/data.partition?<=int{*}(*/n/pf, //1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum()))",
-                        "{119,229}");
+                        "126");
             } finally {
                 Machine.write(f("/n/pf"), noobj());
             }
