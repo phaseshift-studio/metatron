@@ -113,6 +113,28 @@ strong {
     color: inherit;
 }
 
+/* A DEEP DIVE: a call-out box set off from the article's argument, for a derivation or a design rationale a reader
+ * may skip on a first pass. Written <aside class="deep-dive">, a blank line, the markdown, a blank line, </aside>:
+ * the blank lines let the markdown inside render, math and listings included. */
+.article-body aside.deep-dive {
+    border: 1px solid var(--mmagenta, #9f4040);
+    border-left-width: 4px;
+    border-radius: 4px;
+    background: rgba(159, 64, 64, 0.05);
+    margin: 1.6em 0;
+    padding: 0.5em 1.2em 0.2em;
+}
+
+.article-body aside.deep-dive::before {
+    content: "deep dive";
+    display: block;
+    color: var(--mmagenta, #9f4040);
+    font-size: 0.85em;
+    font-variant: small-caps;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.2em;
+}
+
 .article-body code,
 .article-body pre {
     font-family: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;

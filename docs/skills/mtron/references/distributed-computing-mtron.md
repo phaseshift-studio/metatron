@@ -340,8 +340,9 @@ take the fold natively (C's `native_count`). Pinned by the B and C rows of `Abst
 once per obj: each obj goes to the lane its key names. A key naming two lanes sends it to both, an unmatched key goes
 to `<#>`, an obj keyed noobj goes to each zeroable lane (`{?}//a`), and an obj no lane takes fails the call. A hosted
 key is a place, and its lane is the cut its program runs in there, so each place is sent its share alone (data
-distribution); a key that names where its data lives co-locates the two, so B and C hold by key as by address. The
-dom coefficient is the grain, as a branch's. A partition with a hosted key is a layout, so `law_shard` leaves its
+distribution); a key that names where its data lives co-locates the two, so B and C hold by key as by address. It is
+a barrier instruction: its dom gathers the whole lhs by default, and a smaller maximum makes it a lazy barrier. A
+partition with a hosted key is a layout, so `law_shard` leaves its
 chain; the planner emits no partition yet (`?split=key` still declines). See *X* below; pinned by `PartitionTest` and
 the B, C and X rows of `AbstractDistributedComputingTest`.
 An empty box is *not* "unsound": the law holds, the lowering is unwritten. `F` is struck for streams (order lives in
@@ -736,12 +737,14 @@ or a key template) keys it as `mod(2)` does; a key is a uri, or an int read as i
 
 A key naming two lanes sends the obj to both, `<#>` takes every key no other lane names, and an obj keyed noobj goes to
 each lane whose key is zeroable (`{?}<odd>`, any coefficient that holds zero). An obj no lane takes fails the call.
-The dom coefficient is the grain, as a branch's: one obj at a time by default, `{n}` a page, `{*}` the whole lhs, so
-under `{*}` a lane's fold folds its whole share once:
+A partition is a barrier instruction (Marko, 2026-11-27): its dom, `{*}` by default, gathers the whole lhs, so a
+lane's fold folds its whole share once, where a branch's default is one obj at a time. A smaller maximum makes it a
+lazy barrier, `{n}` a page of n and `{?}` one obj at a time:
 
 ```mtron_pre
 {1,2,3,4}.partition(mod(2), <0> => sum(), <1> => sum())
-{1,2,3,4}.partition?<=int{*}(mod(2), <0> => sum(), <1> => sum())
+{1,2,3,4}.partition?<=int{2}(mod(2), <0> => sum(), <1> => sum())
+{1,2,3,4}.partition?<=int{?}(mod(2), <0> => sum(), <1> => sum())
 ```
 
 A hosted key is a place: its lane is the cut its program runs in there, so each place is sent its share alone, where a
@@ -749,7 +752,7 @@ branch sends every lane the whole bag. That is DATA DISTRIBUTION. A key that nam
 CO-LOCATION: each lane reads its keys where they are held, which is B and C by key:
 
 ```mtron
-*/data.partition?<=int{*}(*/pf, //a => sum(), //b => sum()).sum()
+*/data.partition(*/pf, //a => sum(), //b => sum()).sum()
 {1,2}.partition(<//${_}>, //1 => *</kv/${_}>.sum(), //2 => *</kv/${_}>.sum())
 ```
 

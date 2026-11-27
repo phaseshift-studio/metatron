@@ -539,35 +539,99 @@ every instruction in it is pure, and so is every code it is handed, so a filter 
 between two runs brings the members home, where it runs once over the merged bag, and the run after it goes out
 again on a branch of its own.
 
-The shuffle begins with a partition. `partition(p, k => c, …)` sends each member to the lane its key $p(x)$ names,
-where a branch sends it to every lane. It is the branch whose lanes are guarded by the fibres of $p$,
-$\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i \mathrm{filter}(p = k_i)\,c_i$, so the branch's laws hold of it,
-and $p$ runs once per member rather than once per guard. When the keys cover $p$'s image and every lane is one program
-$c$, the fibres sum to the stream, $\sum_i \mathrm{filter}(p = k_i)\,c = c$: the free example, written as a
-partition, answers as it did. A fold in each lane and one after the partition is the shuffle's own shape, partition
-by key, reduce, gather, and it answers what the star does:
+The shuffle begins with a partition, the subject of the next subsection.
+
+## Partition and Branch
+
+A branch is the code ring's $+$: every member goes to every lane, $x\,(c_1 + \cdots + c_n) = x\,c_1 + \cdots + x\,c_n$.
+Shipping each place only its share asks for the other reading, one lane per member.
+
+**Definition (partition).** Let $p$ map members to keys, let $k_1, \ldots, k_n$ be keys, and write
+$\phi_k = \mathrm{filter}(p = k)$ for the guard that keeps the members $p$ keys $k$. Then
+
+$$
+\mathrm{partition}(p,\ k_1 \Rightarrow c_1, \ldots, k_n \Rightarrow c_n) = \phi_{k_1}\,c_1 + \cdots + \phi_{k_n}\,c_n ,
+$$
+
+the branch whose lanes are guarded by the fibres of $p$, with $p$ evaluated once per member. A key that names a place,
+`//a`, runs its lane there, so each place is sent its share alone.
+
+A partition routes a batch, so it is a barrier instruction: its domain coefficient is $\{*\}$ unless stated, and it
+gathers the whole stream and sends each lane its share once, where a branch's default is one member at a time. A
+smaller maximum makes it a lazy barrier, $\{n\}$ a page and $\{?\}$ one member at a time.
+
+Distribution and co-location are one idea. A key computed from the member distributes the data, each place folding
+its key's fibre. A key that names where a member's data lives co-locates the two: the members are keys, and each lane
+reads what its keys address where it is held. Keyed by the places themselves, the partition is the data-local read of
+*The Shard Identity* again, its owners named by the keys rather than by the address:
 
 ```mtron_pre
-{1,2,3,4,5,6,7,8}.partition(mod(2), <0> => plus(1).mult(2), <1> => plus(1).mult(2))
-{1,2,3,4,5,6,7,8}.partition?<=int{*}(mod(2), <0> => plus(1).mult(2).sum(), <1> => plus(1).mult(2).sum()).sum()
+{1,2,3,4,5,6,7,8}.partition(<//${mod(2)}>, //0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()).sum()
+{1,2,3,4,5,6,7,8}.partition(<//${mod(2)}>, //0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()).explain()>>ext/topology/format
+{0,1}.partition(<//${_}>, //0 => */n/data.count(), //1 => */n/data.count()).sum()
+```
+
+<aside class="deep-dive">
+
+**Partition or branch?** From the stream ring's point of view a partition is a branch, its lanes guarded by the
+fibres of one function. In practice the two differ, and the difference is why the partition is an instruction of its
+own.
+
+**Proposition (the fibres are a partition of unity).** On a stream whose keys all lie among the $k_i$, the guards are
+idempotent, orthogonal, and complete:
+
+$$
+\phi_k\,\phi_k = \phi_k, \qquad \phi_k\,\phi_{k'} = 0 \quad (k \neq k'), \qquad \phi_{k_1} + \cdots + \phi_{k_n} = 1 .
+$$
+
+*Proof sketch.* A member passes $\phi_k$ exactly when $p$ keys it $k$: passing twice changes nothing, no member has
+two keys, and every member has one of the $k_i$. ◻
+
+Three consequences follow. Identical lanes collapse, $\sum_i \phi_{k_i}\,c = c$, where a branch of $n$ copies of $c$
+is $\{n\}c$. A key naming two lanes names their branch, $\phi_k\,c_1 + \phi_k\,c_2 = \phi_k\,(c_1 + c_2)$. And the
+fibres partition the seed, $x = \sum_i x\,\phi_{k_i}$, so the shard identity holds with them as its parts: for a
+floatable run $f$ and a cut $r$,
+
+$$
+x\,f\,r = \Big(\sum_i x\,\phi_{k_i}\,f\,r\Big)\,C(r),
+$$
+
+and a partition whose lanes fold, followed by $C(r)$, is the shuffle: partition by key, reduce, gather. The program
+chooses the parts, where the shard identity let the planner deal them. The guarded branch and the partition answer
+alike, one member at a time, and a fold in each lane recombines to the star's answer:
+
+```mtron_pre
+{1,2,3,4,5,6,7,8}.branch(filter(mod(2).eq(0)).plus(10), filter(mod(2).eq(1)).plus(20))
+{1,2,3,4,5,6,7,8}.partition?<=int{?}(mod(2), <0> => plus(10), <1> => plus(20))
+{1,2,3,4}.partition?<=int{?}(mod(2), <0> => plus(1), <1> => plus(1))
+{1,2,3,4}.branch(plus(1), plus(1))
+{1,2,3,4,5,6,7,8}.partition(mod(2), <0> => plus(1).mult(2).sum(), <1> => plus(1).mult(2).sum()).sum()
 {1,2,3,4,5,6,7,8}.plus(1).mult(2).sum()
 ```
 
-A key that names a place, `//a`, runs its lane there, so each place is sent its share alone, and the key function
-moves one program between patterns. A key computed from the member distributes the data, each peer folding its key's
-fibre:
+**The same algebra, a different cost.** Written as a guarded branch, the partition is sound, and the stream ring
+cannot tell the two apart. The machine can. A guarded lane sees every member: when its lane is a place, the branch
+ships the whole stream to each of the $n$ places, $n\,\lvert x\rvert$ members on the wire, and each place evaluates
+its guard over all of them. Putting each guard before its cut, so the lane is $\phi_{k_i}\,\mathrm{cut}(a_i, c)$ in place
+of $\mathrm{cut}(a_i, \phi_{k_i}\,c)$, ships each member once, but home still evaluates every guard on every member.
+A partition evaluates $p$ once per member and routes the member to its lane:
 
-```mtron_pre
-{1,2,3,4,5,6,7,8}.partition?<=int{*}(<//${mod(2)}>, //0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()).sum()
-{1,2,3,4,5,6,7,8}.partition?<=int{*}(<//${mod(2)}>, //0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()).explain()>>ext/topology/format
-```
+| form                                                                  | evaluations of $p$                 | members shipped        |
+|-----------------------------------------------------------------------|------------------------------------|------------------------|
+| $\sum_i \mathrm{cut}(a_i,\ \phi_{k_i}\,c)$, guards at the places      | $n\,\lvert x\rvert$, at the places | $n\,\lvert x\rvert$ |
+| $\sum_i \phi_{k_i}\,\mathrm{cut}(a_i,\ c)$, guards before the cuts    | $n\,\lvert x\rvert$, at home       | $\lvert x\rvert$     |
+| $\mathrm{partition}(p,\ a_i \Rightarrow c)$                           | $\lvert x\rvert$, at home           | $\lvert x\rvert$     |
 
-A key that names where a member's data lives co-locates the two. Keyed by the places themselves, the partition is the
-data-local read of *The Shard Identity* again, its owners named by the keys rather than by the address:
+**No lane is read for its guard.** A planner could recover the cheap form from a guarded branch only by reading each
+lane's head as a guard, finding one function $p$ under all of them, and proving the guards orthogonal and complete:
+that means looking into code the user wrote for other reasons, and taking on proof obligations the branch never
+states. A partition states $p$ and its keys, so its fibres are orthogonal by construction, as each member has one key,
+and the layout is read off the call. What the guarded reading leaves implicit becomes a rule of the instruction. A
+member whose key no lane names fails the call unless a `<#>` lane takes the rest. A member keyed nothing goes to every
+lane whose key is zeroable, `{?}//a`. And the routed member is its lane's input, so the lane can name it,
+`*</data/${_}>`.
 
-```mtron_pre
-{0,1}.partition(<//${_}>, //0 => */n/data.count(), //1 => */n/data.count()).sum()
-```
+</aside>
 
 ## Bookkeeping Data Structures
 
