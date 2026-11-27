@@ -59,9 +59,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *     here. A key naming two lanes names their branch, and the member goes to each. A {@code <#>} lane takes every
  *     member no other key names; with none, such a member fails the call. A member keyed noobj goes to each lane whose
  *     key is zeroable ({@code {?}//a}, {@code {*}<a>}); with none, it fails the call too.</li>
- *     <li>THE DOM COEFFICIENT IS THE GRAIN, as for a branch: {@code {?}} routes one member at a time, {@code {n}}
- *     buckets a page of n, and {@code {*}} buckets the whole lhs, so each lane receives its share once. A lane whose
- *     share of a call is empty runs nothing.</li>
+ *     <li>A PARTITION IS A BARRIER INSTRUCTION (Marko, 2026-11-27): its dom, {@code {*}} by default, gathers the whole
+ *     lhs once, so each lane receives its share once, where a branch's default is one member at a time. A smaller
+ *     maximum makes it a lazy barrier: {@code {n}} buckets a page of n, and {@code {?}} routes one member at a time. A
+ *     lane whose share of a call is empty runs nothing.</li>
  * </ul>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -50,51 +50,53 @@ public class PartitionTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            // each obj to the lane its key names: the odds to <1>, the evens to <0>
-            "{1,2,3,4}.partition(mod(2), <0> => plus(10), <1> => plus(20))                       % {21,12,23,14}",
+            // each obj to the lane its key names, the whole lhs bucketed: the evens to <0>, the odds to <1>
+            "{1,2,3,4}.partition(mod(2), <0> => plus(10), <1> => plus(20))                       % {12,14,21,23}",
             // ... which is what the guarded branch its derivation names answers, every guard evaluated on every obj
             "{1,2,3,4}.branch(filter(mod(2).eq(0)).plus(10), filter(mod(2).eq(1)).plus(20))       % {21,12,23,14}",
             // THE IDENTITY: identical lanes are one lane, each obj counted once (a branch of them counts it twice)
-            "{1,2,3,4}.partition(mod(2), <0> => plus(1), <1> => plus(1))                          % {2,3,4,5}",
+            "{1,2,3,4}.partition(mod(2), <0> => plus(1), <1> => plus(1))                          % {3,5,2,4}",
             "{1,2,3,4}.branch(plus(1), plus(1))                                                   % {{2}2,{2}3,{2}4,{2}5}",
-            // THE GRAIN IS THE DOM: one obj at a time, a fold in a lane folds each obj alone
-            "{1,2,3,4}.partition(mod(2), <0> => sum(), <1> => sum())                              % {1,2,3,4}",
-            // ... the whole lhs bucketed, a lane's fold folds its whole share: the evens 6, the odds 4
+            // A PARTITION IS A BARRIER INSTRUCTION (Marko, 2026-11-27): its dom gathers the whole lhs by default, so a
+            // lane's fold folds its whole share, the evens 6 and the odds 4 ...
+            "{1,2,3,4}.partition(mod(2), <0> => sum(), <1> => sum())                              % {6,4}",
             "{1,2,3,4}.partition?<=int{*}(mod(2), <0> => sum(), <1> => sum())                     % {6,4}",
-            // ... a page of two bucketed, a fold per page: {1,2} gives <0> 2 and <1> 1, {3,4} gives 4 and 3
+            // ... and a smaller maximum is a lazy barrier: one obj at a time, a fold folds each obj alone
+            "{1,2,3,4}.partition?<=int{?}(mod(2), <0> => sum(), <1> => sum())                     % {1,2,3,4}",
+            // ... a page of two, a fold per page: {1,2} gives <0> 2 and <1> 1, {3,4} gives 4 and 3
             "{1,2,3,4}.partition?<=int{2}(mod(2), <0> => sum(), <1> => sum())                     % {2,1,4,3}",
             "{1,2,3,4}.partition?<=int{2}(mod(2), <0> => sum(), <1> => sum()).sum()               % 10",
             // a lane with an empty share runs nothing: no obj keys <2>, so its count never answers 0
-            "{1,3}.partition?<=int{*}(mod(2), <0> => count(), <1> => count(), <2> => count())     % 2",
+            "{1,3}.partition(mod(2), <0> => count(), <1> => count(), <2> => count())              % 2",
             // A <#> LANE TAKES THE REST: 3 keys <0>, and 1 and 2 key nothing else named
-            "{1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100))                             % {101,102,3}",
+            "{1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100))                             % {3,101,102}",
             // a key template keys each obj as its spelling says
-            "{1,2,3,4}.partition(<${mod(2)}>, <0> => plus(10), <1> => plus(20))                   % {21,12,23,14}",
+            "{1,2,3,4}.partition(<${mod(2)}>, <0> => plus(10), <1> => plus(20))                   % {12,14,21,23}",
             // A KEY FUNCTION THAT SPLITS ON A PREDICATE keys the objs it admits and leaves the rest noobj, which a
             // zeroable lane takes: map's dom narrowed to one obj (Marko, 2026-11-27) maps only what the filter kept ...
-            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=int(<even>), <even> => plus(10), {?}<odd> => plus(20))        % {21,12,23,14}",
-            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=A(<even>), <even> => plus(10), {?}<odd> => plus(20))          % {21,12,23,14}",
+            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=int(<even>), <even> => plus(10), {?}<odd> => plus(20))        % {12,14,21,23}",
+            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=A(<even>), <even> => plus(10), {?}<odd> => plus(20))          % {12,14,21,23}",
             // ... as map's own dom, maybe an obj, maps the noobj too (a mid-expression start), and every obj keys even
             "{1,2,3,4}.partition(is(mod(2).eq(0)).map(<even>), <even> => plus(10), {?}<odd> => plus(20))              % {11,12,13,14}",
             // a bulked obj goes whole to one lane, its count riding
-            "{{2}1,{3}2}.partition(mod(2), <0> => plus(10), <1> => plus(20))                      % {{2}21,{3}12}",
+            "{{2}1,{3}2}.partition(mod(2), <0> => plus(10), <1> => plus(20))                      % {{3}12,{2}21}",
             // A KEY NAMING TWO LANES NAMES THEIR BRANCH: 1 goes to both <1> lanes, as the guarded branch sends it
             "{1,2}.partition(mod(2), <1> => plus(10), <1> => plus(20), <0> => id())               % {11,21,2}",
             // AN OBJ KEYED NOOBJ GOES TO EACH ZEROABLE LANE (Marko, 2026-11-27): is(gt(2)) keys 1 and 2 nothing ...
-            "{1,2,3}.partition(is(gt(2)), <3> => plus(10), {?}<#> => plus(100))                   % {101,102,13}",
+            "{1,2,3}.partition(is(gt(2)), <3> => plus(10), {?}<#> => plus(100))                   % {13,101,102}",
             // ... any coefficient that holds zero is zeroable, and each such lane takes it
-            "{1,3}.partition(is(gt(2)), {0,5}<3> => plus(10), {*}<4> => plus(20))                 % {11,21,13}",
+            "{1,3}.partition(is(gt(2)), {0,5}<3> => plus(10), {*}<4> => plus(20))                 % {11,13,21}",
             // ... the rest is not zeroable, so a <#> lane takes keys, never noobj, and with no zeroable lane the call fails
             "{1,2,3}.partition(is(gt(2)), <3> => plus(10), <#> => plus(100))                      % <ERROR>",
             "{1,2,3}.partition(is(gt(2)), <3> => plus(10))                                        % <ERROR>",
             // AN OBJ NO LANE TAKES FAILS THE CALL: 2 keys <2>, and no lane is keyed so ...
             "{1,2,3}.partition(mod(3), <0> => id(), <1> => id())                                  % <ERROR>",
             // ... and the same call with a <2> lane answers
-            "{1,2,3}.partition(mod(3), <0> => id(), <1> => id(), <2> => id())                     % {1,2,3}",
+            "{1,2,3}.partition(mod(3), <0> => id(), <1> => id(), <2> => id())                     % {3,1,2}",
             // a key that is neither a uri nor an int is refused ...
             "{1,2}.partition(gt(1), <true> => id(), <false> => id())                              % <ERROR>",
             // ... and the same bool spelled as a uri keys
-            "{1,2}.partition(<${gt(1)}>, <true> => plus(10), <false> => plus(20))                 % {21,12}",
+            "{1,2}.partition(<${gt(1)}>, <true> => plus(10), <false> => plus(20))                 % {12,21}",
             // a partition of nothing is nothing
             "noobj.partition(mod(2), <0> => plus(10), <1> => plus(20))                            % noobj",
     }, delimiter = '%')
@@ -111,7 +113,7 @@ public class PartitionTest extends AbstractMetatronTest {
         try {
             // | blocks the instruction, so the write stores mod(2) itself, not what it answers applied to nothing
             Machine.evaluate("|mod(2).to(/partition/pf)");
-            checkCodeParseApply(LOG, "{1,2,3,4}.partition(*/partition/pf, <0> => plus(10), <1> => plus(20))", "{21,12,23,14}");
+            checkCodeParseApply(LOG, "{1,2,3,4}.partition(*/partition/pf, <0> => plus(10), <1> => plus(20))", "{12,14,21,23}");
         } finally {
             Machine.evaluate("noobj.to(/partition/pf)");
         }
@@ -134,7 +136,7 @@ public class PartitionTest extends AbstractMetatronTest {
                         rel(uri(f("1")), ObjmtronSerializer.parse("plus(20)")),
                         rel(uri(f("2")), ObjmtronSerializer.parse("plus(30)"))))))
                 .apply(noobj());
-        assertEquals(ObjmtronSerializer.parse("{21,32,13,24}"), answer);
+        assertEquals(ObjmtronSerializer.parse("{13,21,24,32}"), answer);
         assertEquals(4, calls.get(), "one call per obj, not one per lane per obj");
     }
 }

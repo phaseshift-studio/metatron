@@ -1484,9 +1484,10 @@ public final class mInsts {
                         .create(),
                 InstBuilder.build()
                         .tid(PARTITION_INST_TID)
-                        // THE DOM IS THE GRAIN, as the branch's: {?} routes one obj at a time, {n} buckets a page, {*}
-                        // buckets the whole lhs, so each lane receives its share once
-                        .dom(A.maybe(), "maybe an obj: one obj at a time (`{n}` buckets a page, `{*}` the whole lhs)")
+                        // A PARTITION IS A BARRIER INSTRUCTION (Marko, 2026-11-27): its dom, {*} by default, gathers the
+                        // whole lhs once, so each lane receives its share once, where a branch's default is one obj at a
+                        // time. A smaller maximum makes it a lazy barrier: {n} a page of n, {?} one obj at a time
+                        .dom(A.maybeSome(), "the whole lhs, gathered once: a barrier (`{n}` a page, a lazy barrier; `{?}` one obj at a time)")
                         .rng(B.maybeSome(), "what the lanes answer, merged")
                         // ONE SLOT BINDS EVERY ARG: the partition function, then the lanes, key => program
                         .argLst(T(A.maybeSome()), "the partition function, then the lanes, key => program")
@@ -1504,9 +1505,10 @@ public final class mInsts {
                                 branch, and the obj goes to each. a <#> lane takes every obj no other key names; with
                                 none, such an obj fails the call. an obj keyed noobj goes to each lane whose key is
                                 zeroable ({?}//a, {*}<a>); with none, it fails the call too.
-                                the dom coefficient is the grain: `{?}` routes one obj at a time, `{n}` buckets a page of n,
-                                and `{*}` buckets the whole lhs, so each lane receives its share once. a lane whose share
-                                of a call is empty runs nothing.""")
+                                a partition is a barrier instruction: its dom, `{*}` by default, gathers the whole lhs once,
+                                so each lane receives its share once. a smaller maximum makes it a lazy barrier: `{n}` buckets
+                                a page of n, and `{?}` routes one obj at a time. a lane whose share of a call is empty runs
+                                nothing.""")
                         // THE BODY LIVES ON ITS CLASS, as the branch's: a call bound from the definition is a clone of it
                         .inst(PartitionInst::new)
                         .body((lhs, inst) -> ((PartitionInst) inst).route(lhs))

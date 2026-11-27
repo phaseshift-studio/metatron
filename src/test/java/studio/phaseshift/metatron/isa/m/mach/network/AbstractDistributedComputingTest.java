@@ -416,10 +416,10 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     @ParameterizedTest
     @CsvSource(value = {
             "{1}.partition(<//${_}>, //1 => *</n/kv/${_}>.count())                % 2",
-            // one obj at a time, each of the three copies counts its own read ...
-            "{{3}1}.partition(<//${_}>, //1 => *</n/kv/${_}>.count())             % {3}2",
-            // ... and bucketed, the place counts every read
-            "{{3}1}.partition?<=int{*}(<//${_}>, //1 => *</n/kv/${_}>.count())    % 6",
+            // a barrier by default, the place counts every read ...
+            "{{3}1}.partition(<//${_}>, //1 => *</n/kv/${_}>.count())             % 6",
+            // ... and one obj at a time, a lazy barrier, each of the three copies counts its own read
+            "{{3}1}.partition?<=int{?}(<//${_}>, //1 => *</n/kv/${_}>.count())    % {3}2",
     }, delimiter = '%')
     void test_C_a_partition_of_one_place_folds_where_its_keys_live(final String code, final String expected) {
         named(NUMBERS, () -> checkCodeParseApply(LOG, code, expected));
@@ -901,12 +901,14 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     @CsvSource(value = {
             // the evens to peer 1 (2+4+6 and its 111), the odds to peer 2 (1+3+5 and its 222), each share sent once
             "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum()))  % {123,231}",
-            // one obj at a time, each sent alone: 1 and 3 to peer 2, 2 and 4 to peer 1
-            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum()))                 % {223,113,225,115}",
+            // a barrier by default: 2 and 4 sent to peer 1 together, 1 and 3 to peer 2 ...
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum()))                 % {113,115,223,225}",
+            // ... and one obj at a time, a lazy barrier, each sent alone
+            "{1,2,3,4}.partition?<=int{?}(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum()))       % {223,113,225,115}",
             // the rest runs here, beside a place: the odds key //2, which no lane names, and read this machine's {7,8}
-            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), <#> => plus(*/n/data.sum()))                 % {16,113,18,115}",
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), <#> => plus(*/n/data.sum()))                 % {113,115,16,18}",
             // a zeroable place takes the objs keyed noobj: the odds, which the narrowed map leaves nothing, run at peer 2
-            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=A(<//1>), //1 => plus(*/n/data.sum()), {?}//2 => plus(*/n/data.sum()))  % {223,113,225,115}",
+            "{1,2,3,4}.partition(is(mod(2).eq(0)).map?<=A(<//1>), //1 => plus(*/n/data.sum()), {?}//2 => plus(*/n/data.sum()))  % {113,115,223,225}",
             // the lanes' answers fold at home
             "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => count(), //2 => count()).sum()                         % 6",
             // a place no name reaches fails the call (3 keys //3), as the same call keyed by a reached one answers
