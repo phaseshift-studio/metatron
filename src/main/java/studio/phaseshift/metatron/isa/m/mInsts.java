@@ -1489,8 +1489,10 @@ public final class mInsts {
                         // time. A smaller maximum makes it a lazy barrier: {n} a page of n, {?} one obj at a time
                         .dom(A.maybeSome(), "the whole lhs, gathered once: a barrier (`{n}` a page, a lazy barrier; `{?}` one obj at a time)")
                         .rng(B.maybeSome(), "what the lanes answer, merged")
-                        // ONE SLOT BINDS EVERY ARG: the partition function, then the lanes, key => program
-                        .argLst(T(A.maybeSome()), "the partition function, then the lanes, key => program")
+                        // THE ROUTES ARE KEYED BY URI, as a keyed branch's lanes are, and their programs are of any type: never the
+                        // dom's A, which bound every arg to the lhs and compiled the partition function and each lane against the
+                        // barrier (int{*}), so mod(2) was handed a bulk (Marko, 2026-11-27)
+                        .args(rec(URI_TYPE, T(ALL.maybeSome())))
                         .desc("""
                                 a partitioning function: each obj of the lhs is routed to the lane its partition
                                 function keys, where a branch routes every obj to every lane. partition(p, k => c, …)
