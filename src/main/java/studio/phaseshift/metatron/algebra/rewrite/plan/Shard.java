@@ -400,8 +400,12 @@ public final class Shard {
         // is what each lane's last instruction answers, once per lane: the branch's own B{*} is bound by nothing and
         // resolves to #{*}, which the combiner after it cannot bind (kmerge's lst[{*}A{*}]{*} fell back to # => #, a
         // lst{1} read as {*}). Profiling lanes answer reports, so they state none.
+        // AN ADDRESSED SEED'S BRANCH TAKES WHAT ITS READ TOOK (A{?}, one obj at a time): a from accepts an input and
+        // ignores it, so the code it heads may be a branch member or a lambda applied to one, where an initial form,
+        // which takes nothing, refused the input the read accepted (1.branch(*//east/p.count()) failed)
         final fURI carrier = chain.carriers().get(runIndex).typeId();
-        final fURI dom = literal || addressed ? fURI.Singleton.NOOBJ
+        final fURI dom = literal ? fURI.Singleton.NOOBJ
+                : addressed ? InstSet.A.maybe()
                 : null == carrier || fURI.Singleton.ALL.basePath().equals(carrier.basePath()) ? InstSet.A.maybeSome()
                 : carrier.maybeSome();
         // an absorbed select keeps a prefix of the cut's lst, so the cut's contract states what those lanes answer too;

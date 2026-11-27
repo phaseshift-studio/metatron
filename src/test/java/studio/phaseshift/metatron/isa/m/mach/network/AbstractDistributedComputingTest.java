@@ -340,6 +340,20 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     }
 
     /**
+     * AN ADDRESSED READ TAKES AN INPUT AND IGNORES IT, planned or not: a code it heads may be a branch member applied to
+     * one. Its planned branch refused the input as an initial form does, so {@code 1.branch(*<//east/p>.count())}
+     * failed where the plain read answered.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.branch(*//east/n/data.count())                               % 3",
+            "1.branch(*//east/n/data.count(),*//west/n/data.count()).sum()  % 6",
+    }, delimiter = '%')
+    void test_C_an_addressed_read_takes_an_input(final String code, final String expected) {
+        named(() -> checkCodeParseApply(LOG, code, expected));
+    }
+
+    /**
      * WHAT AN ADDRESSED READ KEEPS HOME, and the answer it gives there all the same.
      */
     @ParameterizedTest
