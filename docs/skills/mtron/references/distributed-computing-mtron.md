@@ -729,21 +729,30 @@ lane. Routing is the walk join of the rec algebra (`Rec#mult`): the selector `p`
 itself), the routes are one table, and `[# => p(x)] * [k_i => c_i]` gives the routes that admit the key in written
 order, of which the first is kept. With disjoint keys it is the branch whose lanes are guarded by the fibers of `p`,
 $\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i \mathrm{filter}(p = k_i)\,c_i$, with `p` run once per obj where
-the guarded branch runs every guard. What `p` answers is applied to the obj in turn, so a stored function (`*/pf`: an
-instruction, a code or a key template) keys it as `mod(2)` does.
+the guarded branch runs every guard. `p` is applied to each obj once, as written, and what it answers is the key,
+never unwrapped or applied again (Marko, 2026-11-27): a read `*/k` keys by what it reads, and a blocked `|mod(2)` by
+the code it blocks.
+
+The args are varargs of relations (Marko, 2026-11-27): `partition(p, k_1 => c_1, …)` is `partition(p => {k_1 => c_1,
+…})` with `p` a selector whatever it is (`_` keys each obj by itself there, where `_` as a key guards), and written paths
+factor their common key, so `p => k_1 => c_1, p => k_2 => c_2` is the rec form's call. A key that
+computes selects (`mod(2)`, a key template), and a key that answers its obj or nothing guards (a type, `?k`, `_`, any
+filter): a guard that admits an obj opens its whole table, and a value admits its equal. The processor hands a blocking
+instruction its keys raw, so the partition applies each to each obj, never to the gathered lhs.
 
 ```mtron_pre
+{1,2,3,4}.partition(mod(2) => {?0 => plus(10), ?1 => plus(20)})
 {1,2,3,4}.partition(mod(2), ?0 => plus(10), ?1 => plus(20))
-{1,2,3,4}.partition(<${mod(2)}>, <0> => plus(10), <1> => plus(20))
+{1,2,3,4}.partition(<${mod(2)}> => {<0> => plus(10), <1> => plus(20)})
 {1,2,3}.partition(mod(3), ?0 => id(), _ => plus(100))
-{1,2,3,4}.partition(_, ?>2 => plus(10), _ => plus(20))
-{1,2,3,4}.partition(_, ?int::T => map(<int>), _ => map(<other>))
+{1,2,3,4}.partition(?>2 => plus(10), _ => plus(20))
+{1,2,3,4}.partition(int::T => map(<int>), _ => map(<other>))
 ```
 
 `?` on a value admits its equal, on a type its instances, and a guard what it holds for; `_` admits every key, so
 written last it is the else. The first route that admits a key takes it, so overlapping guards route each obj once. A
-key of noobj forms no relation, so its obj is dropped, `none` is a key like any other, and an obj no route admits fails
-the call.
+selector's key of noobj forms no relation, so its obj is dropped, `none` is a key like any other, and an obj no route
+admits fails the call.
 A partition is a barrier instruction (Marko, 2026-11-27): its dom, `{*}` by default, gathers the whole lhs, so a
 lane's fold folds its whole share once, where a branch's default is one obj at a time. A smaller maximum makes it a
 lazy barrier, `{n}` a page of n and `{?}` one obj at a time:
@@ -761,7 +770,7 @@ lane the whole bag. That is DATA DISTRIBUTION. A key that names where its data l
 keys where they are held, which is B and C by key:
 
 ```mtron
-*/data.partition(*/pf, //a => sum(), //b => sum()).sum()
+*/data.partition(mod(2) => {?0 => //a => sum(), ?1 => //b => sum()}).sum()
 {1,2,3,4}.partition(mod(2), ?0 => //a => sum(), ?1 => //b => sum()).sum()
 {1,2}.partition(<//${_}>, //1 => *</kv/${_}>.sum(), //2 => *</kv/${_}>.sum())
 ```
