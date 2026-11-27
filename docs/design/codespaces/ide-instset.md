@@ -138,7 +138,7 @@ lazy action.
 
 The `output` field of `cs_result::T` is declared `str{*}::T` but holds a **`!*` auto-from ref** to a minted temp uri
 where the line-stream is stored (see `CommandRunner`). Only on access (`>>output`) does auto-from pull the stream from
-the temp uri — the result rec stays compact, and paging (`>>output.limit(10)`, `>>output.range(10,50)`) works on the
+the temp uri — the result rec stays compact, and paging (`>>output.limit(10)`, `>>output.range(10,40)`) works on the
 materialized stream.
 
 ```

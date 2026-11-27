@@ -185,7 +185,7 @@ public class mInstSetRewriteTest extends AbstractInstSetTest {
             "derivation_contraction  % cmplx::[1.0,2.0].mult(cmplx::[1.0,1.0].inv())  % start(cmplx::[1.0,2.0]).div(cmplx::[1.0,1.0])",
             // rules no plan ever named: the pool is the table
             "else_after_count        % {1,2,3}.count().else(0)             % start({1,2,3}).count()",
-            "range_skip_take         % {1,2,3,4,5}.range(1,4)              % start({1,2,3,4,5}).skip(1).take(3)",
+            "range_skip_take         % {1,2,3,4,5}.range(1,4)              % start({1,2,3,4,5}).skip(1).take(4)",
             "branch_factor           % 1.branch(plus(1).mult(2),plus(1).mult(3))  % start(1).plus(1).branch(mult(2),mult(3))",
             // a head handed an effect is not factored: the effect would run once instead of once per lane
             "branch_factor           % 1.branch(plus(print(_)).mult(2),plus(print(_)).mult(3))  % start(1).branch(plus(print(_)).mult(2),plus(print(_)).mult(3))",

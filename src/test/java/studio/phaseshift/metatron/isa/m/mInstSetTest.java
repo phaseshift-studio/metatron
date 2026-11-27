@@ -302,6 +302,40 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * A WINDOW IS A SKIP AND A TAKE (Marko, 2026-11-26): {@code range(i,n)} is {@code skip(i).take(n)}, its offset skip's
+     * count and its length take's. The body read n as a length, but {@code range_skip_take} rewrote literal bounds to
+     * {@code skip(i).take(n - i)}, reading n as an end, so {@code range(1,4)} answered {@code {2,3,4}} while
+     * {@code range(1,map(4))} answered {@code {2,3,4,5}}. A window running backwards took from the end:
+     * {@code range(3,1)} was {@code skip(3).take(-2)}, all of {@code {4,5}}. A literal bound and a computed one now
+     * answer the same window, and a negative length takes the last of what follows the offset, as {@code take(-n)} does.
+     * A negative offset skips the last objs, as {@code skip(-n)} does, and that lays what is left out from the end
+     * ({@code skip(-2)} is {@code {3,2,1}}), so the window after it is {@code {3,2}}, not {@code {1,2}}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5}.range(1,4)                       % {2,3,4,5}",
+            "{1,2,3,4,5}.range(1,map(4))                  % {2,3,4,5}",
+            "{1,2,3,4,5}.range(1,2)                       % {2,3}",
+            "{1,2,3,4,5}.range(1,map(2))                  % {2,3}",
+            "{1,2,3,4,5}.range(3,1)                       % 4",
+            "{1,2,3,4,5}.range(3,map(1))                  % 4",
+            "{1,2,3,4,5}.range(3)                         % 4",
+            "{1,2,3,4,5}.range(4,3)                       % 5",
+            "{1,2,3,4,5}.range(0,0)                       % noobj",
+            "{1,2,3,4,5}.range(2,-2)                      % {5,4}",
+            "{1,2,3,4,5}.range(2,map(-2))                 % {5,4}",
+            "{1,2,3,4,5}.range(-2,2)                      % {3,2}",
+            "{1,2,3,4,5}.range(-2,map(2))                 % {3,2}",
+            "{1,2,3,4,5}.range(map(1),4)                  % {2,3,4,5}",
+            "{3}5.range(1,1)                              % 5",
+            "{3}5.range(1,map(1))                         % 5",
+            "{1,2,3,4,5}.range(1,4).count()               % 4",
+    }, delimiter = '%')
+    public void testRangeIsASkipAndATake(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     @TestData(value = {"1@take/a", "2@take/b", "3@take/c"})
     @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest

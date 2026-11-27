@@ -1090,7 +1090,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             // the poset row keeps the stricter bound, whichever side it is on
             "{1,2,3,4,5}.is(gt(1)).is(gt(3))  % start({1,2,3,4,5}).is(gt(3))",
             "{1,2,3,4,5}.is(gt(3)).is(gt(1))  % start({1,2,3,4,5}).is(gt(3))",
-            "{1,2,3,4,5}.range(1,4)         % start({1,2,3,4,5}).skip(1).take(3)",
+            "{1,2,3,4,5}.range(1,4)         % start({1,2,3,4,5}).skip(1).take(4)",
             // a computed bound is no int, so the window stays range
             "{1,2,3,4,5}.range(1,plus(3))   % start({1,2,3,4,5}).range(1,plus(3))",
             // an absorbing op swallows the run before it, the longest the gate admits, and never the seed
@@ -1182,8 +1182,8 @@ public class catInstSetTest extends AbstractInstSetTest {
             "map_nest    % map(map(plus(2))).neg()       % map(plus(2)).neg()",
             // a map of a map is the map whatever it maps, a stream's fold among them
             "map_nest    % map(map(sum()))               % map(sum())",
-            // a computed change: the template reads the names the run bound
-            "range_skip_take % range(2,5).plus(1)        % skip(2).take(3).plus(1)",
+            // a window is a skip and a take, its offset skip's count and its length take's (Marko, 2026-11-26)
+            "range_skip_take % range(2,5).plus(1)        % skip(2).take(5).plus(1)",
             // a spanned element, {+}#, is a run of one or more instructions of any name and arguments: ungated, the op
             // swallows the longest run before it, an absorbing op of its own kind among them, and nothing after it
             "absorbing   % plus(1).neg().zero()          % zero()",
@@ -1235,19 +1235,19 @@ public class catInstSetTest extends AbstractInstSetTest {
      * each over the code the last one left, so its scan, its unscaled check and its gate all read the code that equation
      * matches. Handed to update() whole, the rules were scanned for their first equation alone, so a chain without a range
      * kept its dead else, and an equation that lengthened the chain shifted every later match off the code the check
-     * read: {@code range(2,5)} became {@code skip(2).take(3)}, and the check for the {@code count().else(0)} after it read
+     * read: {@code range(2,5)} became {@code skip(2).take(5)}, and the check for the {@code count().else(0)} after it read
      * {@code else(0).plus{2}(1)}, refusing the scaled plus, or read past the end. The rules are range_skip_take's and
      * else_after_count's in one rec. Each row: the chain % the chain the two equations leave.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "range(2,5).count().else(0)              % skip(2).take(3).count()",
-            "range(2,5).count().else(0).plus{2}(1)   % skip(2).take(3).count().plus{2}(1)",
+            "range(2,5).count().else(0)              % skip(2).take(5).count()",
+            "range(2,5).count().else(0).plus{2}(1)   % skip(2).take(5).count().plus{2}(1)",
             // the unscaled check reads the run its own equation matched: a scaled else stays
-            "range(2,5).count().else{2}(0)           % skip(2).take(3).count().else{2}(0)",
+            "range(2,5).count().else{2}(0)           % skip(2).take(5).count().else{2}(0)",
             // the scan is each equation's own: a chain that holds no range still drops its dead else
             "count().else(0)                         % count()",
-            "count().else(0).range(2,5)              % count().skip(2).take(3)",
+            "count().else(0).range(2,5)              % count().skip(2).take(5)",
     }, delimiter = '%')
     void testEachEquationRunsOnItsOwn(final String chain, final String expected) {
         final Rec rules = rec(Stream.of(RANGE_SKIP_TAKE, ELSE_AFTER_COUNT).flatMap(rule -> rule.<Rel>elements()));
@@ -1908,7 +1908,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "start(5).plus(3).minus(3)         % inverse_cancellation    % start(5)",
             "start(6).plus(3.neg())            % derivation_contraction  % start(6).minus(3)",
             "start({1,2,3}).count().else(0)    % else_after_count        % start({1,2,3}).count()",
-            "start({1,2,3,4,5}).range(1,4)     % range_skip_take         % start({1,2,3,4,5}).skip(1).take(3)",
+            "start({1,2,3,4,5}).range(1,4)     % range_skip_take         % start({1,2,3,4,5}).skip(1).take(4)",
             "start(1).branch(+2,+2)            % branch_collapse         % start(1).branch(plus{2}(2))",
             // a rule that leaves the chain as it is, is no edge
             "start(5).plus(1)                  % theory_unit_removal     % noobj",

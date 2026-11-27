@@ -322,9 +322,10 @@ wraps declares the mapper form (a form is declared per operation). `map` hands e
 to bind and no law to gate it. `else_after_count` carries `[count().else(#::T) => count()]` and drops the dead `else`
 after a total `count`, and `map_nest` carries `[map(map(#::T@f)) => map(#::T@f)]` and drops a map of a map, whatever it
 maps. It runs just before `form_map_unwrap`, and the two are separate rules: `map`'s own form is no mapper, so the unwrap
-never takes a nested mapping on its own. A plain rule may compute its change: a `${…}` template is evaluated with the
-names the run bound, so `range_skip_take`'s `[range(int::T@i,int::T@n) => skip(#::T@i).take(${*n.minus(*i)})]` turns a
-window into a skip and a take. The poset law's rewrite, `law_poset`, is stated over the bound each rule keeps:
+never takes a nested mapping on its own. `range_skip_take` carries `[range(int::T@i,int::T@n) => skip(#::T@i).take(#::T@n)]`
+and turns a window into a skip and a take: range's offset is skip's count and its length is take's. A change may also
+compute an argument: in `update`, which applies a rule as the rewrites do, a `${…}` template is evaluated with the names
+the run bound, so `update([plus(int::T@a).plus(int::T@b)=>plus(${*a.plus(*b)})])` folds two additions into one. The poset law's rewrite, `law_poset`, is stated over the bound each rule keeps:
 `[is(op(#::T@a)).is(op(#::T@b)) => is(op(#::T@b)), …]`. Its gate evaluates the comparison, so the bound
 kept is the one the comparison orders past the other ($\max$ under `gt`, $\min$ under `lt`), with no comparison
 named in the rule. The pair is also stated the other way round, and for `filter`.

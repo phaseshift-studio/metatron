@@ -525,12 +525,13 @@ public class mInstSet extends AbstractInstSet {
             MCode.code(List.of(instB(COUNT_INST_TID, lst()))));
 
     /**
-     * {@code range_skip_take} — a PLAIN rule whose change is COMPUTED: a {@code ${...}} template is evaluated with the names
-     * the run bound, so a window is a skip and a take, {@code range(i, n) ⇝ skip(i)·take(n - i)}. Only literal bounds match
-     * ({@code int::T} refuses an instruction), so a computed range stays range.
+     * {@code range_skip_take} — a PLAIN rule: a window is a skip and a take, {@code range(i, n) ⇝ skip(i)·take(n)}, its
+     * offset skip's count and its length take's (Marko, 2026-11-26). The change read n as an end ({@code take(n - i)}) where
+     * range's body reads a length, so a literal range and a computed one answered different windows. Only literal bounds
+     * match ({@code int::T} refuses an instruction), so a computed range stays range, and its body answers the same.
      */
     public static final Rec RANGE_SKIP_TAKE = rec(MCode.code(List.of(instB(RANGE_INST_TID, lst(T(INT_TID, f("i"), null, null), T(INT_TID, f("n"), null, null))))),
-            MCode.code(List.of(instB(SKIP_INST_TID, lst(T(ALL, f("i"), null, null))), instB(TAKE_INST_TID, lst(uri("${*n.minus(*i)}"))))));
+            MCode.code(List.of(instB(SKIP_INST_TID, lst(T(ALL, f("i"), null, null))), instB(TAKE_INST_TID, lst(T(ALL, f("n"), null, null))))));
 
     /**
      * A theory's law battery as its type states it: the labels, a lst of {@code law::T}.
@@ -1105,7 +1106,7 @@ public class mInstSet extends AbstractInstSet {
                                 "count is total, so an else after it is dead code: \\(\\mathrm{count} \\cdot \\mathrm{else}(x) \\leadsto \\mathrm{count}\\)"),
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("range_skip_take"), RANGE_SKIP_TAKE, (code, rules) ->
                                         Law.Helper.rewrite(code, List.of(rules), (scanned, start, length) -> true)),
-                                "a window is a skip and a take, its bounds literal ints: \\(\\mathrm{range}(i, n) \\leadsto \\mathrm{skip}(i) \\cdot \\mathrm{take}(n - i)\\)"),
+                                "a window is a skip and a take, its bounds literal ints: \\(\\mathrm{range}(i, n) \\leadsto \\mathrm{skip}(i) \\cdot \\mathrm{take}(n)\\)"),
 
                         // THE INVERSE LAW: group_theory states op(a)·op(inv(a)) ⇝ ε and op(inv(a))·op(a) ⇝ ε, every group
                         // instance a carrier declares binds them (Law.Helper.rules), and an adjacent pair with equal operands

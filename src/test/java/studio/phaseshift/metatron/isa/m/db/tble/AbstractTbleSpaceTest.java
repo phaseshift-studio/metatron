@@ -2773,6 +2773,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             "*db:rewrite_test/+.isa([value=>?>5]).count()                  % sql_where_count",
             "*db:rewrite_test/+.isa([value=>?>5]).take(2)                  % sql_where_limit",
             "*db:rewrite_test/+.skip(2).take(2)                            % sql_offset_limit",
+            // a window is a skip and a take (range_skip_take), so it fuses as one too
+            "*db:rewrite_test/+.range(2,3)                                 % sql_offset_limit",
     })
     public void testChainRulesFuseToOneNativeOp(final String code, final String fusedOp) {
         final Obj compiled = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));

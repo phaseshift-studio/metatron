@@ -283,7 +283,13 @@ public interface CommonRewritesTestContract {
                 Arguments.of("skip+limit: skip(8).take(5)", "*" + p + "/+.skip(8).take(5).count()", jnt(2)),
                 Arguments.of("skip+limit: skip(10).take(3)", "*" + p + "/+.skip(10).take(3).count()", jnt(0)),
                 Arguments.of("skip+limit: skip(100).take(10)", "*" + p + "/+.skip(100).take(10).count()", jnt(0)),
-                Arguments.of("skip+limit: skip(3).take(0)", "*" + p + "/+.skip(3).take(0).count()", jnt(0))
+                Arguments.of("skip+limit: skip(3).take(0)", "*" + p + "/+.skip(3).take(0).count()", jnt(0)),
+                // a window is a skip and a take (Marko, 2026-11-26): range(i,n) is skip(i).take(n), so it pushes down as
+                // skip and take do; range_skip_take read n as an end, so range(2,3) was skip(2).take(1) and range(5,5)
+                // skip(5).take(0). range(8,5) runs past the end (two left); the end reading took the last 3 of them
+                Arguments.of("skip+limit: range(2,3)", "*" + p + "/+.range(2,3).count()", jnt(3)),
+                Arguments.of("skip+limit: range(5,5)", "*" + p + "/+.range(5,5).count()", jnt(5)),
+                Arguments.of("skip+limit: range(8,5)", "*" + p + "/+.range(8,5).count()", jnt(2))
         );
     }
 

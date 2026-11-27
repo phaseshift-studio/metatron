@@ -136,8 +136,8 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.BLOCK_INST_TID, lst(obj)));
     }
 
-    public F range_(final Obj start, final Obj end) {
-        return this.addInst(instB(mInstSet.RANGE_INST_TID, lst(start, end)));
+    public F range_(final Obj offset, final Obj length) {
+        return this.addInst(instB(mInstSet.RANGE_INST_TID, lst(offset, length)));
     }
 
     public F else_(final Obj obj) {
@@ -926,8 +926,8 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().dedup_();
         }
 
-        public static <F extends mFluent<F>> F range_(final Obj start, Obj end) {
-            return new mFluent<F>().range_(start, end);
+        public static <F extends mFluent<F>> F range_(final Obj offset, final Obj length) {
+            return new mFluent<F>().range_(offset, length);
         }
 
         public static <F extends mFluent<F>> F explain_(final Obj obj) {
