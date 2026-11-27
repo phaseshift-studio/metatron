@@ -66,11 +66,18 @@ public class NetworkPrefixTest extends AbstractMetatronTest {
      */
     private static final fURI GINGER = f("//ginger");
     private static final fURI GINGER_WS = f("ws://ginger.local:8555");
+    /**
+     * a second loop origin, bound to a name and never dialed: a name is denotation, so a sum of names aligns without a
+     * socket anywhere, and a read of this one's term finds no peer
+     */
+    private static final fURI OTHER = f("//other");
+    private static final fURI OTHER_LOOP = f("loop://other");
 
     @BeforeEach
     void connect() {
         Machine.current().network().registerPrefix(NAME, LOOP);
         Machine.current().network().registerPrefix(GINGER, GINGER_WS);
+        Machine.current().network().registerPrefix(OTHER, OTHER_LOOP);
         Network.Helper.connect(Machine.current().network(), LOOP);
     }
 
@@ -78,6 +85,7 @@ public class NetworkPrefixTest extends AbstractMetatronTest {
     void disconnect() {
         Machine.current().network().unregisterPrefix(NAME);
         Machine.current().network().unregisterPrefix(GINGER);
+        Machine.current().network().unregisterPrefix(OTHER);
         // a row a test declared is not the next test's: the class proves the door's dialect, so it must not inherit one
         Machine.write(f("/network/prefix"), noobj());
         Machine.current().network().drop(LOOP);
@@ -120,9 +128,104 @@ public class NetworkPrefixTest extends AbstractMetatronTest {
             "//nobody/a/b/c             % //nobody/a/b/c",
             // A DOTTED HOST IS A HOSTNAME, never a name a binding may shadow
             "//ginger.local/a           % //ginger.local/a",
+            // A SUM OF NAMES ALIGNS TO THE SUM OF WHAT EACH NAMES: a point rides on its name's term, and an unbound
+            // name is answered as written inside the sum, as it is alone
+            "//{other,self}/a           % <{loop://other/a,loop://self/a}>",
+            "//{{2}other,self}/a        % <{{2}loop://other/a,loop://self/a}>",
+            "//{other,nobody}/a         % <{//nobody/a,loop://other/a}>",
+            "//{other}/a                % loop://other/a",
     })
     void testTheNameResolvesTheWholeTail(final String written, final String resolved) {
         assertEquals(f(resolved), Machine.Helper.align(Machine.current(), f(written)), written);
+    }
+
+    /**
+     * {@code //+} IS EVERY NAME THIS LEVEL SEES (Marko, 2026-11-26): the sum of what each one denotes. With no name
+     * bound it is the empty sum, which denotes nothing.
+     */
+    @Test
+    void testTheWildcardNameIsEveryName() {
+        Machine.write(f("/network/prefix"), noobj());
+        Machine.current().network().registerPrefix(NAME, LOOP);
+        Machine.current().network().registerPrefix(OTHER, OTHER_LOOP);
+        assertEquals(f("<{loop://other/a,loop://self/a}>"), Machine.Helper.align(Machine.current(), f("//+/a")),
+                "//+/a is every name's /a");
+        Machine.write(f("/network/prefix"), noobj());
+        assertEquals(fURI.Singleton.NOOBJ, Machine.Helper.align(Machine.current(), f("//+/a")), "no name, no term");
+    }
+
+    /**
+     * A SUM OF NAMES IS READ TERM BY TERM, each term through its own origin: the loop peer answers {@code //self}'s,
+     * and {@code //other}, a name no peer is dialed at, answers nothing to a read the run computed.
+     */
+    @Test
+    void testASumOfNamesIsReadTermByTerm() {
+        assertFalse(Machine.read(f("loop://self/sys/thread/main")).isNoObj(), "the loop peer answers");
+        assertEquals(Machine.read(f("loop://self/sys/thread/main")), Machine.read(f("//{self,other}/sys/thread/main")),
+                "the sum reads each name's term");
+    }
+
+    /**
+     * A READ OF A MACHINE NO PEER ANSWERS FAILS, by the address it named (Marko, 2026-11-26: "the user should know
+     * that their expression fails"). The refusal was logged and swallowed, and the read answered nothing, as if
+     * nothing were there. In a sum, one term no peer answers fails the whole read; a term with no host is this
+     * machine's own, read as any local address is.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*//nobody/sys/thread/main                                    % <ERROR>",
+            "*//{self,nobody}/sys/thread/main                             % <ERROR>",
+            // a name is not a dial: other is bound, and nothing is dialed there
+            "*//{self,other}/sys/thread/main                              % <ERROR>",
+            "*//{self}/sys/thread/main.count()                            % 1",
+    })
+    void testAReadOfAMachineNoPeerAnswersFails(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A TERM WITH NO HOST IS THIS MACHINE'S OWN, read beside the terms its names reach: {@code //self} is the loop
+     * peer, which reads this machine, so the sum holds the one value twice.
+     */
+    @Test
+    void testASumMayHoldThisMachinesOwnTerm() {
+        Machine.write(f("/n/x"), jnt(5));
+        try {
+            checkCodeParseApply(LOG, "*<{//self/n/x,/n/x}>.sum()", "10");
+        } finally {
+            Machine.write(f("/n/x"), noobj());
+        }
+    }
+
+    /**
+     * A ROW IS THE ORIGIN IT DENOTES. A value written with the route its dial carries ({@code ws_client::[…]>>host})
+     * keeps the origin alone, as {@code registerPrefix} files it: a row's value is spliced in front of every tail its
+     * name aligns, so a kept route read {@code //svc/a} under it.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            // the value written | the row stored | what the name's tail aligns to
+            "loop://self/mtron                % loop://self               % loop://self/sys/thread/main",
+            "loop://other:1/mtron             % loop://other:1            % loop://other:1/sys/thread/main",
+            "loop://other/a/b?c=1             % loop://other              % loop://other/sys/thread/main",
+    })
+    void testTheDoorKeepsTheOriginAlone(final String written, final String stored, final String aligned) {
+        Machine.write(f("/network/prefix"), rec(uri("//svc"), uri(written)));
+        assertEquals(f(stored), Machine.read(f("/network/prefix/svc")).uriValue(), "the row is the origin");
+        assertEquals(f(aligned), Machine.Helper.align(Machine.current(), f("//svc/sys/thread/main")), "the tail rides on the origin");
+    }
+
+    /**
+     * THE REPORTED ZERO (Marko, 2026-11-26): with a row written as its dial's address, {@code <//name/p>.*_.count()}
+     * answered 0 where {@code *<//name/p>.count()} answered 101. A read the run computes aligns the name, and the route
+     * the row kept put every tail under it, while a read bound at compile time hands the peer the spelling as written.
+     */
+    @Test
+    void testARowWrittenWithItsRouteReadsWhereItsOriginDoes() {
+        Machine.write(f("/network/prefix"), rec(uri("//svc"), uri("loop://self/mtron")));
+        assertFalse(Machine.read(f("loop://self/sys/thread/main")).isNoObj(), "the origin answers");
+        assertEquals(Machine.read(f("loop://self/sys/thread/main")), Machine.read(f("//svc/sys/thread/main")),
+                "the name reads where its origin does, not under the route");
     }
 
     @Test

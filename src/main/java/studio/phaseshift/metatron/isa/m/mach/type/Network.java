@@ -279,6 +279,16 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         // it), and an explicit port means the address names a service already; neither may be rewritten by a binding.
         if (!vid.isHosted())
             return vid;
+        // A SUM OF NAMES DENOTES THE SUM OF WHAT EACH NAMES (Marko, 2026-11-26): //{ginger,chibi}/a is //ginger/a +
+        // //chibi/a, and //+/a is that sum over every name this level sees, so the spelling aligns to the sum of the
+        // origins, which a read and a write take term by term. The host's branch is read by the uri algebra, a point on
+        // a name included ({{2}ginger,chibi}), and an unbound name in the sum is answered as written, as it is alone
+        final String host = vid.host();
+        if (fURI.isOnePattern(host) || '{' == host.charAt(0))
+            return fURI.Helper.sum((fURI.isOnePattern(host)
+                    ? Component.Prefix.Helper.effectivePrefixes(this).keys().filter(Obj::isUri).map(Obj::uriValue)
+                    : f(host).branches())
+                    .map(name -> this.alignPrefix(vid.host(name.d(cInt.ONE()).toString()).d(vid.d().mult(name.d())))));
         // THE SHADOWING LOOKUP, not this level's table: the meaning of a name is the nearest declaration above the
         // machine the caller stands in, so a frame that declares nothing still resolves the root's vocabulary.
         final Obj origin = Component.Prefix.Helper.effectivePrefix(this, f(vid.host()));
@@ -785,7 +795,10 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
                 // rec, which is re-typechecked on every later write, so it is refused with the key rather than stored.
                 if (label.isEmpty() || !row.getValue().isUri())
                     return Optional.empty();
-                rows.put(uri(label.get()), row.getValue());
+                // ... AND THE ORIGIN ALONE, as registerPrefix files it: the route a dial carries (ws://ginger.local:8555/mtron,
+                // a client's host) is the connection's, kept on its peer, while a row's value is spliced in front of every
+                // tail it aligns, so a route kept there read //ginger/a at /mtron/a
+                rows.put(uri(label.get()), uri(row.getValue().uriValue().origin()));
             }
             return Optional.of(rec(rows));
         }
@@ -1310,24 +1323,30 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
             if (!spelled.isUri())
                 return resolved;
             final fURI address = Machine.Helper.align(machine, spelled.uriValue());
-            if (!address.hasHost())
-                return resolved;
-            final fURI origin = address.path(List.of());
-            final Obj override = reach(machine, origin, base);
-            if (!override.isObjInst()) {
-                // AN ADDRESSED MACHINE WITH NO PEER HERE IS NOT A LOCAL OPERATION. The hosted form (`//abc` — no
-                // scheme, a host) and a wire scheme (`ws://host/...`) name a machine; with no dialed peer the native
-                // instruction would run LOCALLY and silently drop the authority — `move(//abc)` answered the lhs and
-                // `from(//abc/x)` read nothing, both indistinguishable from success. A SPACE address is a different
-                // thing and keeps falling through: its scheme has no dialer (maria:, docker:, mqtt:, …), so the
-                // instruction is an ordinary local read into that space.
-                final String scheme = address.scheme();
-                if (null == scheme || null != Signatures.dialerOf(scheme))
-                    throw unreachable(machine, resolved.tid().basePath(), origin);
-                return resolved;
+            // A SUM OF AUTHORITIES BINDS NO ONE PEER (//{ginger,chibi}/x and //+/x align to a root branch of origins,
+            // Network.alignPrefix). It is read and written term by term (Machine.read), each term through its own peer,
+            // so the call stays native -- but every term that names a machine is asked here as a lone address is, and
+            // one no peer answers refuses the whole call, where the run would have lost that term's answer without a word
+            final List<fURI> terms = address.hasHost() ? List.of(address) : address.branches().filter(fURI::hasHost).toList();
+            for (final fURI term : terms) {
+                final fURI origin = term.path(List.of());
+                final Obj override = reach(machine, origin, base);
+                if (!override.isObjInst()) {
+                    // AN ADDRESSED MACHINE WITH NO PEER HERE IS NOT A LOCAL OPERATION. The hosted form (`//abc` — no
+                    // scheme, a host) and a wire scheme (`ws://host/...`) name a machine; with no dialed peer the native
+                    // instruction would run LOCALLY and silently drop the authority — `move(//abc)` answered the lhs and
+                    // `from(//abc/x)` read nothing, both indistinguishable from success. A SPACE address is a different
+                    // thing and keeps falling through: its scheme has no dialer (maria:, docker:, mqtt:, …), so the
+                    // instruction is an ordinary local read into that space.
+                    final String scheme = term.scheme();
+                    if (null == scheme || null != Signatures.dialerOf(scheme))
+                        throw unreachable(machine, resolved.tid().basePath(), origin);
+                } else if (address.hasHost()) {
+                    WIRE_LOG.debug("bound %s to the override %s declares", resolved, origin);
+                    return resolved.f(Inst.f.of(new AtPeer(machine.network(), origin, override.asInst().f(), read, submit)));
+                }
             }
-            WIRE_LOG.debug("bound %s to the override %s declares", resolved, origin);
-            return resolved.f(Inst.f.of(new AtPeer(machine.network(), origin, override.asInst().f(), read, submit)));
+            return resolved;
         }
 
         /**

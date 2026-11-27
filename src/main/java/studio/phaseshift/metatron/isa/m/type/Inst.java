@@ -453,27 +453,33 @@ public interface Inst extends Call {
         }
         */
 
+        Inst selected = null;
         try {
-            final Inst resolved = sel.apply(lhs, this, binder);
-            if (null != resolved) {
-                LOG.trace("%s => %s is %s resolved", lhs, resolved, CommonUtil.lambda(() -> resolved.isResolved(false) ? "" : "not"));
-                // Cache disabled - see comment above
-                /*if (cacheKey != null) {
-                    RESOLUTION_CACHE.putIfAbsent(cacheKey, resolved);
-                }*/
-                // A PEER'S INSTRUCTION BINDS HERE, AT COMPILE TIME: a from/to whose address names a dialed peer that
-                // overrides it keeps this resolution's signature and binding, with f() swapped for the peer's body
-                final Inst bound = Network.Helper.atPeer(resolved);
-                // the call's own query rides onto the contract, the contract's keys winning — set on a COPY (tid
-                // clones), never written into the contract: a definition without a vid is bound as itself
-                final Map<String, String> query = new HashMap<>(this.tid().qMap());
-                query.putAll(bound.tid().qMap());
-                return bound.tid(bound.tid().q(query));
-            } else {
+            selected = sel.apply(lhs, this, binder);
+            if (null == selected)
                 LOG.debug("unable to resolve: %s", this);
-            }
         } catch (final Exception e) {
             this.logger().error(e);
+        }
+        if (null != selected) {
+            final Inst resolved = selected;
+            LOG.trace("%s => %s is %s resolved", lhs, resolved, CommonUtil.lambda(() -> resolved.isResolved(false) ? "" : "not"));
+            // Cache disabled - see comment above
+            /*if (cacheKey != null) {
+                RESOLUTION_CACHE.putIfAbsent(cacheKey, resolved);
+            }*/
+            // A PEER'S INSTRUCTION BINDS HERE, AT COMPILE TIME: a from/to whose address names a dialed peer that
+            // overrides it keeps this resolution's signature and binding, with f() swapped for the peer's body. It binds
+            // OUTSIDE THE SELECTOR'S CATCH (Marko, 2026-11-26: "the user should know that their expression fails"): a
+            // selector that cannot choose falls back below, but an address no peer answers is a refusal, not a miss, so
+            // it leaves resolve() and the caller's code answers it as a fail::T -- caught, it ran the native from, which
+            // read nothing here and answered as if nothing were there
+            final Inst bound = Network.Helper.atPeer(resolved);
+            // the call's own query rides onto the contract, the contract's keys winning — set on a COPY (tid
+            // clones), never written into the contract: a definition without a vid is bound as itself
+            final Map<String, String> query = new HashMap<>(this.tid().qMap());
+            query.putAll(bound.tid().qMap());
+            return bound.tid(bound.tid().q(query));
         }
         // find all other insts of the same name
         // if they all have the same domain coefficient as the lhs obj,

@@ -1230,7 +1230,11 @@ public class fURITest extends AbstractMetatronTest {
             "<a{,/b/d,/c/d}>      | a/c/d                       | a{,/b/d,{2}/c/d}",
             "<{{5}http://a.com/a,{4}ws://a.com/a}> | http://a.com/b | {{5}http://a.com/a,http://a.com/b,{4}ws://a.com/a}",
             "<{{5}http://a.com/a,{4}ws://a.com/a}> | ws://a.com/a{-4} | http://a.com/a{5}",
-            "/m/inst/gt           | <{/m/inst/eq,/m/inst/lt}>   | /m/inst/{eq,gt,lt}"
+            "/m/inst/gt           | <{/m/inst/eq,/m/inst/lt}>   | /m/inst/{eq,gt,lt}",
+            // terms that differ in their host branch at the root, a hosted spelling as surely as a schemed one
+            "//east/x             | //west/x                    | {//east/x,//west/x}",
+            "//west/x{2}          | //east/x                    | {//east/x,{2}//west/x}",
+            "//east/x             | ws://west:1/x               | {//east/x,ws://west:1/x}"
     }, delimiter = '|')
     public void testPlus(final String f1, final String f2, final String expected) {
         final fURI furi1 = f(f1);
@@ -2401,9 +2405,28 @@ public class fURITest extends AbstractMetatronTest {
             "<{a[x,y],a[x]}>                         % a[x,y]|a[x]",
             "<{/m/int,{1}{2}/m/int}>                 % /m/int|{2}/m/int",
             "<http://a.com/{a,b/c}>                  % http://a.com/a|http://a.com/b/c",
+            "<{//east/x,//west/x}>                   % //east/x|//west/x",
+            "<{{2}//east/x,ws://west:1/x}>           % //east/x{2}|ws://west:1/x",
     }, delimiter = '%')
     void testBranches(final String furi, final String expected) {
         assertEquals(Arrays.asList(expected.split("\\|")), f(furi).branches().map(fURI::toString).toList());
+    }
+
+    /**
+     * A ROOT TERM LEADING WITH {@code //} NAMES A HOST: it is a whole uri, never the absolute path {@code /east/x}
+     * that a hoisted branch of absolute paths reads, so each term keeps the machine its read goes to. A path printed
+     * {@code //east/x} and a uri addressed at east print alike, which is why the host itself is asserted.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<{//east/x,//west/x}>                   % east|west",
+            "<{//east/x,ws://west:1/x}>              % east|west",
+            "<{//east/x,/y}>                         % east|null",
+            // the hoist is untouched: a branch of absolute paths is still a path, and names no host
+            "<{/east/x,/west/x}>                     % null|null",
+    }, delimiter = '%')
+    void testARootTermLeadingWithTwoSlashesNamesAHost(final String furi, final String hosts) {
+        assertEquals(Arrays.asList(hosts.split("\\|")), f(furi).branches().map(term -> String.valueOf(term.host())).toList());
     }
 
     /**
@@ -2568,8 +2591,9 @@ public class fURITest extends AbstractMetatronTest {
             "<a/b/c{,/d}>                     % a|b|c{,/d}",
             "</{,b/}c>                        % |{,b/}c",
             "<a{/0,/1}>                       % a{/0,/1}",
-            // a root branch of whole uris is one segment, not a scheme
+            // a root branch of whole uris is one segment, not a scheme -- nor a host, nor an absolute path
             "<{{5}http://a.com/a,{4}ws://a.com/a}> % {{5}http://a.com/a,{4}ws://a.com/a}",
+            "<{//east/x,//west/x}>            % {//east/x,//west/x}",
             "<{a[x,y],a[x]}>                  % {a[x,y],a[x]}",
     }, delimiter = '%')
     void testBranchedPathParsing(final String furi, final String segments) {

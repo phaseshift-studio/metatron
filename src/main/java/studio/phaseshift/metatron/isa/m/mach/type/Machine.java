@@ -172,6 +172,10 @@ public interface Machine extends Rec, AutoCloseable {
         // to coefficient one, which must not be imposed on an ordinary read, and a RELATIVE name stays
         // relative -- "in the machine" is memory's contract to interpret.
         final fURI name = Helper.align(machine, vid);
+        // A SUM OF NAMES ALIGNS TO A SUM OF ORIGINS (//{ginger,chibi}/a, //+/a: Network.alignPrefix), read term by term
+        // as a written sum is
+        if (name.hasBranches())
+            return Machine.read(name);
         // THE NETWORK'S Q-PROCS APPLY HERE, not inside Network: the layer is the one place a vid is handed to a
         // source, so a `?subq` on a peer address registers in THIS VM (the layer's pre_write consumes the write)
         // instead of riding the wire and registering on the peer.
@@ -248,6 +252,9 @@ public interface Machine extends Rec, AutoCloseable {
         // aligned once at the gatekeeper, exactly as read -- a prefixed spelling must land where its
         // aligned form lands, on the wire and in the index alike.
         final fURI name = Helper.align(machine, vid);
+        // ... and a sum of names, written term by term as a written sum is (see read)
+        if (name.hasBranches())
+            return Machine.write(name, obj);
         // the same layer as read, under the same host gate: a write the network's q-procs answer (a `?subq`
         // registration) never reaches the wire, and the write's own answer is the network's reply
         final Network network = machine.network();

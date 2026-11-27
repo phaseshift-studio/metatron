@@ -1818,14 +1818,16 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
          * absolute path of relative elements, its marker hoisted into a leading empty segment ({@code <{/a,/b}/c>} →
          * {@code ["", {a,b}, c]}), unless those elements would read as a coefficient ({@code {/0,/1}} is not
          * {@code /{0,1}}). Any other branch keeps its elements verbatim: {@code {,/b}} is the empty uri and {@code /b},
-         * and {@code a/{/b,/c}/d} is {@code [a, {/b,/c}, d]}.
+         * and {@code a/{/b,/c}/d} is {@code [a, {/b,/c}, d]}. AN ELEMENT LEADING WITH {@code //} NAMES A HOST, a whole
+         * uri and never an absolute path: {@code {//chibi/a,//ginger/a}} is the sum of two machines' {@code /a}, which
+         * the hoist read as the paths {@code /chibi/a} and {@code /ginger/a}.
          */
         private static List<String> normalizeBranch(final String segment, final boolean leading) {
             if (segment.length() < 2 || segment.charAt(0) != '{' || segment.charAt(segment.length() - 1) != '}')
                 return List.of(segment);
             final List<String> elements = splitBranchElements(segment.substring(1, segment.length() - 1));
             final List<String> relative = elements.stream().map(element -> element.startsWith("/") ? element.substring(1) : element).toList();
-            final boolean absolute = leading && elements.stream().allMatch(element -> element.startsWith("/"))
+            final boolean absolute = leading && elements.stream().allMatch(element -> element.startsWith("/") && !element.startsWith("//"))
                     && (1 == elements.size() || !COEFFICIENT_BODY_PATTERN.matcher(String.join(",", relative)).matches());
             final List<String> atoms = absolute ? relative : elements;
             final String branch = 1 == atoms.size() ? atoms.getFirst() : "{" + String.join(",", atoms) + "}";
