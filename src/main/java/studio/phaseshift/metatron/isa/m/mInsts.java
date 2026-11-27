@@ -1496,7 +1496,7 @@ public final class mInsts {
                         .desc("""
                                 a partitioning function: each obj of the lhs is routed to the lane its partition
                                 function keys, where a branch routes every obj to every lane. partition(p, k => c, …)
-                                means the branch whose lanes are guarded by the fibres of p,
+                                means the branch whose lanes are guarded by the fibers of p,
                                 branch(k => filter(p.eq(k)).c, …), and evaluates p once per obj, not every guard.
                                 the partition function is applied to each obj, and what it answers is applied to the obj
                                 in turn: a value answers itself, and a stored function (*xyz: an instruction, a code or a

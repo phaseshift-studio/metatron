@@ -32,6 +32,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static studio.phaseshift.metatron.Tokens.HASH_FURI;
+import static studio.phaseshift.metatron.Tokens.HOP;
+import static studio.phaseshift.metatron.Tokens.TIMEOUT;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
@@ -43,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * PARTITION — routes each member of its lhs to the lane its partition function keys, where {@link BranchInst}
  * routes every member to every lane (the code ring's {@code +}). It means a branch whose lanes are guarded by the
- * fibres of one function,
+ * fibers of one function,
  * <pre>
  *   partition(p, k_1 => c_1, …, k_n => c_n)  =  branch(k_1 => filter(p.eq(k_1)).c_1, …, k_n => filter(p.eq(k_n)).c_n)
  * </pre>
@@ -55,8 +58,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *     member. So {@code mod(2)}, a key template {@code <${mod(2)}>} and {@code *xyz} all key a member. A key is a uri,
  *     or an int read as its decimal spelling.</li>
  *     <li>A LANE'S KEY IS ITS PLACE OR ITS LABEL: a hosted key ({@code //a}) is a place, and the lane is the cut its
- *     program runs in there, as a keyed branch's lane is; any other key ({@code <0>}) is a label, and the lane runs
- *     here. A key naming two lanes names their branch, and the member goes to each. A {@code <#>} lane takes every
+ *     program runs in there, as a keyed branch's lane is, timed and budgeted by its key's {@code ?timeout} and
+ *     {@code ?hop}; any other key ({@code <0>}) is a label, and the lane runs here. A key naming two lanes names their branch, and the member goes to each. A {@code <#>} lane takes every
  *     member no other key names; with none, such a member fails the call. A member keyed noobj goes to each lane whose
  *     key is zeroable ({@code {?}//a}, {@code {*}<a>}); with none, it fails the call too.</li>
  *     <li>A PARTITION IS A BARRIER INSTRUCTION (Marko, 2026-11-27): its dom, {@code {*}} by default, gathers the whole
@@ -79,23 +82,21 @@ public class PartitionInst extends MInst {
      * a layout reads it: a lane receives its key's share, never the whole lhs (a weight of zero).
      */
     public static List<BranchInst.Lane> lanes(final Inst partition) {
-        return routes(partition).stream().map(route -> {
+        // the routes, every argument after the partition function
+        return partition.args().<Obj>elements().skip(1).map(Obj::asRel).map(route -> {
             // THE ROUTE'S COEFFICIENT IS ITS KEY'S: it says whether the lane takes noobj (a zeroable key, {?}//a), and a rel
             // multiplies it into both its sides, so the place is read at one and the program runs as written
             final fURI key = route.first().uriValue().one();
             final List<Inst> program = BranchInst.program(route.c(cInt.ONE()).asRel().second());
             final Obj tail = program.isEmpty() ? code(new ArrayList<>()) : code(program).tryToInst();
-            return key.hasHost()
-                    ? new BranchInst.Lane(key, program, 1L, instB(CUT_INST_TID, lst(uri(Machine.Helper.align(Machine.current(), key)), tail)))
-                    : new BranchInst.Lane(null, program, 1L, tail);
+            if (!key.hasHost())
+                return new BranchInst.Lane(null, program, 1L, tail);
+            // A HOSTED LANE IS TIMED AND BUDGETED AS A KEYED BRANCH'S (BranchInst#lanes): the key's ?timeout is its cut's,
+            // and its ?hop rides with its place
+            final fURI place = null == key.q(HOP) ? key.qLess() : key.qLess().q(HOP, key.q(HOP));
+            return new BranchInst.Lane(place, program, 1L, instB(null == key.q(TIMEOUT) ? CUT_INST_TID : CUT_INST_TID.q(TIMEOUT, key.q(TIMEOUT)),
+                    lst(uri(Machine.Helper.align(Machine.current(), place)), tail)));
         }).toList();
-    }
-
-    /**
-     * The routes, every argument after the partition function.
-     */
-    private static List<Rel> routes(final Inst partition) {
-        return partition.args().<Obj>elements().skip(1).map(Obj::asRel).toList();
     }
 
     /**
@@ -104,10 +105,12 @@ public class PartitionInst extends MInst {
      */
     public Obj route(final Obj lhs) {
         final Obj function = this.arg(0);
-        final List<Rel> routes = routes(this);
-        // keys compare at coefficient one: a bulked member's key carries its count
-        final List<fURI> keys = routes.stream().map(route -> route.first().uriValue().one()).toList();
-        final int rest = keys.indexOf(fURI.Singleton.f("#").one());
+        final List<Rel> routes = this.args().<Obj>elements().skip(1).map(Obj::asRel).toList();
+        // keys compare at coefficient one and without their query: a bulked member's key carries its count, and a lane's
+        // key may carry its cut's ?timeout and ?hop
+        final List<fURI> keys = routes.stream().map(route -> route.first().uriValue().one().qLess()).toList();
+        // every <#> lane takes the rest, as every lane a key names takes its members
+        final int[] rest = IntStream.range(0, keys.size()).filter(r -> HASH_FURI.equals(keys.get(r))).toArray();
         final List<List<Obj>> shares = keys.stream().map(key -> (List<Obj>) new ArrayList<Obj>()).toList();
         for (final Obj member : lhs.stream().toList()) {
             // what the function answers is applied to the member in turn: a value answers itself, and a stored function
@@ -115,18 +118,19 @@ public class PartitionInst extends MInst {
             final Obj answer = function.apply(member).apply(member);
             if (!answer.isNoObj() && !answer.isUri() && !answer.isInt())
                 throw MTronException.of("a partition key is a uri or an int: %s keys %s as %s", function, member, answer);
-            final fURI key = answer.isUri() ? answer.uriValue().one()
-                    : answer.isInt() ? fURI.Singleton.f(answer.intValue().toString())
-                    : null;
+            // a typed zero (a uri's noobj, an int's) is noobj too: it keys nothing
+            final fURI key = answer.isNoObj() ? null
+                    : answer.isUri() ? answer.uriValue().one().qLess()
+                    : fURI.Singleton.f(answer.intValue().toString());
             // A KEY NAMING TWO LANES NAMES THEIR BRANCH: the member goes to each, as the guarded branch sends it. A MEMBER
             // KEYED NOOBJ goes to each lane whose key is zeroable, {?}//a or {*}<a> (Marko, 2026-11-27)
             final int[] named = IntStream.range(0, keys.size())
                     .filter(r -> null == key ? routes.get(r).first().c().isZeroable() : keys.get(r).equals(key)).toArray();
             if (0 == named.length && null == key)
                 throw MTronException.of("no lane of the partition is zeroable ({?}//a): %s keys %s noobj", function, member);
-            if (0 == named.length && -1 == rest)
+            if (0 == named.length && 0 == rest.length)
                 throw MTronException.of("no lane of the partition is keyed %s: %s keys %s so, and no <#> lane takes the rest", answer, function, member);
-            (0 == named.length ? IntStream.of(rest) : IntStream.of(named)).forEach(r -> shares.get(r).add(member));
+            IntStream.of(0 == named.length ? rest : named).forEach(r -> shares.get(r).add(member));
         }
         final List<BranchInst.Lane> lanes = lanes(this);
         return BranchInst.await(IntStream.range(0, lanes.size())

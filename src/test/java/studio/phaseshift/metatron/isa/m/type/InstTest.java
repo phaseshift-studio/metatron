@@ -931,6 +931,10 @@ public class InstTest extends AbstractObjTest {
             "{3}5     % cc()                   % true",
             "5        % cc(3)                  % true",
             "{1,1,2}  % order(cc())            % true",
+            // PARTITION IS PURE (Marko, 2026-11-27): declared in mInsts, and as pure as its function and its lanes
+            "{1,2,3}  % partition(mod(2), <0> => plus(1), <1> => plus(2))             % true",
+            "{1,2,3}  % partition(mod(2), <0> => plus(1), <1> => print(_))            % false",
+            "{1,2,3}  % partition(print(_).mod(2), <0> => plus(1), <1> => plus(2))    % false",
     }, delimiter = '%')
     public void testAnInstructionIsPureWhenDeclaredOrComposedOfPureInstructions(final String lhs, final String code, final boolean pure) {
         final Call parsed = ObjmtronSerializer.parse(code.trim()).as();

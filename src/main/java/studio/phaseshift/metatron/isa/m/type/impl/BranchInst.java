@@ -206,15 +206,15 @@ public class BranchInst extends MInst {
     /**
      * Whether a branch is a LAYOUT: it routes its lanes (a key, a lane headed by a move or a cut) or splits its lhs
      * ({@code ?split}, a deal or a copy), so a planner does not plan around it, a rewrite neither sums nor factors its
-     * members, and only a lone lane that runs here is inlined.
+     * members, and only a lone lane that runs here is inlined. A PARTITION is a layout when a key of its names a place
+     * ({@link PartitionInst#lanes}).
      */
     public static boolean isLayout(final Inst inst) {
         final fURI base = inst.tid().basePath();
         return (BRANCH_INST_TID.equals(base)
                 && (inst.args().isRec() || inst.tid().hasQ(SPLIT) || lanes(inst).stream().anyMatch(lane -> !lane.home())))
-                // A PARTITION WHOSE LANES LEAVE FOR PLACES ROUTES THEM, as a keyed branch does: a hosted key is a place
-                || (PARTITION_INST_TID.equals(base) && inst.args().<Obj>elements().skip(1)
-                .anyMatch(route -> route.isRel() && route.asRel().first().isUri() && route.asRel().first().uriValue().hasHost()));
+                // A PARTITION WHOSE LANES LEAVE FOR PLACES ROUTES THEM, as a keyed branch does (PartitionInst#lanes)
+                || (PARTITION_INST_TID.equals(base) && PartitionInst.lanes(inst).stream().anyMatch(lane -> !lane.home()));
     }
 
     /**

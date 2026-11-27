@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * PARTITION ROUTES EACH OBJ TO ONE LANE (Marko, 2026-11-27): partition(p, k => c, …) means the branch whose lanes are
- * guarded by the fibres of p, branch(filter(p.eq(k)).c, …), and evaluates p once per obj. These rows are the local half,
+ * guarded by the fibers of p, branch(filter(p.eq(k)).c, …), and evaluates p once per obj. These rows are the local half,
  * keys that are labels; a hosted key's lane runs at its place (AbstractDistributedComputingTest).
  */
 public class PartitionTest extends AbstractMetatronTest {
@@ -66,10 +66,20 @@ public class PartitionTest extends AbstractMetatronTest {
             // ... a page of two, a fold per page: {1,2} gives <0> 2 and <1> 1, {3,4} gives 4 and 3
             "{1,2,3,4}.partition?<=int{2}(mod(2), <0> => sum(), <1> => sum())                     % {2,1,4,3}",
             "{1,2,3,4}.partition?<=int{2}(mod(2), <0> => sum(), <1> => sum()).sum()               % 10",
+            // ... and the three grains told apart by how many folds answer: one, one per page, one per obj
+            "{1,3,5,7}.partition(mod(2), <1> => sum()).count()                                   % 1",
+            "{1,3,5,7}.partition?<=int{2}(mod(2), <1> => sum()).count()                          % 2",
+            "{1,3,5,7}.partition?<=int{?}(mod(2), <1> => sum()).count()                          % 4",
             // a lane with an empty share runs nothing: no obj keys <2>, so its count never answers 0
             "{1,3}.partition(mod(2), <0> => count(), <1> => count(), <2> => count())              % 2",
             // A <#> LANE TAKES THE REST: 3 keys <0>, and 1 and 2 key nothing else named
             "{1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100))                             % {3,101,102}",
+            // ... and every <#> lane takes it, as every lane a key names takes its members
+            "{1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100), <#> => plus(200))           % {3,101,102,201,202}",
+            // a key compares without its query, which a hosted lane's cut reads (?timeout, ?hop)
+            "{1,2}.partition(mod(2), <0?timeout=5000> => plus(10), <1> => plus(20))               % {12,21}",
+            // a typed zero keys nothing, as noobj does: {0}1 is an int's zero
+            "{1,2}.partition(map({0}1), {?}<a> => plus(10))                                       % {11,12}",
             // a key template keys each obj as its spelling says
             "{1,2,3,4}.partition(<${mod(2)}>, <0> => plus(10), <1> => plus(20))                   % {12,14,21,23}",
             // A KEY FUNCTION THAT SPLITS ON A PREDICATE keys the objs it admits and leaves the rest noobj, which a
@@ -136,7 +146,7 @@ public class PartitionTest extends AbstractMetatronTest {
                         rel(uri(f("1")), ObjmtronSerializer.parse("plus(20)")),
                         rel(uri(f("2")), ObjmtronSerializer.parse("plus(30)"))))))
                 .apply(noobj());
-        assertEquals(ObjmtronSerializer.parse("{13,21,24,32}"), answer);
+        checkEquality(LOG, ObjmtronSerializer.parse("{13,21,24,32}"), answer, true);
         assertEquals(4, calls.get(), "one call per obj, not one per lane per obj");
     }
 }
