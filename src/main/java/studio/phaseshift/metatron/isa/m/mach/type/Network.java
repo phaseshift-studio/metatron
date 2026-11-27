@@ -283,11 +283,16 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         // //chibi/a, and //+/a is that sum over every name this level sees, so the spelling aligns to the sum of the
         // origins, which a read and a write take term by term. The host's branch is read by the uri algebra, a point on
         // a name included ({{2}ginger,chibi}), and an unbound name in the sum is answered as written, as it is alone.
-        // ONLY A BRANCH IS A SUM: a brace the algebra reads as a coefficient ({0,1}, a range) names no one, so it is
-        // looked up as the label it is spelled as, and fails closed downstream like any unbound name
+        // A HOST HOLDS NO COEFFICIENT, so its brace is always a sum of names, numeric ones included ({0,1}, the names a
+        // spawn gives, which the algebra alone would read as a range): each name is written with its point, explicit
+        // where the caller left it implicit, so the algebra reads a branch
         final String host = vid.host();
-        final fURI names = '{' == host.charAt(0) ? f(host) : null;
-        if (fURI.isOnePattern(host) || (null != names && names.hasBranches()))
+        final fURI names = '{' == host.charAt(0) && '}' == host.charAt(host.length() - 1)
+                ? f(Arrays.stream(host.substring(1, host.length() - 1).split(","))
+                .map(name -> name.startsWith("{") ? name : "{1}" + name)
+                .collect(Collectors.joining(",", "{", "}")))
+                : null;
+        if (fURI.isOnePattern(host) || null != names)
             return fURI.Helper.sum((null == names
                     ? Component.Prefix.Helper.effectivePrefixes(this).keys().filter(Obj::isUri).map(Obj::uriValue)
                     : names.branches())
