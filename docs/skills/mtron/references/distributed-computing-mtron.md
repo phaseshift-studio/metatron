@@ -154,7 +154,8 @@ no place, through `peer`, `#` or `//host`, and neither is its own address in the
 |----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `stream` (the default)           | **yes** — today's stride division, the layout `law_shard` has always emitted                                                                                     |
 | `copy`                           | **only behind idempotence** — one part, the whole seed on every lane; legal only when the cut's combiner declares `idempotent`, else the unchanged chain         |
-| `block`, `key`, `owner`, `index` | **decline** — their premises (order, a key, an addressed seed, a generator) are not held yet, so the decision is the identity, never a plausible-looking reorder |
+| `owner`                          | **over an addressed seed alone** (B, C): one part per owner, each lane reading its own; the default reads as `owner` there, and a `copy` of one declines |
+| `block`, `key`, `index`          | **decline** — their premises (order, a key, a generator) are not held yet, so the decision is the identity, never a plausible-looking reorder |
 
 An unreadable `?split` is refused loudly (the key and the text), never defaulted to `stream`.
 
@@ -279,8 +280,8 @@ copies of its answer. The rows write the keyed spelling, which reads the same.
 | key   | pre-write                                                          | rewrite                                                                                            |
 |-------|--------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
 | **A** | `{1,2,3,4}.plus(1).count()`                                        | `branch?<={0}(<p_i> => start?hop=0(part_i).plus(1).count(), …).sum()`                              |
-| **B** | `*/usr/data/+/current.plus(1).sum()`                               | `branch(<a_i> => from?hop=0(</usr/data/+/current>).plus(1).sum(), …).sum()`                        |
-| **C** | `*<ws://host:8555/n/+>.plus(1).sum()`                              | `branch(<ws://host:8555> => from?hop=0(</n/+>).plus(1).sum()).sum()`                               |
+| **B** | `*//{a,b}/p.count()`, `*//+/p.count()`                             | `branch(<a> => from?hop=0(</p>).count(), <b> => from?hop=0(</p>).count()).sum()`                   |
+| **C** | `*//a/p.count()`                                                   | `branch(<a> => from?hop=0(</p>).count()).sum()`                                                    |
 | **D** | any shard                                                          | `branch(<p_i> => s_i, …).combiner`, every lane a `virtual::T`                                      |
 | **E** | `{1,…,8}.plus(1).sum?hop=2()`                                      | a nested `start?hop=n-1(p_i)…` at each interior node: the dial graph is the tree                   |
 | **F** | a `lst`-partitioned fold                                           | a pipeline: the running total travels neighbor to neighbor                                         |
@@ -321,6 +322,18 @@ first reply wins) is not written yet.
 `N` done 2026-11-22 — `law_bsp`, its own rule beside `law_shard` (Marko): a whole-frontier `repeat?<=A{*}` whose code
 is pure and floatable has its code dealt over the dialed peers on every pass, the loop and its predicates home; see *N*
 below.
+`B` and `C` done 2026-11-26 — an ADDRESSED SEED (`Shard.owners`): a `from` whose literal address names machines is
+read where each part lives. The address is a sum of names (`//{a,b}/p`, the host brace always names, numeric ones
+included), every name in the prefix table (`//+/p`), a root branch of terms (`<{/p,//a/p}>`, a term with no host
+being a home lane), or one origin (C). Each term's owner is the dialed peer that answers its origin and serves the
+route. One lane per owner reads its own part, `from(</p>)` localized there, and the floatable run and the fold ship
+with it; home recombines through the computed combiner. An owner's part lives at no other place, so no lane is
+dropped by an arity or dealt elsewhere, and a term no dialed peer serves leaves the read as written, where
+`Network.Helper.atPeer` refuses it. The read must head its run: an effect between it and the fold keeps it home, and
+the fold ships over the bag it hands on. A read is untyped (`#`) on the planning side, so a mean (its lift is declared
+at int and real) or a sum (a str sum is not commutative) over one stays home; `count` and `order` recombine through
+derivations that hold at any carrier. At the owner, the lane is compiled there, so a database space holding `/p` can
+take the fold natively (C's `native_count`). Pinned by the B and C rows of `AbstractDistributedComputingTest`.
 An empty box is *not* "unsound": the law holds, the lowering is unwritten. `F` is struck for streams (order lives in
 `lst`, never a bag); `M` is a note; `I` is infrastructure. `C` needs only Thm 5 and a pure chain. `T` is the machine
 semiring's groupoid, the stream ring's process dual. `V`'s unrolls are independent terms (Definition 3), which is why
@@ -349,7 +362,7 @@ distribution — the menu (A–W)
 │  ├─ pipeline · associative          → F
 │  └─ shuffle · keyed                 → (G's hash-route; M(3))
 ├─ by the location                (native · delegation — where the work lives)
-│  └─ B  C  Q  P  T:✅
+│  └─ B:✅  C:✅  Q  P  T:✅
 ├─ orthogonal                     (multiply any fan-out)
 │  └─ D:✅  S:✅  U:✅  V:✅ (the run's own multiplicity)
 └─ composite & substrate          (built from the above)

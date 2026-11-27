@@ -96,8 +96,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <caption>the distributed-computing pattern menu</caption>
  *   <tr><th>row</th><th>pattern</th><th>law</th><th>pre-write motif</th><th></th></tr>
  *   <tr><td>A</td><td>homomorphism shard</td><td>h(a ⊎ b) = h(a) ⊕ h(b)</td><td>{@code {1,2,3,4}.plus(1).count()}</td><td>✅</td></tr>
- *   <tr><td>B</td><td>data-local shard</td><td>from(p) = Σ_a from_a(p)</td><td>{@code *<//usr/data/+>.plus(1).sum()}</td><td></td></tr>
- *   <tr><td>C</td><td>authority push-down</td><td>from · count ↦ native_count</td><td>{@code *<ws://host:8555/n/+>.plus(1).sum()}</td><td></td></tr>
+ *   <tr><td>B</td><td>data-local shard</td><td>from(p) = Σ_a from_a(p)</td><td>{@code *<//{east,west}/n/data>.count()}</td><td>✅</td></tr>
+ *   <tr><td>C</td><td>authority push-down</td><td>from · count ↦ native_count</td><td>{@code *<//east/n/data>.count()}</td><td>✅</td></tr>
  *   <tr><td>D</td><td>parallel fan-out</td><td>⟨x⟩(a+b) = ⟨x⟩a + ⟨x⟩b</td><td>any shard (the transport, not a fold)</td><td>✅</td></tr>
  *   <tr><td>E</td><td>tree reduction</td><td>(a+b+c+d)·r = ((a·r+b·r)·C + (c·r+d·r)·C)·C</td><td>{@code {1,…,8}.plus(1).sum?hop=2()}</td><td>✅</td></tr>
  *   <tr><td>F</td><td>ordered fold</td><td>a·(b·c) = (a·b)·c</td><td>an lst-partitioned fold (streams never shard)</td><td></td></tr>
