@@ -135,6 +135,12 @@ MAVEN_REPO="${MAVEN_REPO:-.build/m2/repository}"
 # repo-root dot dir: killswitch-owned and swallowed by .gitignore's `.*`
 BUILD_TARGET="${METATRON_BUILD_TARGET:-.docker-target}"
 MVN_OPTS="-B -Dmaven.repo.local=/work/$MAVEN_REPO"
+# Mirror the dead "Paho Releases" repository to Central (conf/maven-settings.xml): without
+# it the plugin-prefix scan waits ~181s on a host that stopped answering. Safe here because a
+# throwaway build container has no user settings file for `-s` to shadow.
+if [ -f conf/maven-settings.xml ]; then
+    MVN_OPTS="$MVN_OPTS -s /work/conf/maven-settings.xml"
+fi
 JAR="target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar"
 DOCS_RUNNER="studio.phaseshift.metatron.docs.MarkdownRunner"
 JVM_FLAGS="--enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector \

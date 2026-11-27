@@ -18,6 +18,18 @@ set -euo pipefail
 # ── resolve project root ───────────────────────────────────────────
 cd "$(dirname "$(readlink -f "$0")")/.."
 
+# ── project Maven settings, without shadowing the developer's ──────
+# conf/maven-settings.xml mirrors the DEAD "Paho Releases" repository (declared by the
+# transitive moquette-parent POM) to Central; without it, Maven's plugin-prefix scan sits
+# on that socket for ~181s on a cold resolve.
+# `-s` REPLACES the user settings file rather than merging, so it is passed ONLY when the
+# developer has no ~/.m2/settings.xml of their own — otherwise their proxies, mirrors and
+# credentials would silently disappear.
+SETTINGS_ARGS=()
+if [ -f conf/maven-settings.xml ] && [ ! -f "${HOME:-/nonexistent}/.m2/settings.xml" ]; then
+    SETTINGS_ARGS=(-s conf/maven-settings.xml)
+fi
+
 # ── stdio mcp mode: fd 1 is the protocol wire, so this script's own output
 #    (spinner, maven log, the restart banner) must go to stderr.  The JVM takes
 #    stdout for the protocol; anything the shell prints there first would be
@@ -130,7 +142,7 @@ else
         # a network resolve, and that one shows its downloads on the spinner line.
         # Fully-qualified coordinates also skip plugin-prefix resolution entirely.
         CP_GOAL="org.apache.maven.plugins:maven-dependency-plugin:3.11.0:build-classpath"
-        if "$MVNW" -o -B "$CP_GOAL" \
+        if "$MVNW" -o -B "${SETTINGS_ARGS[@]+"${SETTINGS_ARGS[@]}"}" "$CP_GOAL" \
                 -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" \
                 < /dev/null > "$MVN_LOG" 2>&1; then
             MVN_EXIT=0
@@ -139,7 +151,7 @@ else
             # Resolver-level timeouts (not just wagon): the dead "Paho Releases" host
             # that a transitive POM declares was costing 181s per cold resolve. Bounded
             # to seconds per attempt, maven falls through to the next repo instead.
-            "$MVNW" -B \
+            "$MVNW" -B "${SETTINGS_ARGS[@]+"${SETTINGS_ARGS[@]}"}" \
                 -Dmaven.wagon.http.connectionTimeout=5000 \
                 -Dmaven.wagon.http.readTimeout=15000 \
                 -Daether.connector.http.connectionTimeout=3000 \
@@ -175,7 +187,7 @@ else
         MVN_LOG=$(mktemp)
         set +e
         # same </dev/null, -B and wagon timeouts as the classpath resolve above
-        "$MVNW" -B \
+        "$MVNW" -B "${SETTINGS_ARGS[@]+"${SETTINGS_ARGS[@]}"}" \
             -Dmaven.wagon.http.connectionTimeout=30000 \
             -Dmaven.wagon.http.readTimeout=120000 \
             compile < /dev/null > "$MVN_LOG" 2>&1 &
