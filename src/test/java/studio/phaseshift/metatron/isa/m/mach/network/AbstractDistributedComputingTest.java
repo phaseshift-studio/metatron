@@ -169,6 +169,10 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     }
 
     protected static PeerCluster cluster;
+    /**
+     * the names peers 1 and 2 are called by in this machine's prefix table
+     */
+    private static final List<fURI> NAMES = List.of(f("//east"), f("//west"));
     private static Protocol protocol;
     private static final List<AutoCloseable> clients = new ArrayList<>();
 
@@ -178,6 +182,9 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
      */
     protected static void startPeers(final Protocol over) throws Exception {
         protocol = over;
+        // this machine's own data, a home term of an addressed read (B), written by the source compiler before the
+        // category's compiler, which takes no source, replaces it
+        Machine.evaluate("{7,8}.to?<=int{*}(/n/data)");
         // the boot default: every type check on except code_resolve (Marko, 2026-11-18)
         // law_shard is /m's (Marko, 2026-11-24), but the rows' path::T ([as(cat:path::T)]) is catInstSet's, which
         // the standard test boot does not mount (BootLoader.load mounts only /m, /sys, /m/mach). Import its parent
@@ -186,8 +193,9 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
         InstSet.importInstSet(CAT_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());
         Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, Typer.defaultsOn(flag)));
-        // no peer mounts the category: law_shard is /m's, so a lane with budget left is re-planned wherever it lands
-        cluster = PeerCluster.of(3).seed("import(/m/math)").start();
+        // no peer mounts the category: law_shard is /m's, so a lane with budget left is re-planned wherever it lands. Each
+        // peer holds data of its own at /n/data, {i,10i,100i}, which the addressed rows (B, C) read where it lives
+        cluster = PeerCluster.of(3).seed("import(/m/math)", "{$index,$index0,$index00}.to?<=int{*}($root/data)").start();
         // THE DIAL GRAPH THE TREE FOLLOWS (row E): peers 1 and 2 dial each other and peer 3, which dials no one. A dial
         // is construction, so it happens THERE: a peer is sent the client rec as a value, and constructing it there
         // dials from that peer and indexes the client as its own. Code naming the client type does not travel (this
@@ -207,10 +215,16 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             clients.add(protocol.dial(i));
         assertEquals(2L, Machine.current().network().peers().elements().count(),
                 "this machine holds peers 1 and 2 alone: " + Machine.current().network().peers());
+        // THE NAMES the addressed rows spell their owners by: //east and //west, every name //+ sums. Letters, as a
+        // numeric branch in a host reads as a coefficient ({1,2} is a range)
+        for (int i = 1; i <= 2; i++)
+            Machine.current().network().registerPrefix(NAMES.get(i - 1), protocol.endpoint(i));
     }
 
     @AfterAll
     static void stopPeers() {
+        NAMES.forEach(name -> Machine.current().network().unregisterPrefix(name));
+        Machine.write(f("/n/data"), noobj());
         for (final AutoCloseable client : clients)
             try {
                 client.close();
@@ -282,22 +296,65 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
     }
 
-    /**
-     * B -- data-local shard: from(p) = Σ_a from_a(p). Needs {@code ?split=owner}: one part per ADDRESS OWNER,
-     * so an addressed seed ({@code from}, {@code *<uri>}) can be partitioned by where the data lives.
-     */
-    @Test
-    void test_B_data_local_shard() {
-        LOG.warn("menu row B (data-local shard) currently not implemented");
+    // ================================================================================================
+    // B — data-local shard: from(p) = Σ_a from_a(p). An address that names machines -- a sum of names
+    // (//{1,2}), every name (//+), a root branch of terms -- is read where each part lives: one lane per owner
+    // reads its own part, the run and the fold ship with it, and home recombines the partials through the
+    // computed combiner. C is B with one owner. Peer i holds {i,10i,100i} at /n/data, and this machine {7,8}.
+    // ================================================================================================
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*//{east,west}/n/data.count()      % branch(from(</n/data>).count(),from(</n/data>).count()).sum()     % 6",
+            "*//+/n/data.count()                % branch(from(</n/data>).count(),from(</n/data>).count()).sum()     % 6",
+            "*//{east,west}/n/data.order()      % branch(from(</n/data>).order(),from(</n/data>).order()).kmerge()  % [1,2,10,20,100,200]",
+            // a term with no host is this machine's own, a lane at distance zero
+            "*<{/n/data,//east/n/data}>.count() % branch(from(</n/data>).count(),from(</n/data>).count()).sum()     % 5",
+    }, delimiter = '%')
+    void test_B_data_local_shard(final String code, final String expectedRewriteForm, final String expectedResult) {
+        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
     }
 
     /**
-     * C -- authority push-down: from·count ↦ native_count (Thm 5 + a pure chain). B with a single owner — the
-     * chain is delegated to the space that owns the data instead of being sharded over peers.
+     * C -- authority push-down: from·count ↦ native_count. B with one owner: the chain the address reads runs where
+     * the data lives, and one partial comes home.
      */
-    @Test
-    void test_C_authority_push_down() {
-        LOG.warn("menu row C (authority push-down) currently not implemented");
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*//east/n/data.count()             % branch(from(</n/data>).count()).sum()      % 3",
+            "*//west/n/data.order()             % branch(from(</n/data>).order()).kmerge()   % [2,20,200]",
+    }, delimiter = '%')
+    void test_C_authority_push_down(final String code, final String expectedRewriteForm, final String expectedResult) {
+        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+    }
+
+    /**
+     * WHAT AN ADDRESSED READ KEEPS HOME, and the answer it gives there all the same.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // a budget of zero plans nothing, and the sum is read term by term
+            "*//{east,west}/n/data.count?hop=0()                % from(<//{east,west}/n/data>).count()             % 6",
+            // an effect between the read and the fold keeps the read home: the fold ships over the bag it hands on
+            "*//{east,west}/n/data.is(print(_).gt(5)).count()   % from(<//{east,west}/n/data>).is().branch().sum() % 4",
+            // a read is untyped here, and mean's lift is declared at int and real: no lift, no lanes
+            "*//{east,west}/n/data.mean()                       % from(<//{east,west}/n/data>).mean()              % 55.5",
+    }, delimiter = '%')
+    void test_B_what_an_addressed_read_keeps_home(final String code, final String expectedRewriteForm, final String expectedResult) {
+        checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
+    }
+
+    /**
+     * AN OWNER NO PEER ANSWERS FAILS THE READ: its part lives at no other place, so no lane is dropped and no part is
+     * dealt elsewhere, and the read refuses by the address it named.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*//{east,nobody}/n/data.count()   % <ERROR>",
+            "*//nobody/n/data.count()          % <ERROR>",
+    }, delimiter = '%')
+    void test_B_an_owner_no_peer_answers_fails(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
     }
 
     // ================================================================================================

@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.algebra.rewrite.*;
 import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver.ResolvedPlace;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
@@ -154,20 +155,24 @@ public final class Shard {
             return code;
         final List<Inst> insts = code.insts();
         // THE SEED IS THE INITIAL FORM (dom {0}) at the head of the chain, read off the contract the chain's own typing
-        // resolved it to — never off its name.
+        // resolved it to — never off its name — or AN ADDRESSED READ (B, C): a from whose address names the machines
+        // that hold what it reads (owners)
         final List<Inst> contracts = 2 > insts.size() ? List.of() : contracts(code);
-        if (contracts.isEmpty() || null == contracts.getFirst() || !contracts.getFirst().isInitial())
+        if (contracts.isEmpty() || null == contracts.getFirst())
             return code;
         // the placement that ships — the plan's distributing route — states what its targets must serve
         final Placement route = plan.where().stream().filter(placement -> placement.shape().distributes()).findFirst().orElse(null);
         if (null == route)
+            return code;
+        final Map<fURI, fURI> owners = contracts.getFirst().isInitial() ? null : owners(insts.getFirst(), route, env);
+        if (!contracts.getFirst().isInitial() && null == owners)
             return code;
         // each instruction keyed at the carrier flowing into it, not the seed's
         final List<Type> carriers = carriers(code);
         final List<Inst> typed = IntStream.range(0, insts.size())
                 .mapToObj(i -> 0 == i ? insts.getFirst() : retype(insts.get(i), carriers.get(i)))
                 .toList();
-        final Chain chain = new Chain(insts, typed, contracts, carriers, plan.cut().laws().toArray(Law[]::new), route, env);
+        final Chain chain = new Chain(insts, typed, contracts, carriers, plan.cut().laws().toArray(Law[]::new), route, env, owners);
         // EVERY CUT PLANS THE RUN BEFORE IT. A cut is a fold whose partials recombine through a fold declaring the cut's
         // laws: its run ships, and its combiner brings the computation home, where the next run starts. A run states its
         // own axes; one that states none keeps the axes the run before it resolved, else the plan's, so a budget or a
@@ -236,9 +241,12 @@ public final class Shard {
         // THE ARITY CAPS THE FAN-OUT: at most `w` lanes leave one node; the data still clamps it (`k = min(shares, seed)`).
         final int fanout = (int) Math.min(null == hop.arity().max() ? Integer.MAX_VALUE : hop.arity().max(), Integer.MAX_VALUE);
         // THE PARTITION AXIS: what counts as one place's share. This chunk lowers STREAM and COPY; the other kinds
-        // DECLINE TO THE IDENTITY -- the unchanged chain, never a different-but-plausible layout.
+        // DECLINE TO THE IDENTITY -- the unchanged chain, never a different-but-plausible layout. AN ADDRESSED SEED IS
+        // PARTED BY ITS OWNERS (owner, the default reading as owner there), and a copy of it declines
         final Partition split = axes.split();
-        if (Partition.Kind.STREAM != split.kind() && Partition.Kind.COPY != split.kind()) {
+        final boolean owned = 0 == from && null != chain.owners();
+        if (!(owned ? EnumSet.of(Partition.Kind.STREAM, Partition.Kind.OWNER) : EnumSet.of(Partition.Kind.STREAM, Partition.Kind.COPY))
+                .contains(split.kind())) {
             log.debug("?split={} does not lower in this chunk: the fold stays where it stands ({})", split, insts.subList(from, end));
             return null;
         }
@@ -271,6 +279,12 @@ public final class Shard {
         // carried to the run by the instructions that stay home before it: its one multiplicity is a span range in the run.
         final Inst head = insts.getFirst();
         final boolean literal = 0 == from && 1 == runIndex && literal(head);
+        // AN ADDRESSED SEED (B, C) IS READ WHERE IT LIVES: each lane reads its owner's part of the address, so the lanes
+        // are the owners, and none is dropped or dealt another's part. Its run must start at the read, or the read stays
+        // home, and what it hands on is a bag the branch deals as any other
+        final boolean addressed = owned && 1 == runIndex;
+        if (owned && !addressed && Partition.Kind.OWNER == split.kind())
+            return null;
         final long seed = literal ? head.arg(0).stream().count() : Long.MAX_VALUE;
         final boolean one = literal ? 1 == seed : one(chain, runIndex);
         // THE RUN AXIS: a closed span range or a point in the run, factored when the seed is one obj. The unrolls a^[m,n]
@@ -307,12 +321,13 @@ public final class Shard {
         // arity
         final int cap = (int) Math.min(members, Integer.MAX_VALUE);
         // THE CANDIDATES are the run's place set, and nothing else: the peer enum is the dialed set, and a machine the
-        // roster knows is a candidate only when the place set names it (//host). Planning never dials.
-        final List<ResolvedPlace> shares = shares(resolve(chain.env(), chain.route(), axes.place()), cap,
+        // roster knows is a candidate only when the place set names it (//host). Planning never dials. AN ADDRESSED SEED'S
+        // CANDIDATES ARE ITS OWNERS, each one a lane, so an arity that would drop one declines
+        final List<ResolvedPlace> shares = addressed ? List.of() : shares(resolve(chain.env(), chain.route(), axes.place()), cap,
                 runAxis || copy ? fanout : Math.min(fanout, cap));
         // NOTHING SHIPS: no place answered, or the single home lane — one home share is the code that already stands
         // here. Several home shares are the lanes case, a peerless machine sharding.
-        if (1 >= shares.size() && shares.stream().allMatch(ResolvedPlace::isLocal))
+        if (addressed ? chain.owners().size() > fanout : 1 >= shares.size() && shares.stream().allMatch(ResolvedPlace::isLocal))
             return null;
         // THE FORM IS RESTATED, NEVER THE NUMBER: the lane's budget is the same arity with the height decremented and
         // the unstated arity keeps its spelling; below a height of one the leaf states the bare point, 0.
@@ -323,6 +338,8 @@ public final class Shard {
         // Under the run axis a lane is at most one per unroll or copy, its share chosen by WORK for a span
         // (splitByCost) and evenly for a point.
         final Map<fURI, Integer> places = new LinkedHashMap<>();
+        if (addressed)
+            chain.owners().keySet().forEach(owner -> places.put(owner, 1));
         shares.forEach(share -> places.merge(share.isLocal() ? fURI.Singleton.f("~") : share.authority(), 1, Integer::sum));
         final List<Map.Entry<fURI, Integer>> keys = places.entrySet().stream()
                 .flatMap(key -> runAxis || copy || !BranchInst.home(key.getKey()) ? Stream.of(key)
@@ -351,6 +368,9 @@ public final class Shard {
             final List<Inst> lane = new ArrayList<>();
             if (literal)
                 lane.add(instB(START_INST_TID, lst(runAxis || copy ? head.arg(0) : objs(parts.get(r)))));
+            // an owner's lane reads its own part, the address localized to where it lives
+            if (addressed)
+                lane.add(instB(FROM_INST_TID, lst(uri(chain.owners().get(keys.get(r).getKey())))));
             for (int i = runIndex; i < stop; i++) {
                 final Inst inst = raw(insts.get(i));
                 // a NARROWED span or point is a fresh instruction, never a clone: Inst.tid(fURI) clones (and the clone
@@ -381,7 +401,7 @@ public final class Shard {
         // resolves to #{*}, which the combiner after it cannot bind (kmerge's lst[{*}A{*}]{*} fell back to # => #, a
         // lst{1} read as {*}). Profiling lanes answer reports, so they state none.
         final fURI carrier = chain.carriers().get(runIndex).typeId();
-        final fURI dom = literal ? fURI.Singleton.NOOBJ
+        final fURI dom = literal || addressed ? fURI.Singleton.NOOBJ
                 : null == carrier || fURI.Singleton.ALL.basePath().equals(carrier.basePath()) ? InstSet.A.maybeSome()
                 : carrier.maybeSome();
         // an absorbed select keeps a prefix of the cut's lst, so the cut's contract states what those lanes answer too;
@@ -394,14 +414,14 @@ public final class Shard {
         // (BranchInst#share), and each home lane is local's one share. Shares of one apiece are an even part. The set is
         // written as a value is; an authority the writer brackets (a dotted host) leaves the branch's text unparseable
         // as source, as a query cannot hold a bracketed uri, though the branch reads it
-        final fURI branch = literal && runAxis ? BRANCH_INST_TID.dom(dom)
+        final fURI branch = literal && runAxis || addressed ? BRANCH_INST_TID.dom(dom)
                 : BRANCH_INST_TID.dom(dom).q(SPLIT, runAxis || copy ? COPY
                 : keys.stream().allMatch(key -> 1 == key.getValue()) ? PART
                 : ObjmtronSerializer.single().write(lst(places.entrySet().stream()
                 .map(place -> BranchInst.home(place.getKey()) ? (Obj) uri(LOCAL) : uri(place.getKey().origin()).c(cInt.of(place.getValue())))
                 .toList())));
         final List<Inst> master = new ArrayList<>();
-        if (!literal)
+        if (!literal && !addressed)
             master.addAll(insts.subList(from, runIndex));
         master.add(instB(null == lane || fURI.Singleton.ALL.basePath().equals(lane.basePath()) ? branch : branch.rng(lane.maybeSome()), lst(routes)));
         if (profiling) {
@@ -464,6 +484,36 @@ public final class Shard {
      */
     private static boolean literal(final Inst head) {
         return START_INST_TID.equals(head.tid().basePath()) && !head.args().isEmpty() && !head.arg(0).isCall();
+    }
+
+    /**
+     * THE OWNERS OF AN ADDRESSED SEED (B, the data-local shard, and C, its one owner): a from whose literal address
+     * names the machines that hold what it reads, {@code from(p) = Σ_a from_a(p)}, aligned as a read aligns it, so
+     * {@code //{ginger,chibi}/p} and {@code //+/p} are sums of origins (Network.alignPrefix). Keyed by the place each
+     * term's read ships to -- the dialed peer that answers its origin and serves the route, or the home key for a term
+     * with no host or one this machine answers -- and valued by the read made there, a place's terms summed. Null when
+     * the head is no such read, every term is home's, or a term names a machine no dialed peer here serves: an owner's
+     * part lives at no other place, so no lane is dropped or dealt elsewhere, and the read stays as written, where its
+     * address refuses (Network.Helper.atPeer) or reads what it reads.
+     */
+    private static Map<fURI, fURI> owners(final Inst head, final Placement route, final Env env) {
+        if (!FROM_INST_TID.equals(head.tid().basePath()) || 1 != head.args().count() || !head.arg(0).isUri()
+                || head.arg(0).uriValue().hasTemplates())
+            return null;
+        final List<fURI> dialed = PlaceResolver.resolve(PlaceSet.peer(), env, route.inst()).stream().map(ResolvedPlace::authority).toList();
+        final Machine machine = Machine.current();
+        final Map<fURI, fURI> owners = new LinkedHashMap<>();
+        // each term of a root branch is aligned in turn ({/a,//east/a} holds a name), and one that aligns to a sum is
+        // its terms
+        for (final fURI term : Machine.Helper.align(machine, head.arg(0).uriValue()).branches()
+                .flatMap(written -> Machine.Helper.align(machine, written).branches()).toList()) {
+            final fURI place = !term.hasHost() || Network.Helper.reachesSelf(term.origin(), env.authorities()) ? fURI.Singleton.f("~")
+                    : dialed.stream().filter(origin -> Network.Helper.sameService(origin, term.origin())).findFirst().orElse(null);
+            if (null == place)
+                return null;
+            owners.merge(place, term.localize(), fURI::plus);
+        }
+        return owners.keySet().stream().allMatch(BranchInst::home) ? null : owners;
     }
 
     /**
@@ -627,10 +677,11 @@ public final class Shard {
 
     /**
      * THE CHAIN a walk plans over, read once: its instructions, each one typed at the carrier flowing into it, the
-     * contract each resolved to, the carriers, the cut's laws, the plan's distributing route, and the snapshot.
+     * contract each resolved to, the carriers, the cut's laws, the plan's distributing route, the snapshot, and the
+     * owners of an addressed seed ({@link #owners}, null for any other head).
      */
     private record Chain(List<Inst> insts, List<Inst> typed, List<Inst> contracts, List<Type> carriers, Law[] laws,
-                         Placement route, Env env) {
+                         Placement route, Env env, Map<fURI, fURI> owners) {
     }
 
     /**
