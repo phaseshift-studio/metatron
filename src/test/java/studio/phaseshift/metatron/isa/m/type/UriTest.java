@@ -686,8 +686,9 @@ public class UriTest extends AbstractAlgebraTest {
             // a host branch is a sum of names, a numeric one too (a host holds no coefficient), and terms that differ in
             // their host sum to a root branch of hosted terms
             "<//{east,west}/a/b>.-<         % {<//east/a/b>,<//west/a/b>}",
-            // mtron reads a numeric brace in a written uri as a coefficient, so numeric names are spelled by template
+            "<//{0,1}/a>.-<                 % {<//0/a>,<//1/a>}",
             "<//{${'0,1'}}/a>.-<            % {<//0/a>,<//1/a>}",
+            "<{ws,http}://{hostA,hostB}/a/b>.-< % {<ws://hostA/a/b>,<ws://hostB/a/b>,<http://hostA/a/b>,<http://hostB/a/b>}",
             "<//{ginger,chibi}/a/{b,c}>.-<  % {<//ginger/a/b>,<//ginger/a/c>,<//chibi/a/b>,<//chibi/a/c>}",
             "<//+/{a,b}>.-<                 % {<//+/a>,<//+/b>}",
             "<//east/a> + <//west/a>        % <{//east/a,//west/a}>",

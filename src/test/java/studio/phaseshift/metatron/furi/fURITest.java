@@ -2414,11 +2414,16 @@ public class fURITest extends AbstractMetatronTest {
             "<//{0,1}/x>                             % //0/x|//1/x",
             "<//{{2}east,west}/x/{a,b}>              % //east/x/a{2}|//east/x/b{2}|//west/x/a|//west/x/b",
             "<//{ginger,chibi}/a/{b,c}>              % //ginger/a/b|//ginger/a/c|//chibi/a/b|//chibi/a/c",
-            // a wildcard host is a host like any other: the path's branch flattens under it
+            // a wildcard host is a host like any other: the path's branch flattens under it, and nothing here asks a
+            // network what + names -- a uri is a uri, and only a read of one (from, a branch's lane) aligns it
             "<//+/{a,b}>                             % //+/a|//+/b",
+            "<//+/a/{b,c}/d>                         % //+/a/b/d|//+/a/c/d",
+            // every slot flattens: the scheme, the host and the path, scheme-major
+            "<{ws,http}://{hostA,hostB}/a/b>         % ws://hostA/a/b|ws://hostB/a/b|http://hostA/a/b|http://hostB/a/b",
+            "<ws://{hostA,hostB}:8555/a/b>           % ws://hostA:8555/a/b|ws://hostB:8555/a/b",
     }, delimiter = '%')
     void testBranches(final String furi, final String expected) {
-        assertEquals(Arrays.asList(expected.split("\\|")), f(furi).branches().map(fURI::toString).toList());
+        assertEquals(Arrays.asList(expected.split("\\|")), idem(furi).branches().map(fURI::toString).toList());
     }
 
     /**
@@ -2431,12 +2436,13 @@ public class fURITest extends AbstractMetatronTest {
             "<{//east/x,//west/x}>                   % east|west",
             "<{//east/x,ws://west:1/x}>              % east|west",
             "<//{east,west}/x>                       % east|west",
+            "<{ws,http}://{hostA,hostB}/a/b>         % hostA|hostB|hostA|hostB",
             "<{//east/x,/y}>                         % east|null",
             // the hoist is untouched: a branch of absolute paths is still a path, and names no host
             "<{/east/x,/west/x}>                     % null|null",
     }, delimiter = '%')
     void testARootTermLeadingWithTwoSlashesNamesAHost(final String furi, final String hosts) {
-        assertEquals(Arrays.asList(hosts.split("\\|")), f(furi).branches().map(term -> String.valueOf(term.host())).toList());
+        assertEquals(Arrays.asList(hosts.split("\\|")), idem(furi).branches().map(term -> String.valueOf(term.host())).toList());
     }
 
     /**

@@ -1209,7 +1209,7 @@ public class mParser {
     }
 
     private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query, final boolean allowLeadingBranch) {
-        final Parser element = m_furi_ip_literal().or(word()).or(m_furi_template()).or(m_furi_branch_literal()).or(m_furi_coefficient_marked_atom()).or(seq(of("::").not(), of("->").not(), anyOf(furiCharacterSet)));
+        final Parser element = m_furi_ip_literal().or(m_furi_host_branch()).or(word()).or(m_furi_template()).or(m_furi_branch_literal()).or(m_furi_coefficient_marked_atom()).or(seq(of("::").not(), of("->").not(), anyOf(furiCharacterSet)));
         // a quoted uri may lead with its span before a `/` (`<{2}/m/int{3}>`): the text goes to f(), which reads it
         final Parser first = allowLeadingBranch ? seq(m_furi_coefficient(), of('/').and()).or(m_furi_leading_coefficient_marked_atom()).or(element) : element;
         // a bare uri (m_furi_bare) keeps a '~' past its first character only before another uri character (m_furi_rest);
@@ -1284,12 +1284,28 @@ public class mParser {
      * Handles one level of nesting (a coefficient inside a branch).
      */
     public static Parser m_furi_branch_literal() {
-        final Parser nested = seq(of('{'), noneOf("}").star(), of('}')).flatten();
-        final Parser body = nested.or(noneOf("}")).plus().flatten();
         return seq(m_furi_coefficient().not(), of('{'),
-                labeled(body, "a coefficient body — {int,int}, {,int}, {int,}, {int}, or a sugar encoding such as {*}, {+}, {?}"),
+                labeled(m_furi_branch_body(), "a coefficient body — {int,int}, {,int}, {int,}, {int}, or a sugar encoding such as {*}, {+}, {?}"),
                 of('}'))
                 .map(t -> "{" + pick(t, 2) + "}");
+    }
+
+    /**
+     * A HOST BRANCH, read together with the {@code //} it follows: {@code //{ginger,chibi}}, {@code //{0,1}}. A host
+     * holds no coefficient, so a brace there is always a sum of names, a numeric one too, where anywhere else the
+     * coefficient takes a numeric brace first ({@link #m_furi_branch_literal}). Like the IP literal
+     * ({@link #m_furi_ip_literal}), it is taken only right after {@code //}, and the text passes through unchanged for
+     * {@code fURI} to read: {@code fURI.branches} flattens it.
+     */
+    public static Parser m_furi_host_branch() {
+        return seq(of("//"), of('{'), m_furi_branch_body(), of('}')).flatten();
+    }
+
+    /**
+     * A branch's body, the text between its braces, holding one level of nested braces (a point on an element).
+     */
+    private static Parser m_furi_branch_body() {
+        return seq(of('{'), noneOf("}").star(), of('}')).flatten().or(noneOf("}")).plus().flatten();
     }
 
     /**
