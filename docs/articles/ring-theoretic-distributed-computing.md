@@ -550,7 +550,7 @@ Shipping each place only its share asks for the other reading, one lane per memb
 $\phi_k = \mathrm{filter}(p = k)$ for the guard that keeps the members $p$ keys $k$. Then
 
 $$
-\mathrm{partition}(p,\ k_1 \Rightarrow c_1, \ldots, k_n \Rightarrow c_n) = \phi_{k_1}\,c_1 + \cdots + \phi_{k_n}\,c_n ,
+\mathrm{partition}(p \Rightarrow \{k_1 \Rightarrow c_1, \ldots, k_n \Rightarrow c_n\}) = \phi_{k_1}\,c_1 + \cdots + \phi_{k_n}\,c_n ,
 $$
 
 the branch whose lanes are guarded by the fibers of $p$, with $p$ evaluated once per member. A key that names a place,
@@ -566,9 +566,9 @@ reads what its keys address where it is held. Keyed by the places themselves, th
 *The Shard Identity* again, its owners named by the keys rather than by the address:
 
 ```mtron_pre
-{1,2,3,4,5,6,7,8}.partition(<//${mod(2)}>, //0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()).sum()
-{1,2,3,4,5,6,7,8}.partition(<//${mod(2)}>, //0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()).explain()>>ext/topology/format
-{0,1}.partition(<//${_}>, //0 => */n/data.count(), //1 => */n/data.count()).sum()
+{1,2,3,4,5,6,7,8}.partition(<//${mod(2)}> => {//0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()}).sum()
+{1,2,3,4,5,6,7,8}.partition(<//${mod(2)}> => {//0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()}).explain()>>ext/topology/format
+{0,1}.partition(<//${_}> => {//0 => */n/data.count(), //1 => */n/data.count()}).sum()
 ```
 
 <aside class="deep-dive">
@@ -602,10 +602,10 @@ alike, one member at a time, and a fold in each lane recombines to the star's an
 
 ```mtron_pre
 {1,2,3,4,5,6,7,8}.branch(filter(mod(2).eq(0)).plus(10), filter(mod(2).eq(1)).plus(20))
-{1,2,3,4,5,6,7,8}.partition?<=int{?}(mod(2), ?0 => plus(10), ?1 => plus(20))
-{1,2,3,4}.partition?<=int{?}(mod(2), ?0 => plus(1), ?1 => plus(1))
+{1,2,3,4,5,6,7,8}.partition?<=int{?}(mod(2) => {?0 => plus(10), ?1 => plus(20)})
+{1,2,3,4}.partition?<=int{?}(mod(2) => {?0 => plus(1), ?1 => plus(1)})
 {1,2,3,4}.branch(plus(1), plus(1))
-{1,2,3,4,5,6,7,8}.partition(mod(2), ?0 => plus(1).mult(2).sum(), ?1 => plus(1).mult(2).sum()).sum()
+{1,2,3,4,5,6,7,8}.partition(mod(2) => {?0 => plus(1).mult(2).sum(), ?1 => plus(1).mult(2).sum()}).sum()
 {1,2,3,4,5,6,7,8}.plus(1).mult(2).sum()
 ```
 
@@ -620,7 +620,7 @@ A partition evaluates $p$ once per member and routes the member to its lane:
 |-----------------------------------------------------------------------|------------------------------------|------------------------|
 | $\sum_i \mathrm{cut}(a_i,\ \phi_{k_i}\,c)$, guards at the places      | $n\,\lvert x\rvert$, at the places | $n\,\lvert x\rvert$ |
 | $\sum_i \phi_{k_i}\,\mathrm{cut}(a_i,\ c)$, guards before the cuts    | $n\,\lvert x\rvert$, at home       | $\lvert x\rvert$     |
-| $\mathrm{partition}(p,\ a_i \Rightarrow c)$                           | $\lvert x\rvert$, at home           | $\lvert x\rvert$     |
+| $\mathrm{partition}(p \Rightarrow \{a_i \Rightarrow c\})$                | $\lvert x\rvert$, at home           | $\lvert x\rvert$     |
 
 **No lane is read for its guard.** A planner could recover the cheap form from a guarded branch only by reading each
 lane's head as a guard, finding one function $p$ under all of them, and proving the guards orthogonal and complete:
@@ -732,7 +732,7 @@ instruction's, as a program writes it, and no planner emits one yet.
 | **U** | $\checkmark$ | profile collation         | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$                                                                               | each shard's profile ships home, and the master collates one report                                                                    |
 | **V** | $\checkmark$ | generative run            | $a^{[m,n]} = \sum_{k=m}^{n} a^k$                                                                                                   | a span range or a point is an index set: the lanes split the unrolls by work, or the copies evenly                                     |
 | **W** | $\checkmark$ | embarrassingly parallel   | $(a + b) \cdot f = a \cdot f + b \cdot f$                                                                                          | no cut: each place runs the floatable run on its share, and the branch's merge brings it all home                                      |
-| **X** | $\checkmark$ | partition by key          | $\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i \mathrm{filter}(p = k_i)\,c_i$                                                | each obj to the lane its key names: a hosted key is a place, so each place is sent its share alone                                     |
+| **X** | $\checkmark$ | partition by key          | $\mathrm{partition}(p \Rightarrow \{k_i \Rightarrow c_i\}) = \sum_i \mathrm{filter}(p = k_i)\,c_i$                                                | each obj to the lane its key names: a hosted key is a place, so each place is sent its share alone                                     |
 
 [To be written: the menu as a tree of these laws, a figure.]
 

@@ -266,7 +266,7 @@ the pattern and keep its letter in parentheses, as in *the generative run (V)*.
 | **U** |                                                                                                      | profile collation           | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$                                                                               | each lane's profile ships home and nests under the master's, timed around the branch              |
 | **V** | <!-- cast: dist-run title="V" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->         | generative run              | $a^{[m,n]} = \sum_{k=m}^{n} a^k$                                                                                                   | a span range or a point is an index set: the lanes split the unrolls by WORK, or the copies evenly |
 | **W** | <!-- cast: dist-parallel title="W" speed_rates="0.5,1,1.5,2" speed_default="1" place="inline" -->    | embarrassingly parallel     | $(a + b) \cdot f = a \cdot f + b \cdot f$                                                                                          | no cut: each place runs the floatable run on its share, and the branch's merge brings it all home |
-| **X** |                                                                                                      | partition by key            | $\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i \mathrm{filter}(p = k_i)\,c_i$                                             | each obj to the lane its key names; a hosted key is a place, so each place is sent its share alone |
+| **X** |                                                                                                      | partition by key            | $\mathrm{partition}(p \Rightarrow \{k_i \Rightarrow c_i\}) = \sum_i \mathrm{filter}(p = k_i)\,c_i$                                             | each obj to the lane its key names; a hosted key is a place, so each place is sent its share alone |
 
 ### the mtron motif rewrites
 
@@ -303,7 +303,7 @@ copies of its answer. The rows write the keyed spelling, which reads the same.
 | **U** | `{1,2,3,4,5}.plus(10).sum().profile()>>format`                     | `profile_collate(branch?<={0}(<p_i> => start?hop=0(part_i).plus(10).sum().profile(), …))>>format`  |
 | **V** | `start(0).{0,1000}plus(1).sum()`                                   | `branch?<={0}(<p_1> => start?hop=0(0).{0,p}plus(1).sum(), <p_2> => …).sum()`, narrowed by WORK     |
 | **W** | `{1,…,8}.complex_computation()`                                    | `branch?<={0}(<p_i> => start?hop=0(part_i).complex_computation(), …)`, and no combiner             |
-| **X** | `{…}.partition(<//${mod(2).plus(1)}>, //1 => f, //2 => f)`        | as written, a layout already: each lane is `cut(<p_k>, f)` over its key's share, and the fold after it stays home |
+| **X** | `{…}.partition(<//${mod(2).plus(1)}> => {//1 => f, //2 => f})`        | as written, a layout already: each lane is `cut(<p_k>, f)` over its key's share, and the fold after it stays home |
 
 **Legend.** The dates behind the tree's ✅ (`A` done; `D` done 2026-10-26; `E`, `G` v1 done 2026-10-28; `S` done 2026-10-28 —
 the axes' `local` designator, `?place=[local,peer]`; `O` free today — it needs no plumbing; `V` v1 done 2026-11-12 — a
@@ -336,7 +336,7 @@ the fold ships over the bag it hands on. A read is untyped (`#`) on the planning
 at int and real) or a sum (a str sum is not commutative) over one stays home; `count` and `order` recombine through
 derivations that hold at any carrier. At the owner, the lane is compiled there, so a database space holding `/p` can
 take the fold natively (C's `native_count`). Pinned by the B and C rows of `AbstractDistributedComputingTest`.
-`X` done 2026-11-27 — `partition(p, k => c, …)` routes each obj down the FIRST route its key admits, by the walk join
+`X` done 2026-11-27 — `partition(p => {k => c, …})` routes each obj down the FIRST route its key admits, by the walk join
 of the rec algebra (`Rec#mult`): `p` keys each obj once, `[# => p(x)] * [k => v, …]` gives the routes that admit the key
 in written order, and the first is kept. `?` on a value admits its equal, on a type its instances, a guard what it
 holds for, and `_` everything, so `_` written last is the else; a key of noobj forms no relation and drops its obj, and
@@ -724,27 +724,26 @@ instruction is still bare when `law_shard` runs, before resolution, so it stays 
 
 ### X — partition by key (the shuffle)
 
-`partition(p, k_1 => c_1, …)` sends each obj down the first route its key admits, where a branch sends it to every
-lane. Routing is the walk join of the rec algebra (`Rec#mult`): the selector `p` keys each obj once (`_` for the obj
-itself), the routes are one table, and `[# => p(x)] * [k_i => c_i]` gives the routes that admit the key in written
+`partition(p => {k_1 => c_1, …})` sends each obj down the first route its key admits, where a branch sends it to every
+lane. Routing is the walk join of the rec algebra (`Rec#mult`): the selector `p` keys each obj once, the routes are
+one table, and `[# => p(x)] * [k_i => c_i]` gives the routes that admit the key in written
 order, of which the first is kept. With disjoint keys it is the branch whose lanes are guarded by the fibers of `p`,
-$\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i \mathrm{filter}(p = k_i)\,c_i$, with `p` run once per obj where
+$\mathrm{partition}(p \Rightarrow \{k_i \Rightarrow c_i\}) = \sum_i \mathrm{filter}(p = k_i)\,c_i$, with `p` run once per obj where
 the guarded branch runs every guard. `p` is applied to each obj once, as written, and what it answers is the key,
 never unwrapped or applied again (Marko, 2026-11-27): a read `*/k` keys by what it reads, and a blocked `|mod(2)` by
 the code it blocks.
 
-The args are varargs of relations (Marko, 2026-11-27): `partition(p, k_1 => c_1, …)` is `partition(p => {k_1 => c_1,
-…})` with `p` a selector whatever it is (`_` keys each obj by itself there, where `_` as a key guards), and written paths
-factor their common key, so `p => k_1 => c_1, p => k_2 => c_2` is the rec form's call. A key that
+The args are varargs of relations (Marko, 2026-11-27), and an argument that is no relation fails the call. Written
+paths factor their common key, so `p => k_1 => c_1, p => k_2 => c_2` is `p => {k_1 => c_1, k_2 => c_2}`. A key that
 computes selects (`mod(2)`, a key template), and a key that answers its obj or nothing guards (a type, `?k`, `_`, any
 filter): a guard that admits an obj opens its whole table, and a value admits its equal. The processor hands a blocking
 instruction its keys raw, so the partition applies each to each obj, never to the gathered lhs.
 
 ```mtron_pre
 {1,2,3,4}.partition(mod(2) => {?0 => plus(10), ?1 => plus(20)})
-{1,2,3,4}.partition(mod(2), ?0 => plus(10), ?1 => plus(20))
+{1,2,3,4}.partition(mod(2) => {?0 => plus(10), ?1 => plus(20)})
 {1,2,3,4}.partition(<${mod(2)}> => {<0> => plus(10), <1> => plus(20)})
-{1,2,3}.partition(mod(3), ?0 => id(), _ => plus(100))
+{1,2,3}.partition(mod(3) => {?0 => id(), _ => plus(100)})
 {1,2,3,4}.partition(?>2 => plus(10), _ => plus(20))
 {1,2,3,4}.partition(int::T => map(<int>), _ => map(<other>))
 ```
@@ -758,9 +757,9 @@ lane's fold folds its whole share once, where a branch's default is one obj at a
 lazy barrier, `{n}` a page of n and `{?}` one obj at a time:
 
 ```mtron_pre
-{1,2,3,4}.partition(mod(2), ?0 => sum(), ?1 => sum())
-{1,2,3,4}.partition?<=int{2}(mod(2), ?0 => sum(), ?1 => sum())
-{1,2,3,4}.partition?<=int{?}(mod(2), ?0 => sum(), ?1 => sum())
+{1,2,3,4}.partition(mod(2) => {?0 => sum(), ?1 => sum()})
+{1,2,3,4}.partition?<=int{2}(mod(2) => {?0 => sum(), ?1 => sum()})
+{1,2,3,4}.partition?<=int{?}(mod(2) => {?0 => sum(), ?1 => sum()})
 ```
 
 A walk runs its code at the last place it passes: a route may name its place after its key (`?0 => //a => code`), a
@@ -771,8 +770,8 @@ keys where they are held, which is B and C by key:
 
 ```mtron
 */data.partition(mod(2) => {?0 => //a => sum(), ?1 => //b => sum()}).sum()
-{1,2,3,4}.partition(mod(2), ?0 => //a => sum(), ?1 => //b => sum()).sum()
-{1,2}.partition(<//${_}>, //1 => *</kv/${_}>.sum(), //2 => *</kv/${_}>.sum())
+{1,2,3,4}.partition(mod(2) => {?0 => //a => sum(), ?1 => //b => sum()}).sum()
+{1,2}.partition(<//${_}> => {//1 => *</kv/${_}>.sum(), //2 => *</kv/${_}>.sum()})
 ```
 
 A partition with a hosted key is a layout (`BranchInst.isLayout`), so `law_shard` leaves its chain as written and the

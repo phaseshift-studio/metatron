@@ -1506,9 +1506,8 @@ public final class mInsts {
                                 (mod(2) => {?0 => …, ?1 => …}). a guard answers its obj or nothing (a type, ?k, _, is,
                                 isa, filter): one that admits an obj opens its whole table, or its one lane
                                 (?>2 => plus(10), _ => plus(20)). a value admits its equal. written paths factor their
-                                common key, so mod(2) => ?0 => x, mod(2) => ?1 => y is mod(2) => {?0 => x, ?1 => y}.
-                                the positional partition(f, k => v, …) is f => {k => v, …} with f a selector whatever it
-                                is, so _ keys each obj by itself there, where _ as a key guards.
+                                common key, so mod(2) => ?0 => x, mod(2) => ?1 => y is mod(2) => {?0 => x, ?1 => y}. an
+                                argument that is no relation fails the call.
                                 a selector's key of noobj forms no relation, and its obj is dropped; none is a key like
                                 any other.
                                 a route's key admits a key as the walk join admits an end: ? on a value its equal (?0), ? on

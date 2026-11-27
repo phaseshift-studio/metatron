@@ -118,7 +118,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <tr><td>U</td><td>profile collation</td><td>p̂(a ⊎ b) = p̂(a) ⊕ p̂(b), ⊕ = keyed union, the figures add or fold</td><td>{@code {1,2,3,4,5}.plus(10).sum().profile()>>format}</td><td>✅</td></tr>
  *   <tr><td>V</td><td>generative run</td><td>a^[m,n] = Σ_k a^k (the unrolls are independent terms)</td><td>{@code start(0).{0,1000}plus(1).sum()}</td><td>✅</td></tr>
  *   <tr><td>W</td><td>embarrassingly parallel</td><td>(a+b)·f = a·f + b·f, f floatable, no cut</td><td>{@code {1,…,8}.plus(1)}</td><td>✅</td></tr>
- *   <tr><td>X</td><td>partition by key (the shuffle)</td><td>partition(p, k⇒c) = branch(k⇒filter(p.eq(k))·c)</td><td>{@code {1,…,6}.partition(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum())}</td><td>✅</td></tr>
+ *   <tr><td>X</td><td>partition by key (the shuffle)</td><td>partition(p => {k⇒c}) = branch(k⇒filter(p.eq(k))·c)</td><td>{@code {1,…,6}.partition(<//${mod(2).plus(1)}> => {//1 => sum(), //2 => sum()})}</td><td>✅</td></tr>
  * </table>
  *
  * <h2>why this suite needs a real cluster</h2>
@@ -399,11 +399,11 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     @ParameterizedTest
     @CsvSource(value = {
             // key i is routed to peer i, where its data is read ...
-            "{1,2}.partition(<//${_}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum())                     % {11,22}",
+            "{1,2}.partition(<//${_}> => {//1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum()})                     % {11,22}",
             // ... bucketed, each place reading every key it was sent, the partials folded at home ...
-            "{1,2}.partition?<=int{*}(<//${_}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum()).sum()      % 33",
+            "{1,2}.partition?<=int{*}(<//${_}> => {//1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum()}).sum()      % 33",
             // ... and a key routed to a place that does not hold it reads nothing there
-            "{1,2}.partition(<//${mod(2).plus(1)}>, //1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum())        % {0,0}",
+            "{1,2}.partition(<//${mod(2).plus(1)}> => {//1 => *</n/kv/${_}>.sum(), //2 => *</n/kv/${_}>.sum()})        % {0,0}",
     }, delimiter = '%')
     void test_B_a_partition_co_locates_each_key_with_its_data(final String code, final String expected) {
         named(NUMBERS, () -> checkCodeParseApply(LOG, code, expected));
@@ -415,11 +415,11 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{1}.partition(<//${_}>, //1 => *</n/kv/${_}>.count())                % 2",
+            "{1}.partition(<//${_}> => {//1 => *</n/kv/${_}>.count()})                % 2",
             // a barrier by default, the place counts every read ...
-            "{{3}1}.partition(<//${_}>, //1 => *</n/kv/${_}>.count())             % 6",
+            "{{3}1}.partition(<//${_}> => {//1 => *</n/kv/${_}>.count()})             % 6",
             // ... and one obj at a time, a lazy barrier, each of the three copies counts its own read
-            "{{3}1}.partition?<=int{?}(<//${_}>, //1 => *</n/kv/${_}>.count())    % {3}2",
+            "{{3}1}.partition?<=int{?}(<//${_}> => {//1 => *</n/kv/${_}>.count()})    % {3}2",
     }, delimiter = '%')
     void test_C_a_partition_of_one_place_folds_where_its_keys_live(final String code, final String expected) {
         named(NUMBERS, () -> checkCodeParseApply(LOG, code, expected));
@@ -889,7 +889,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     }
 
     // ================================================================================================
-    // X — partition by key (the shuffle): partition(p, k⇒c) = branch(k⇒filter(p.eq(k))·c), with p evaluated once
+    // X — partition by key (the shuffle): partition(p => {k⇒c}) = branch(k⇒filter(p.eq(k))·c), with p evaluated once
     // per obj (Marko, 2026-11-27). A hosted key is a place, and its lane is the cut its program runs in there, so each
     // place is sent its share alone (data distribution), where a branch sends every lane the whole bag; B and C route
     // keys to the places that hold their data (co-location). The rows name peers 1 and 2 by number (NUMBERS), so a key
@@ -900,36 +900,31 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     @ParameterizedTest
     @CsvSource(value = {
             // the evens to peer 1 (2+4+6 and its 111), the odds to peer 2 (1+3+5 and its 222), each share sent once
-            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum()))  % {123,231}",
+            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum())})  % {123,231}",
             // a barrier by default: 2 and 4 sent to peer 1 together, 1 and 3 to peer 2 ...
-            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum()))                 % {113,115,223,225}",
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}> => {//1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum())})                 % {113,115,223,225}",
             // ... and one obj at a time, a lazy barrier, each sent alone
-            "{1,2,3,4}.partition?<=int{?}(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum()))       % {223,113,225,115}",
+            "{1,2,3,4}.partition?<=int{?}(<//${mod(2).plus(1)}> => {//1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum())})       % {223,113,225,115}",
             // _ takes the odds, keyed //2, and a walk runs its code at the last place it passes: the key's ...
-            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), _ => plus(*/n/data.sum()))                   % {113,115,223,225}",
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}> => {//1 => plus(*/n/data.sum()), _ => plus(*/n/data.sum())})                   % {113,115,223,225}",
             // ... unless the route brings it home, where the odds read this machine's {7,8}
-            "{1,2,3,4}.partition(<//${mod(2).plus(1)}>, //1 => plus(*/n/data.sum()), _ => <~> => plus(*/n/data.sum()))            % {113,115,16,18}",
-            // VARARGS OF RELATIONS: the selector keys a table of places, f => {//1 => …, //2 => …} (Marko, 2026-11-27) ...
-            "{1,2,3,4}.partition(<//${mod(2).plus(1)}> => {//1 => plus(*/n/data.sum()), //2 => plus(*/n/data.sum())})            % {113,115,223,225}",
-            // ... and a route with no place of its own runs at the place its key template spells
+            "{1,2,3,4}.partition(<//${mod(2).plus(1)}> => {//1 => plus(*/n/data.sum()), _ => <~> => plus(*/n/data.sum())})            % {113,115,16,18}",
+            // a route with no place of its own runs at the place its key template spells
             "{1,2,3,4}.partition(<//${mod(2).plus(1)}> => {_ => plus(*/n/data.sum())})                                            % {113,115,223,225}",
             // TAG => PLACE => CODE: a route names its place after its key (Marko, 2026-11-27) ...
-            "{1,2,3,4}.partition(mod(2), ?0 => //1 => plus(*/n/data.sum()), ?1 => //2 => plus(*/n/data.sum()))                    % {113,115,223,225}",
+            "{1,2,3,4}.partition(mod(2) => {?0 => //1 => plus(*/n/data.sum()), ?1 => //2 => plus(*/n/data.sum())})                    % {113,115,223,225}",
             // ... and a guard does too, the first route that admits an obj taking it
-            "{1,2,3,4}.partition(_, is(mod(2).eq(0)) => //1 => plus(*/n/data.sum()), _ => //2 => plus(*/n/data.sum()))            % {113,115,223,225}",
+            "{1,2,3,4}.partition(is(mod(2).eq(0)) => //1 => plus(*/n/data.sum()), _ => //2 => plus(*/n/data.sum()))            % {113,115,223,225}",
             // the lanes' answers fold at home
-            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => count(), //2 => count()).sum()                         % 6",
+            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => count(), //2 => count()}).sum()                         % 6",
             // a place no name reaches fails the call (3 keys //3), as the same call keyed by a reached one answers
-            "{1,3}.partition(<//${_}>, //1 => count(), //3 => count())                                                             % <ERROR>",
-            "{1,2}.partition(<//${_}>, //1 => count(), //2 => count())                                                             % {1,1}",
+            "{1,3}.partition(<//${_}> => {//1 => count(), //3 => count()})                                                             % <ERROR>",
+            "{1,2}.partition(<//${_}> => {//1 => count(), //2 => count()})                                                             % {1,1}",
             // THE TOPOLOGY: each place is dealt a share of the four, at most all of them, and the partials merge at home
-            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('[{]4[}]──┤').count()                % 1",
-            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('─►//1─[{]0,4[}]─[{]1[}]─┐').count() % 1",
-            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('─►//2─[{]0,4[}]─[{]1[}]─┘').count() % 1",
-            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => sum(), //2 => sum()).explain()>>ext/topology/format.has('├─►//local─[{]2[}]').count()        % 1",
-            // ... and the rec form draws the same places: its table's hosted keys are its lanes'
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => sum(), //2 => sum()}).explain()>>ext/topology/format.has('[{]4[}]──┤').count()                % 1",
             "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => sum(), //2 => sum()}).explain()>>ext/topology/format.has('─►//1─[{]0,4[}]─[{]1[}]─┐').count() % 1",
             "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => sum(), //2 => sum()}).explain()>>ext/topology/format.has('─►//2─[{]0,4[}]─[{]1[}]─┘').count() % 1",
+            "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => sum(), //2 => sum()}).explain()>>ext/topology/format.has('├─►//local─[{]2[}]').count()        % 1",
     }, delimiter = '%')
     void test_X_partition_by_key(final String code, final String expected) {
         named(NUMBERS, () -> checkCodeParseApply(LOG, code, expected));
@@ -941,7 +936,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}>, //1 => count(), //2 => count()).sum() % start().partition().sum() % 6",
+            "{1,2,3,4,5,6}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => count(), //2 => count()}).sum() % start().partition().sum() % 6",
     }, delimiter = '%')
     void test_X_a_partition_is_a_layout(final String code, final String expectedRewriteForm, final String expectedResult) {
         named(NUMBERS, () -> checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true));
@@ -957,7 +952,7 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
         named(NUMBERS, () -> {
             try {
                 Machine.write(f("/n/pf"), Machine.parse("//1"));
-                checkCodeParseApply(LOG, "*/n/data.partition?<=int{*}(*/n/pf, //1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum()))",
+                checkCodeParseApply(LOG, "*/n/data.partition?<=int{*}(*/n/pf => {//1 => sum().plus(*/n/data.sum()), //2 => sum().plus(*/n/data.sum())})",
                         "126");
             } finally {
                 Machine.write(f("/n/pf"), noobj());
