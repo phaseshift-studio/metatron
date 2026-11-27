@@ -121,22 +121,10 @@ after which instruction memory answers the address.
 ```mtron
 mtron> */m/mach/component/compiler?docq
 ==>docs::[obj=>component::T[?[
-     {?}parser=>component::T@/m/mach/component/parser,
-     {?}rewriter=>component::T@/m/mach/component/rewriter,
-     {?}resolver=>component::T[?[
-      {?}selector=>component::T@/m/mach/component/selector,
-      {?}binder=>component::T@/m/mach/component/binder]]@/m/mach/component/resolver,
-     {?}typer=>component::T[?[
-      {?}check=>[
-       {?}inst_dom=>bool::T,
-       {?}inst_rng=>bool::T,
-       {?}type_pred=>bool::T,
-       {?}code_resolve=>bool::T,
-       {?}obj_write=>bool::T],
-      {?}unfold=>[
-       {?}uri=>int::T,
-       {?}lst=>int::T,
-       {?}rec=>int::T]]][ctor?typer<=(#{*}::T){<j>}]@/m/mach/component/typer]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
+     {?}parser=>parser::T,
+     {?}rewriter=>rewriter::T,
+     {?}resolver=>resolver::T,
+     {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
            {?}typer=>'the fourth stage — the per-machine...',
            {?}parser=>'the first stage — source text to o...',
@@ -305,15 +293,8 @@ mtron> */m/mach/component/processor?docq
 ==>docs::[obj=>component::T[?[
      {?}state=>union(stop,run,pause),
      {?}result=><#{*}>::T,
-     {?}tracer=>component::T[?[{?}stack=>[{?}mtron_stack=>bool::T,
-                                          {?}java_stack=>bool::T]]][ctor?tracer<=(#{*}::T){<j>}]@/m/mach/component/processor/tracer,
-     {?}analyzer=>component::T[?[
-      {?}analysis=><#>::T,
-      {?}step=>int::T,
-      {?}profile=>bool::T,
-      {?}mute=><#>::T,
-      {?}cap=><#>::T,
-      {?}request=><#>::T]][ctor?analyzer<=(#{*}::T){<j>}]@/m/mach/component/analyzer]]@/m/mach/component/processor,
+     {?}tracer=>tracer::T,
+     {?}analyzer=>analyzer::T]]@/m/mach/component/processor,
           args=>[
            {?}state=>'the run state: stop, run or pause',
            {?}analyzer=>"the processor's statistics (analyz...",
@@ -424,13 +405,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           code=>"the thread's executing code",
-           {?}time=>'the datetime::T when the thread wa...',
-           {?}loop=>'delay to repeat code evaluation (d...',
            {?}timeout=>'how long a read of rhs waits for t...',
            {?}state=>'current state of the thread',
            {?}result=>'the last result produced by the th...',
-           {?}runtime=>"computes the thread's current runn..."],
+           {?}runtime=>"computes the thread's current runn...",
+           code=>"the thread's executing code",
+           {?}time=>'the datetime::T when the thread wa...',
+           {?}loop=>'delay to repeat code evaluation (d...'],
           desc=>'the thread base type']
 ```
 | key       | value                                        |
@@ -489,12 +470,12 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}pattern=>'the branch this network answers as...',
            {?}listener=>'the sockets this machine serves th...',
            {?}status=>'the health method — an auto inst c...',
            {?}roster=>'what the system knows, connectionl...',
            {?}analyzer=>"the network's statistics (analyzer...",
-           {?}peer=>"machine's own connections, one per..."],
+           {?}peer=>"machine's own connections, one per...",
+           {?}pattern=>'the branch this network answers as...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[machine=>[lab=>...',
@@ -708,6 +689,7 @@ mtron> *~.vid()
 mtron> /.>>
 ==>/xyz/
 ==>/sys/
+==>/m/
 ==>/pattern/
 ==>/q/
 ==>/memory/
@@ -823,7 +805,7 @@ service authority.
 
 ```mtron
 mtron> *~/network/host
-==>debd73bdfc6c
+==>booger
 ```
 ## appendix — registered types
 

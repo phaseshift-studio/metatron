@@ -51,6 +51,6 @@ http_client::[host => <https://#>];
 mdns_discovery::[=>];
 *boot/args/console.?=true.
   else(print('{{g}}docker boot complete — ws 0.0.0.0:8555, http 0.0.0.0:8777{{X}}\n').
-       print('{{g}}remote console: {{y}}wsplus {{b}}ws://localhost:8555/mtron{{X}}\n').
+       print('{{g}}remote console: {{y}}wsplus {{b}}ws://${*/network/host}:8555/mtron{{X}}\n').
        print('{{g}}splash page:    {{y}}splash {{b}}http://${*/network/host}:8777{{X}}\n')).
        -<[[=>]@/sys/console.as(console::T)];

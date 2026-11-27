@@ -810,7 +810,10 @@ coefficient-summing view), and <code>ListMonad</code> the list-backed queue.</p>
 <h3>Threads</h3>
 <p><code>mThread</code> is the unified lifecycle contract (<code>stop</code>/<code>pause</code>/<code>resume</code>/<code>state</code>/<code>apply</code>/<code>applyAsync</code>/<code>result</code>/<code>future</code>).
 <code>AbstractThread</code> implements it over an <code>MRec</code> + <code>FutureObj</code> and hands async work to <code>ThreadExecutor</code>; <code>VirtualThread</code>
-and <code>CoreThread</code> are the two concrete platform strategies. A worker publishes where it ended via <code>landedPerspective()</code>.</p>
+and <code>CoreThread</code> are the two concrete platform strategies. A worker publishes where it ended via <code>landedPerspective()</code>.
+<code>ThreadExecutor</code>'s <code>stop</code> list is a bounded history (<code>FIFOLst</code>, Marko 2026-11-25): the newest 100 ended threads whose
+vid was minted, and every named one (<code>AbstractThread.named()</code>: made with its vid). A minted thread dropped from it is
+deleted at its vid, and so is its doc, which holds the thread (<code>QCollection.docDrop</code>).</p>
 <h3>Bootstrap and the type hierarchy</h3>
 <p><code>machInstSet.setup()</code> registers the whole <code>machine::T</code> family under <code>/m/mach/component/…</code> — <code>processor::T</code>,
 <code>monad_processor::T</code>, <code>swarm_processor::T</code>, <code>compiler::T</code> (with its <code>BasicCompiler</code> constructor, so
@@ -862,7 +865,8 @@ evaluation at <code>~/processor/fail/_?incrq</code>, and an evaluation's at <cod
 computer that ran it. The processor indexes its computers by number (<code>computer =&gt; [&lt;n&gt; =&gt; computer::[…]]</code>): a
 computer is written at <code>~/processor/computer/&lt;n&gt;</code> when it is minted, and that write is the indexing. So the
 processor is per machine: <code>push()</code> mints the child's own, of its parent's architecture, beside its memory, ISA and
-network levels.</li>
+network levels. The index is a bounded history (<code>FIFORec</code>, Marko 2026-11-25): every running computer and the newest
+100 of the rest, a computer minted and not yet started among them.</li>
 </ul>
 <h3>Migration state (why it reads as two systems at once)</h3>
 <p>The Router→Machine migration is <strong>not finished</strong>. <code>Router.java</code> is deleted, but its scaffolding remains:</p>

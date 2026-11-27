@@ -667,7 +667,8 @@ no place, through <code>peer</code>, <code>#</code> or <code>//host</code>, and 
 <tbody>
 <tr><td><code>stream</code> (the default)</td><td><strong>yes</strong> — today's stride division, the layout <code>law_shard</code> has always emitted</td></tr>
 <tr><td><code>copy</code></td><td><strong>only behind idempotence</strong> — one part, the whole seed on every lane; legal only when the cut's combiner declares <code>idempotent</code>, else the unchanged chain</td></tr>
-<tr><td><code>block</code>, <code>key</code>, <code>owner</code>, <code>index</code></td><td><strong>decline</strong> — their premises (order, a key, an addressed seed, a generator) are not held yet, so the decision is the identity, never a plausible-looking reorder</td></tr>
+<tr><td><code>owner</code></td><td><strong>over an addressed seed alone</strong> (B, C): one part per owner, each lane reading its own; the default reads as <code>owner</code> there, and a <code>copy</code> of one declines</td></tr>
+<tr><td><code>block</code>, <code>key</code>, <code>index</code></td><td><strong>decline</strong> — their premises (order, a key, a generator) are not held yet, so the decision is the identity, never a plausible-looking reorder</td></tr>
 </tbody>
 </table>
 <p>An unreadable <code>?split</code> is refused loudly (the key and the text), never defaulted to <code>stream</code>.</p>
@@ -766,6 +767,7 @@ the pattern and keep its letter in parentheses, as in <em>the generative run (V)
 <tr><td><strong>U</strong></td><td> </td><td>profile collation</td><td>\(\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)\)</td><td>each lane's profile ships home and nests under the master's, timed around the branch</td></tr>
 <tr><td><strong>V</strong></td><td><div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-dist-run" aria-label="watch V"><i class="bi bi-play-fill" aria-hidden="true"></i><span>V</span></button></div></td><td>generative run</td><td>\(a^{[m,n]} = \sum_{k=m}^{n} a^k\)</td><td>a span range or a point is an index set: the lanes split the unrolls by WORK, or the copies evenly</td></tr>
 <tr><td><strong>W</strong></td><td><div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-dist-parallel" aria-label="watch W"><i class="bi bi-play-fill" aria-hidden="true"></i><span>W</span></button></div></td><td>embarrassingly parallel</td><td>\((a + b) \cdot f = a \cdot f + b \cdot f\)</td><td>no cut: each place runs the floatable run on its share, and the branch's merge brings it all home</td></tr>
+<tr><td><strong>X</strong></td><td> </td><td>partition by key</td><td>\(\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i \mathrm{filter}(p = k_i)\,c_i\)</td><td>each obj to the lane its key names; a hosted key is a place, so each place is sent its share alone</td></tr>
 </tbody>
 </table>
 <h4>the mtron motif rewrites</h4>
@@ -782,8 +784,8 @@ copies of its answer. The rows write the keyed spelling, which reads the same.</
 </thead>
 <tbody>
 <tr><td><strong>A</strong></td><td><code>{1,2,3,4}.plus(1).count()</code></td><td><code>branch?&lt;={0}(&lt;p_i&gt; =&gt; start?hop=0(part_i).plus(1).count(), …).sum()</code></td></tr>
-<tr><td><strong>B</strong></td><td><code>*/usr/data/+/current.plus(1).sum()</code></td><td><code>branch(&lt;a_i&gt; =&gt; from?hop=0(&lt;/usr/data/+/current&gt;).plus(1).sum(), …).sum()</code></td></tr>
-<tr><td><strong>C</strong></td><td><code>*&lt;ws://host:8555/n/+&gt;.plus(1).sum()</code></td><td><code>branch(&lt;ws://host:8555&gt; =&gt; from?hop=0(&lt;/n/+&gt;).plus(1).sum()).sum()</code></td></tr>
+<tr><td><strong>B</strong></td><td><code>*//{a,b}/p.count()</code>, <code>*//+/p.count()</code></td><td><code>branch(&lt;a&gt; =&gt; from?hop=0(&lt;/p&gt;).count(), &lt;b&gt; =&gt; from?hop=0(&lt;/p&gt;).count()).sum()</code></td></tr>
+<tr><td><strong>C</strong></td><td><code>*//a/p.count()</code></td><td><code>branch(&lt;a&gt; =&gt; from?hop=0(&lt;/p&gt;).count()).sum()</code></td></tr>
 <tr><td><strong>D</strong></td><td>any shard</td><td><code>branch(&lt;p_i&gt; =&gt; s_i, …).combiner</code>, every lane a <code>virtual::T</code></td></tr>
 <tr><td><strong>E</strong></td><td><code>{1,…,8}.plus(1).sum?hop=2()</code></td><td>a nested <code>start?hop=n-1(p_i)…</code> at each interior node: the dial graph is the tree</td></tr>
 <tr><td><strong>F</strong></td><td>a <code>lst</code>-partitioned fold</td><td>a pipeline: the running total travels neighbor to neighbor</td></tr>
@@ -804,6 +806,7 @@ copies of its answer. The rows write the keyed spelling, which reads the same.</
 <tr><td><strong>U</strong></td><td><code>{1,2,3,4,5}.plus(10).sum().profile()&gt;&gt;format</code></td><td><code>profile_collate(branch?&lt;={0}(&lt;p_i&gt; =&gt; start?hop=0(part_i).plus(10).sum().profile(), …))&gt;&gt;format</code></td></tr>
 <tr><td><strong>V</strong></td><td><code>start(0).{0,1000}plus(1).sum()</code></td><td><code>branch?&lt;={0}(&lt;p_1&gt; =&gt; start?hop=0(0).{0,p}plus(1).sum(), &lt;p_2&gt; =&gt; …).sum()</code>, narrowed by WORK</td></tr>
 <tr><td><strong>W</strong></td><td><code>{1,…,8}.complex_computation()</code></td><td><code>branch?&lt;={0}(&lt;p_i&gt; =&gt; start?hop=0(part_i).complex_computation(), …)</code>, and no combiner</td></tr>
+<tr><td><strong>X</strong></td><td><code>{…}.partition(&lt;//${mod(2).plus(1)}&gt;, //1 =&gt; f, //2 =&gt; f)</code></td><td>as written, a layout already: each lane is <code>cut(&lt;p_k&gt;, f)</code> over its key's share, and the fold after it stays home</td></tr>
 </tbody>
 </table>
 <p><strong>Legend.</strong> The dates behind the tree's ✅ (<code>A</code> done; <code>D</code> done 2026-10-26; <code>E</code>, <code>G</code> v1 done 2026-10-28; <code>S</code> done 2026-10-28 —
@@ -825,6 +828,27 @@ first reply wins) is not written yet.
 <code>N</code> done 2026-11-22 — <code>law_bsp</code>, its own rule beside <code>law_shard</code> (Marko): a whole-frontier <code>repeat?&lt;=A{*}</code> whose code
 is pure and floatable has its code dealt over the dialed peers on every pass, the loop and its predicates home; see <em>N</em>
 below.
+<code>B</code> and <code>C</code> done 2026-11-26 — an ADDRESSED SEED (<code>Shard.owners</code>): a <code>from</code> whose literal address names machines is
+read where each part lives. The address is a sum of names (<code>//{a,b}/p</code>, the host brace always names, numeric ones
+included), every name in the prefix table (<code>//+/p</code>), a root branch of terms (<code>&lt;{/p,//a/p}&gt;</code>, a term with no host
+being a home lane), or one origin (C). Each term's owner is the dialed peer that answers its origin and serves the
+route. One lane per owner reads its own part, <code>from(&lt;/p&gt;)</code> localized there, and the floatable run and the fold ship
+with it; home recombines through the computed combiner. An owner's part lives at no other place, so no lane is
+dropped by an arity or dealt elsewhere, and a term no dialed peer serves leaves the read as written, where
+<code>Network.Helper.atPeer</code> refuses it. The read must head its run: an effect between it and the fold keeps it home, and
+the fold ships over the bag it hands on. A read is untyped (<code>#</code>) on the planning side, so a mean (its lift is declared
+at int and real) or a sum (a str sum is not commutative) over one stays home; <code>count</code> and <code>order</code> recombine through
+derivations that hold at any carrier. At the owner, the lane is compiled there, so a database space holding <code>/p</code> can
+take the fold natively (C's <code>native_count</code>). Pinned by the B and C rows of <code>AbstractDistributedComputingTest</code>.
+<code>X</code> done 2026-11-27 — <code>partition(p, k =&gt; c, …)</code>, the branch whose lanes are guarded by the fibers of <code>p</code>, which runs
+once per obj: each obj goes to the lane its key names. A key naming two lanes sends it to both, an unmatched key goes
+to <code>&lt;#&gt;</code>, an obj keyed noobj goes to each zeroable lane (<code>{?}//a</code>), and an obj no lane takes fails the call. A hosted
+key is a place, and its lane is the cut its program runs in there, so each place is sent its share alone (data
+distribution); a key that names where its data lives co-locates the two, so B and C hold by key as by address. It is
+a barrier instruction: its dom gathers the whole lhs by default, and a smaller maximum makes it a lazy barrier. A
+partition with a hosted key is a layout, so <code>law_shard</code> leaves its
+chain; the planner emits no partition yet (<code>?split=key</code> still declines). See <em>X</em> below; pinned by <code>PartitionTest</code> and
+the B, C and X rows of <code>AbstractDistributedComputingTest</code>.
 An empty box is <em>not</em> &quot;unsound&quot;: the law holds, the lowering is unwritten. <code>F</code> is struck for streams (order lives in
 <code>lst</code>, never a bag); <code>M</code> is a note; <code>I</code> is infrastructure. <code>C</code> needs only Thm 5 and a pure chain. <code>T</code> is the machine
 semiring's groupoid, the stream ring's process dual. <code>V</code>'s unrolls are independent terms (Definition 3), which is why
@@ -839,23 +863,23 @@ under a header of its own (its apply, and a leaf's objs or a node's count of pla
 A node's body leads with the summary over its places (objs and apply per place, the straggler, imbalance as max ÷ mean
 apply, the gather wait, and a provisional efficiency, Σ lane apply ÷ (k × gather wait)), then its own run.</p>
 <h3>the taxonomy — the menu as a tree</h3>
-<p>The twenty-three entries are not a flat list: they fall out of <strong>two axes</strong> — the <em>data-side</em> law the anchor obeys (which
+<p>The twenty-four entries are not a flat list: they fall out of <strong>two axes</strong> — the <em>data-side</em> law the anchor obeys (which
 fixes the route shape), and the <em>location-side</em> question of where the work lives — plus <strong>orthogonal</strong> rules that
-multiply any fan-out and <strong>composites</strong> that build on the rest. The table keeps the A–W lettering stable.</p>
-<pre><code>distribution — the menu (A–W)
+multiply any fan-out and <strong>composites</strong> that build on the rest. The table keeps the A–X lettering stable.</p>
+<pre><code>distribution — the menu (A–X)
 ├─ by the anchor's law            (the data-side theorem → the route shape)
 │  ├─ free · floatable (Thm 6)        → O:✅  W:✅
 │  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  J:✅  K:✅  H:✅  L
 │  ├─ pipeline · associative          → F
-│  └─ shuffle · keyed                 → (G's hash-route; M(3))
+│  └─ shuffle · keyed                 → X:✅  (G's hash-route; M(3))
 ├─ by the location                (native · delegation — where the work lives)
-│  └─ B  C  Q  P  T:✅
+│  └─ B:✅  C:✅  Q  P  T:✅
 ├─ orthogonal                     (multiply any fan-out)
 │  └─ D:✅  S:✅  U:✅  V:✅ (the run's own multiplicity)
 └─ composite &amp; substrate          (built from the above)
    └─ N:✅  R  M  I
 </code></pre>
-<!-- figure source: assets/tikz/distributed-patterns.tex (same recipe); the rendered image is the original A–S menu — the table and the tree above are authoritative for U/V/W -->
+<!-- figure source: assets/tikz/distributed-patterns.tex (same recipe); the rendered image is the original A–S menu — the table and the tree above are authoritative for U/V/W/X -->
 <img src="../assets/distributed-patterns.png" alt="the original (A–S) render of the menu as a taxonomy tree: by the anchor's law (free → O, star → A E G J K L H, pipeline → F, shuffle), by the location (B C Q P), orthogonal (D S), composite (N R M I); green = implemented" width="100%" style="margin:0.3em 0 0 0"/>
 <p>The four top branches read the two axes of <code>docs/design/distributed-patterns-through-algebra.md</code>:</p>
 <ul>
@@ -863,7 +887,7 @@ multiply any fan-out and <strong>composites</strong> that build on the rest. The
 the run with no coordination (<code>O</code> carries a constant along, and <code>W</code> is a run with no cut at all); <code>star</code>
 (commutative monoid, Thm 19) scatters, partial-reduces, and gathers — <code>A</code> is the one engine, and <code>E</code> / <code>G</code> / <code>J</code> /
 <code>K</code> / <code>L</code> / <code>H</code> are its refinements; <code>pipeline</code> (associative) carries the running total; <code>shuffle</code> (keyed)
-co-locates the key (G's future hash-route, and M (3)).</li>
+routes each obj by its key, <code>X</code>, and so co-locates a key with its data (G's future hash-route, and M (3)).</li>
 <li><strong>the location</strong> is the <em>machine-side</em> question — native / delegation: <code>B</code> moves the code to the data, <code>C</code> is <code>B</code>
 with one owner, <code>Q</code> is <code>C</code> per step, <code>P</code> partitions the index space instead of data.</li>
 <li><strong>orthogonal</strong> multiplies any fan-out: <code>D</code> ships every round trip in parallel (max RTT), <code>S</code> keeps a slice home, and
@@ -1151,6 +1175,61 @@ cut), and one obj with neither has nothing to deal. Floating is <code>Inst.isPur
 contract declares <code>pure</code> (or, declaring nothing, its mtron body is a composition of pure instructions) and everything
 it is handed is pure too, so <code>is(gt(4))</code> ships and <code>is(print(_).gt(4))</code> keeps the run home. A user-defined
 instruction is still bare when <code>law_shard</code> runs, before resolution, so it stays home until its peers can run it.</p>
+<h4>X — partition by key (the shuffle)</h4>
+<p><code>partition(p, k_1 =&gt; c_1, …)</code> sends each obj to the lane its key names, where a branch sends it to every lane. It is
+the branch whose lanes are guarded by the fibers of <code>p</code>, $\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i
+\mathrm{filter}(p = k_i),c_i$, so the branch's laws hold of it, and <code>p</code> runs once per obj where the guarded branch
+runs every guard. What <code>p</code> answers is applied to the obj in turn, so a stored function (<code>*/pf</code>: an instruction, a code
+or a key template) keys it as <code>mod(2)</code> does; a key is a uri, or an int read as its decimal spelling.</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3,4}.partition(mod(2), &lt;0&gt; =&gt; plus(10), &lt;1&gt; =&gt; plus(20))
+==&gt;12
+==&gt;14
+==&gt;21
+==&gt;23
+mtron&gt; {1,2,3,4}.partition(&lt;${mod(2)}&gt;, &lt;0&gt; =&gt; plus(10), &lt;1&gt; =&gt; plus(20))
+==&gt;12
+==&gt;14
+==&gt;21
+==&gt;23
+mtron&gt; {1,2,3}.partition(mod(3), &lt;0&gt; =&gt; id(), &lt;#&gt; =&gt; plus(100))
+==&gt;3
+==&gt;101
+==&gt;102
+mtron&gt; {1,2,3,4}.partition(is(mod(2).eq(0)).map?&lt;=A(&lt;even&gt;), &lt;even&gt; =&gt; plus(10), {?}&lt;odd&gt; =&gt; plus(20))
+==&gt;12
+==&gt;14
+==&gt;21
+==&gt;23
+</code></pre>
+<p>A key naming two lanes sends the obj to both, <code>&lt;#&gt;</code> takes every key no other lane names, and an obj keyed noobj goes to
+each lane whose key is zeroable (<code>{?}&lt;odd&gt;</code>, any coefficient that holds zero). An obj no lane takes fails the call.
+A partition is a barrier instruction (Marko, 2026-11-27): its dom, <code>{*}</code> by default, gathers the whole lhs, so a
+lane's fold folds its whole share once, where a branch's default is one obj at a time. A smaller maximum makes it a
+lazy barrier, <code>{n}</code> a page of n and <code>{?}</code> one obj at a time:</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3,4}.partition(mod(2), &lt;0&gt; =&gt; sum(), &lt;1&gt; =&gt; sum())
+==&gt;6
+==&gt;4
+mtron&gt; {1,2,3,4}.partition?&lt;=int{2}(mod(2), &lt;0&gt; =&gt; sum(), &lt;1&gt; =&gt; sum())
+==&gt;2
+==&gt;1
+==&gt;4
+==&gt;3
+mtron&gt; {1,2,3,4}.partition?&lt;=int{?}(mod(2), &lt;0&gt; =&gt; sum(), &lt;1&gt; =&gt; sum())
+==&gt;1
+==&gt;2
+==&gt;3
+==&gt;4
+</code></pre>
+<p>A hosted key is a place: its lane is the cut its program runs in there, so each place is sent its share alone, where a
+branch sends every lane the whole bag. That is DATA DISTRIBUTION. A key that names where its data lives is
+CO-LOCATION: each lane reads its keys where they are held, which is B and C by key:</p>
+<pre><code class="language-mtron">*/data.partition(*/pf, //a =&gt; sum(), //b =&gt; sum()).sum()
+{1,2}.partition(&lt;//${_}&gt;, //1 =&gt; *&lt;/kv/${_}&gt;.sum(), //2 =&gt; *&lt;/kv/${_}&gt;.sum())
+</code></pre>
+<p>A partition with a hosted key is a layout (<code>BranchInst.isLayout</code>), so <code>law_shard</code> leaves its chain as written and the
+fold after it stays home. The topology draws each place dealt its key's share, <code>{0,n}</code> of n. The planner emits no
+partition yet: its own deal (<code>?split=stream</code>) assigns by position, not by a function of the obj, and <code>?split=key</code>
+still declines.</p>
 <h3>how the entries compose</h3>
 <p>This section composes the menu's keys, so it writes them as letters. Outside an index like this one, name the
 pattern and keep its letter in parentheses.</p>

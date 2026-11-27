@@ -528,7 +528,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <p class="instset-desc">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
     </div>
     <div class="instset-masthead-meta">
-        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">52</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">365</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">24</span><span class="instset-stat-l">rewrites</span></div></div>
+        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">52</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">366</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">24</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/m-instset-mtron.md">md</a></div>
             <span class="instset-built">built November 27, 2026</span>
@@ -565,35 +565,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                pre_read=&gt;inst(uri::T){&lt;j&gt;},
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[q=&gt;[,]]]],
-             rewrite=&gt;[
-              /m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;},
-              /m/inst/rewrite/theory_unit_removal?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/map_nest?code{?}&lt;=code([map(map(f::T))=&gt;map(f::T)]){&lt;j&gt;},
-              /m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;},
-              /m/inst/rewrite/law_involution?code{?}&lt;=code([op().op()=&gt;id()]){&lt;j&gt;},
-              /m/inst/rewrite/law_idempotent?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/law_monoidic?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/law_poset?code{?}&lt;=code([
-                                                       is(op(a::T)).is(op(b::T))=&gt;is(op(b::T)),
-                                                       is(op(b::T)).is(op(a::T))=&gt;is(op(b::T)),
-                                                       filter(op(a::T)).filter(op(b::T))=&gt;filter(op(b::T)),
-                                                       filter(op(b::T)).filter(op(a::T))=&gt;filter(op(b::T))]){&lt;j&gt;},
-              /m/inst/rewrite/law_absorbing?code{?}&lt;=code([{+}#?&lt;=#{*}({*}#::T).op()=&gt;op()]){&lt;j&gt;},
-              /m/inst/rewrite/else_after_count?code{?}&lt;=code([count().else(#::T)=&gt;count()]){&lt;j&gt;},
-              /m/inst/rewrite/range_skip_take?code{?}&lt;=code([range(i::T,n::T)=&gt;skip(i::T).take(&lt;${*n.minus(*i)}&gt;)]){&lt;j&gt;},
-              /m/inst/rewrite/inverse_cancellation?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/derivation_contraction?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_collapse?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/branch_inline?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/explain_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;},
-              /m/inst/rewrite/explain_topology?code{?}&lt;=code(){&lt;j&gt;},
-              /m/inst/rewrite/pred_extract(){&lt;j&gt;},
-              /m/inst/rewrite/law_bsp?code{?}&lt;=code&amp;zindex=500&amp;pre=[/m/db/+/inst/rewrite](){&lt;j&gt;},
-              /m/inst/rewrite/law_shard?code{?}&lt;=code&amp;zindex=500&amp;pre=[/m/db/+/inst/rewrite](){&lt;j&gt;}],
+             const=&gt;[,],
              type=&gt;[
               &lt;#&gt;::T,
               bool::T,
@@ -738,7 +710,35 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               qproc::T[][ctor?lineq&lt;=(){&lt;j&gt;}]@/m/qproc/lineq,
               qproc::T[][ctor?mimeq&lt;=(){&lt;j&gt;}]@/m/qproc/mimeq,
               qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq],
-             const=&gt;[,],
+             rewrite=&gt;[
+              /m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;},
+              /m/inst/rewrite/theory_unit_removal?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/map_nest?code{?}&lt;=code([map(map(f::T))=&gt;map(f::T)]){&lt;j&gt;},
+              /m/inst/rewrite/form_map_unwrap?code{?}&lt;=code([map(f::T)=&gt;&lt;#&gt;::T@f]){&lt;j&gt;},
+              /m/inst/rewrite/law_involution?code{?}&lt;=code([op().op()=&gt;id()]){&lt;j&gt;},
+              /m/inst/rewrite/law_idempotent?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/law_monoidic?code{?}&lt;=code([op().op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/law_poset?code{?}&lt;=code([
+                                                       is(op(a::T)).is(op(b::T))=&gt;is(op(b::T)),
+                                                       is(op(b::T)).is(op(a::T))=&gt;is(op(b::T)),
+                                                       filter(op(a::T)).filter(op(b::T))=&gt;filter(op(b::T)),
+                                                       filter(op(b::T)).filter(op(a::T))=&gt;filter(op(b::T))]){&lt;j&gt;},
+              /m/inst/rewrite/law_absorbing?code{?}&lt;=code([{+}#?&lt;=#{*}({*}#::T).op()=&gt;op()]){&lt;j&gt;},
+              /m/inst/rewrite/else_after_count?code{?}&lt;=code([count().else(#::T)=&gt;count()]){&lt;j&gt;},
+              /m/inst/rewrite/range_skip_take?code{?}&lt;=code([range(i::T,n::T)=&gt;skip(i::T).take(n::T)]){&lt;j&gt;},
+              /m/inst/rewrite/inverse_cancellation?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/derivation_contraction?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_collapse?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/branch_inline?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/explain_analysis?code{?}&lt;=code&amp;zindex=1000(){&lt;j&gt;},
+              /m/inst/rewrite/explain_topology?code{?}&lt;=code(){&lt;j&gt;},
+              /m/inst/rewrite/pred_extract(){&lt;j&gt;},
+              /m/inst/rewrite/law_bsp?code{?}&lt;=code&amp;zindex=500&amp;pre=[/m/db/+/inst/rewrite](){&lt;j&gt;},
+              /m/inst/rewrite/law_shard?code{?}&lt;=code&amp;zindex=500&amp;pre=[/m/db/+/inst/rewrite](){&lt;j&gt;}],
              inst=&gt;[
               as?bool&lt;=bool(bool::T){&lt;j&gt;},
               as?bytes&lt;=bool(bytes::T){&lt;j&gt;},
@@ -899,6 +899,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               cc?A{**}&lt;=A(int::T){&lt;j&gt;},
               map?B{*}&lt;=A{?}(B{*}::T){&lt;j&gt;},
               branch?B{*}&lt;=A{?}(uri{*}::T=&gt;B{+}::T){&lt;j&gt;},
+              partition?B{*}&lt;=A{*}(uri::T=&gt;#{*}::T){&lt;j&gt;},
               repeat?A{*}&lt;=A&amp;monad_out=+&amp;monad_in=+({?}esc=&gt;A{*}::T,
                                                     code=&gt;A{*}::T,
                                                     {?}until=&gt;bool::T,
@@ -1020,17 +1021,17 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               parse(str::T){&lt;j&gt;},
               rshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
               lshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
-              isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;},
-              isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;},
-              isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;},
-              isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;},
-              isa?code{?}&lt;=code(#{**}::T){&lt;j&gt;},
               isa?inst{?}&lt;=inst(#{**}::T){&lt;j&gt;},
-              isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;},
-              isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;},
-              isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;},
-              isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;},
+              isa?code{?}&lt;=code(#{**}::T){&lt;j&gt;},
+              isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;},
+              isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;},
+              isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;},
+              isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;},
               isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;},
+              isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;},
+              isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;},
+              isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;},
+              isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;},
               save?#&lt;=#(){&lt;j&gt;},
               ctor(),
               lcd?#{?}&lt;=(#{*}::T){&lt;j&gt;},
@@ -1425,6 +1426,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__parse" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">parse</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__inst__partition" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">partition</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__path" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">path</span>
@@ -1988,7 +1992,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
  {?}pre_read=&gt;inst::T,
  {?}post_read=&gt;inst::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> store and retrieve an obj&#39;s vector embedding. On a vec space, embedq::[model=&gt;!*&lt;location&gt;] references the model the space embeds with, read at each write</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> store and retrieve an obj&#39;s vector embedding. On a vec space, embedq::[model=&gt;!*&lt;location&gt;] references the model the space embeds with, read at each write: a spec there is built into a model at every write, and with nothing there a write that brings no embedding fails</p>
 </div>
 </div><div class="card mb-3" id="__m__inst__explain__explanation">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2019,10 +2023,10 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
     <p class="mb-0 text-light"> a structured explanation of a resolved expression produced by explain()</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#"expression-level metadata of the COMPILED chain: whole-expression dom__rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)"" class="text-info">rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression&#39;s explanation ({?}), which terminates the chain (noobj)&quot;</a>
-  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#"lst of per-instruction stage recs (op__dom__rng__args__f__form__c_dom__c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java__opaque)"" class="text-info">opaque)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#ext" class="text-light">ext</a> <span class="text-light">=&gt;</span> <a href="#"the explain extensions (Marko, 2026-11-20): rewrites beside explain_analysis, each writing its rec at ext__<name> (ext__topology) and appending that rec's format to this one's"" class="text-info">topology) and appending that rec&#39;s format to this one&#39;s&quot;</a>
   <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively'" class="text-info">&#39;lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively&#39;</a>
-  <a href="#ext" class="text-light">ext</a> <span class="text-light">=&gt;</span> <a href="#"the explain extensions (Marko, 2026-11-20): rewrites beside explain_analysis, each writing its rec at ext__<name> (ext__topology) and appending that rec's format to this one's"" class="text-info">topology) and appending that rec&#39;s format to this one&#39;s&quot;</a>
+  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#"lst of per-instruction stage recs (op__dom__rng__args__f__form__c_dom__c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java__opaque)"" class="text-info">opaque)&quot;</a>
+  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#"expression-level metadata of the COMPILED chain: whole-expression dom__rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)"" class="text-info">rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression&#39;s explanation ({?}), which terminates the chain (noobj)&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -2562,21 +2566,21 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
     <p class="mb-0 text-light"> a structured profile report produced by profile(); a distributed profile nests its places&#39; reports</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#insts" class="text-light">insts</a> <span class="text-light">=&gt;</span> <a href="#'the resolved instruction count'" class="text-info">&#39;the resolved instruction count&#39;</a>
-  <a href="#path" class="text-light">path</a> <span class="text-light">=&gt;</span> <a href="#'the critical path: the slowest place at each level, from here down to a leaf'" class="text-info">&#39;the critical path: the slowest place at each level, from here down to a leaf&#39;</a>
-  <a href="#machine" class="text-light">machine</a> <span class="text-light">=&gt;</span> <a href="#'the machine the report was made on: its host, its vid and its process id'" class="text-info">&#39;the machine the report was made on: its host, its vid and its process id&#39;</a>
-  <a href="#place" class="text-light">place</a> <span class="text-light">=&gt;</span> <a href="#"a distributed profile's places: each lane's report, keyed by the place it was dealt to, named as the topology names it (____0, else ____host:port, ____local at home)"" class="text-info">local at home)&quot;</a>
-  <a href="#depth" class="text-light">depth</a> <span class="text-light">=&gt;</span> <a href="#'the levels of places below this report (a star is 1)'" class="text-info">&#39;the levels of places below this report (a star is 1)&#39;</a>
-  <a href="#stage" class="text-light">stage</a> <span class="text-light">=&gt;</span> <a href="#'per-pipeline-stage min__max wall-clock timings (rewrite__resolve__apply)'" class="text-info">apply)&#39;</a>
-  <a href="#flow" class="text-light">flow</a> <span class="text-light">=&gt;</span> <a href="#'bulk-compression flow (monads propagated vs coefficient sum)'" class="text-info">&#39;bulk-compression flow (monads propagated vs coefficient sum)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
   <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty print format'" class="text-info">&#39;lazily constructed pretty print format&#39;</a>
-  <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
-  <a href="#level" class="text-light">level</a> <span class="text-light">=&gt;</span> <a href="#"per level below this report, the places' apply: count, min, max and total"" class="text-info">&quot;per level below this report, the places&#39; apply: count, min, max and total&quot;</a>
-  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
-  <a href="#rewrite" class="text-light">rewrite</a> <span class="text-light">=&gt;</span> <a href="#'per-rewrite-rule instruction reduction (rules + net total)'" class="text-info">&#39;per-rewrite-rule instruction reduction (rules + net total)&#39;</a>
-  <a href="#apply" class="text-light">apply</a> <span class="text-light">=&gt;</span> <a href="#'processor sub-stages (split__apply__next)'" class="text-info">next)&#39;</a>
-  <a href="#cache" class="text-light">cache</a> <span class="text-light">=&gt;</span> <a href="#'type-graph cache hit__miss__hit-rate'" class="text-info">hit-rate&#39;</a>
+  <a href="#flow" class="text-light">flow</a> <span class="text-light">=&gt;</span> <a href="#'bulk-compression flow (monads propagated vs coefficient sum)'" class="text-info">&#39;bulk-compression flow (monads propagated vs coefficient sum)&#39;</a>
+  <a href="#stage" class="text-light">stage</a> <span class="text-light">=&gt;</span> <a href="#'per-pipeline-stage min__max wall-clock timings (rewrite__resolve__apply)'" class="text-info">apply)&#39;</a>
+  <a href="#depth" class="text-light">depth</a> <span class="text-light">=&gt;</span> <a href="#'the levels of places below this report (a star is 1)'" class="text-info">&#39;the levels of places below this report (a star is 1)&#39;</a>
+  <a href="#place" class="text-light">place</a> <span class="text-light">=&gt;</span> <a href="#"a distributed profile's places: each lane's report, keyed by the place it was dealt to, named as the topology names it (____0, else ____host:port, ____local at home)"" class="text-info">local at home)&quot;</a>
+  <a href="#machine" class="text-light">machine</a> <span class="text-light">=&gt;</span> <a href="#'the machine the report was made on: its host, its vid and its process id'" class="text-info">&#39;the machine the report was made on: its host, its vid and its process id&#39;</a>
+  <a href="#path" class="text-light">path</a> <span class="text-light">=&gt;</span> <a href="#'the critical path: the slowest place at each level, from here down to a leaf'" class="text-info">&#39;the critical path: the slowest place at each level, from here down to a leaf&#39;</a>
+  <a href="#insts" class="text-light">insts</a> <span class="text-light">=&gt;</span> <a href="#'the resolved instruction count'" class="text-info">&#39;the resolved instruction count&#39;</a>
   <a href="#leaf" class="text-light">leaf</a> <span class="text-light">=&gt;</span> <a href="#'the leaves below this report: how many (count), the objs their runs carried (c_sum) and their summed apply (time)'" class="text-info">&#39;the leaves below this report: how many (count), the objs their runs carried (c_sum) and their summed apply (time)&#39;</a>
+  <a href="#cache" class="text-light">cache</a> <span class="text-light">=&gt;</span> <a href="#'type-graph cache hit__miss__hit-rate'" class="text-info">hit-rate&#39;</a>
+  <a href="#apply" class="text-light">apply</a> <span class="text-light">=&gt;</span> <a href="#'processor sub-stages (split__apply__next)'" class="text-info">next)&#39;</a>
+  <a href="#rewrite" class="text-light">rewrite</a> <span class="text-light">=&gt;</span> <a href="#'per-rewrite-rule instruction reduction (rules + net total)'" class="text-info">&#39;per-rewrite-rule instruction reduction (rules + net total)&#39;</a>
+  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
+  <a href="#level" class="text-light">level</a> <span class="text-light">=&gt;</span> <a href="#"per level below this report, the places' apply: count, min, max and total"" class="text-info">&quot;per level below this report, the places&#39; apply: count, min, max and total&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -3227,7 +3231,7 @@ a/b/c/                           [-- relative/branch uri            --]
     
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">365</span></h3>
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">366</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
         An inst::T contributed by another instruction set is documented at the set that declared it.
     </p>
@@ -3239,7 +3243,7 @@ a/b/c/                           [-- relative/branch uri            --]
             placeholder="filter by keyword" autocomplete="off" spellcheck="false"
             aria-controls="instructions" aria-describedby="instset-inst-filter-count">
         <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
-            aria-live="polite" aria-atomic="true">showing 365 of 365</span>
+            aria-live="polite" aria-atomic="true">showing 366 of 366</span>
     </div>
 </div>
     <div class="card mb-3 instset-inst-card" id="__m__inst__active">
@@ -6415,24 +6419,12 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">isa</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__uri" data-bs-toggle="tooltip" title="domain" class="code text-info">uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__uri{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">uri{?}</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__inst" data-bs-toggle="tooltip" title="domain" class="code text-info">inst</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__inst{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">inst{?}</a></span></span>
         </span>
         <small class="text-muted code">/m/inst/isa</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?inst{?}&lt;=inst(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
@@ -6440,19 +6432,23 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?inst{?}&lt;=inst(#{**}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
@@ -6460,7 +6456,15 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
 </div>
@@ -7768,6 +7772,41 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --]
 </code></pre>
 </div>
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__partition">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">partition</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">B{*}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/inst/partition</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__partition-doc-0-tab').click();document.getElementById('__m__inst__partition-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">partition?B{*}&lt;=A{*}(uri::T=&gt;#{*}::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> a partitioning function: each obj of the lhs is routed to the lane its partition
+function keys, where a branch routes every obj to every lane. partition(p, k =&gt; c, …)
+means the branch whose lanes are guarded by the fibers of p,
+branch(k =&gt; filter(p.eq(k)).c, …), and evaluates p once per obj, not every guard.
+the partition function is applied to each obj, and what it answers is applied to the obj
+in turn: a value answers itself, and a stored function (*xyz: an instruction, a code or a
+key template) keys the obj. a key is a uri, or an int
+read as its decimal spelling.
+a hosted key (//a) is a place, and its lane runs there as a keyed branch&#39;s lane does; any
+other key (&lt;0&gt;) is a label, and its lane runs here. a key naming two lanes names their
+branch, and the obj goes to each. a &lt;#&gt; lane takes every obj no other key names; with
+none, such an obj fails the call. an obj keyed noobj goes to each lane whose key is
+zeroable ({?}//a, {*}&lt;a&gt;); with none, it fails the call too.
+a partition is a barrier instruction: its dom, `{*}` by default, gathers the whole lhs once,
+so each lane receives its share once. a smaller maximum makes it a lazy barrier: `{n}` buckets
+a page of n, and `{?}` routes one obj at a time. a lane whose share of a call is empty runs
+nothing.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the whole lhs, gathered once: a barrier (`{n}` a page, a lazy barrier; `{?}` one obj at a time)" class="text-info">the whole lhs, gathered once: a barrier (`{n}` a page, a lazy barrier; `{?}` one obj at a time)</a> <span class="text-light">=&gt;</span> <a href="#what the lanes answer, merged" class="text-success">what the lanes answer, merged</a></pre>
+</div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__path">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -8436,7 +8475,7 @@ every monad the run produced up to the marker is aggregated into one compressed 
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> a windowing function \(f(X, i, n) \mapsto X&#39;\): the objs starting at offset i for a span of n</p>
+    <p class="mb-0 text-light"> a windowing function \(f(X, i, n) \mapsto X&#39;\): up to n objs after the first i (the last -n of them when n is negative), as skip(i).take(n)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#a window of the lhs objs" class="text-success">a window of the lhs objs</a></pre>
 </div>
@@ -8543,9 +8582,9 @@ every monad the run produced up to the marker is aggregated into one compressed 
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the repeated application results" class="text-success">the repeated application results</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}until" class="text-light">{?}until</a> <span class="text-light">=&gt;</span> <a href="#'the exit predicate (true stops the loop)'" class="text-info">&#39;the exit predicate (true stops the loop)&#39;</a>
-  <a href="#{?}esc" class="text-light">{?}esc</a> <span class="text-light">=&gt;</span> <a href="#'the escape predicate'" class="text-info">&#39;the escape predicate&#39;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to repeat'" class="text-info">&#39;the code to repeat&#39;</a>
   <a href="#{?}emit" class="text-light">{?}emit</a> <span class="text-light">=&gt;</span> <a href="#'the emit predicate'" class="text-info">&#39;the emit predicate&#39;</a>
+  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to repeat'" class="text-info">&#39;the code to repeat&#39;</a>
+  <a href="#{?}esc" class="text-light">{?}esc</a> <span class="text-light">=&gt;</span> <a href="#'the escape predicate'" class="text-info">&#39;the escape predicate&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__inst__reverse">
@@ -10121,9 +10160,9 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         </span>
         <small class="text-muted code">/m/inst/rewrite/range_skip_take?rng=/m/code{?}&amp;dom=/m/code&amp;args=[/m/rec]</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/range_skip_take?code{?}&lt;=code([range(i::T,n::T)=&gt;skip(i::T).take(&lt;${*n.minus(*i)}&gt;)]){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/range_skip_take?code{?}&lt;=code([range(i::T,n::T)=&gt;skip(i::T).take(n::T)]){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> a window is a skip and a take, its bounds literal ints: \(\mathrm{range}(i, n) \leadsto \mathrm{skip}(i) \cdot \mathrm{take}(n - i)\)
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> a window is a skip and a take, its bounds literal ints: \(\mathrm{range}(i, n) \leadsto \mathrm{skip}(i) \cdot \mathrm{take}(n)\)
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>

@@ -660,6 +660,14 @@ native pushdown).</p>
 <tr><td><code>kv_limit</code></td><td><code>from(kvPattern).take(n)</code></td><td><code>SELECT furi, obj FROM kv_store WHERE furi LIKE ... LIMIT n</code></td></tr>
 </tbody>
 </table>
+<p>A table plan stands in only for a source that reads every row of one table, routed to a relative path: <code>table/+</code>
+(<code>table/+/col</code> for <code>sql_sum</code> and <code>sql_mean</code>, <code>table/+&gt;&gt;col</code> for <code>sql_sum_column</code>, where <code>col</code> is one numeric column of
+the table). A single row (<code>table/1</code>), the table itself, <code>table/#</code>, a source no route made relative, a column below a
+row for any other plan (<code>table/+/col.take(2)</code> answers values, not rows), and a sum or a mean of no column, of a path
+below a column, or of a column that holds no number or that the table lacks are read by the walk. The sum plans
+declare the generic range <code>A</code> over their nullary domain <code>#{0}</code>, so a REAL, DOUBLE or scaled DECIMAL column sums to the
+real the walk answers, and an INT column to an int; a whole DECIMAL column's sum comes back unscaled, as an int, where the walk reads
+DECIMAL as a real. An empty table's mean is noobj.</p>
 <p><strong>Composition:</strong> Multiple rewrites can chain via the <code>Code.rewrite()</code> fixed-point loop. Simple example —
 <code>from(uri).skip(100).take(10)</code> fires two rewrites in sequence:</p>
 <ol>

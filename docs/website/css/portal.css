@@ -1202,6 +1202,49 @@ dialog.save-as .actions {
     padding: .12rem 0;
 }
 
+/* WHICH COMPONENTS THE MACHINE COMPOSES, above the compile tree: parser, rewriter,
+   resolver (selector, binder) and typer — ONE INLINE STRIP that wraps only on a narrow
+   card, because the card is four grid columns wide for code and a name/impl table left
+   most of that width blank */
+.compiler-components {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .15rem .5rem;
+    padding: .35rem 0 .45rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.compiler-component {
+    display: inline-flex;
+    align-items: baseline;
+    gap: .3rem;
+}
+
+.compiler-component-name {
+    color: var(--mred);
+    font-size: 10.5px;
+    letter-spacing: .04em;
+}
+
+.compiler-component-impl { color: var(--fg); font-size: 11px; }
+
+.compiler-subgroup {
+    display: inline-flex;
+    align-items: baseline;
+    gap: .3rem;
+}
+
+.compiler-subgroup .compiler-component-name { color: var(--dim); }
+.compiler-subgroup .compiler-component-impl { color: var(--dim); }
+.compiler-paren { color: var(--faint); font-size: 11px; }
+
+/* A URI LINK GETS THE POINTER, NOTHING ELSE: with this many clickable addresses,
+   colour and underline on hover turn the page into a christmas tree — the cursor is
+   the affordance (the same rule the explain tree's .prof-ref follows). */
+.compiler-component.openable { cursor: pointer; }
+.compiler-sep { color: var(--faint); font-size: 10.5px; }
+
 .cnode-mark {
     color: var(--faint);
     font-size: 11px;
@@ -1749,10 +1792,6 @@ dialog.save-as.open-page {
     cursor: pointer;
 }
 
-.exp-args:hover {
-    color: var(--link);
-}
-
 .exp-exts {
     display: flex;
     flex-direction: column;
@@ -1920,7 +1959,7 @@ dialog.save-as.open-page {
     background: var(--panel-hi);
     border: 1px solid var(--line-hi);
     border-radius: 4px;
-    color: var(--link);
+    color: var(--fg);
     font: 10px/1.7 var(--mono);
     padding: 0 .3rem;
     cursor: pointer;
@@ -1928,10 +1967,6 @@ dialog.save-as.open-page {
 
 .ef-place.ef-home {
     color: var(--fg);
-}
-
-.ef-place:hover {
-    border-color: var(--mred);
 }
 
 .ef-stage {
@@ -1966,10 +2001,6 @@ dialog.save-as.open-page {
     color: var(--faint);
     font: 11px/1 var(--mono);
     cursor: pointer;
-}
-
-.ef-open:hover {
-    color: var(--fg);
 }
 
 .ef-loop {
@@ -2026,12 +2057,6 @@ dialog.save-as.open-page {
     font: inherit;
     font-size: 10px;
     cursor: pointer;
-}
-
-.type-refines-link:hover {
-    color: var(--link);
-    text-decoration: underline;
-    text-underline-offset: 3px;
 }
 
 .type-desc {
@@ -2130,12 +2155,6 @@ dialog.save-as.open-page {
 }
 
 .decs-key:hover,
-.decs-tid:hover {
-    color: var(--link);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
 .decs-tid {
     color: var(--faint);
     font-size: 11px;
@@ -2155,12 +2174,6 @@ dialog.save-as.open-page {
     cursor: pointer;
 }
 
-.decs-val:hover {
-    color: var(--link);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
 /* a route target in the web-surface panels: a clickable address that resolves */
 .route-target {
     background: none;
@@ -2173,10 +2186,6 @@ dialog.save-as.open-page {
     text-align: left;
     cursor: pointer;
     overflow-wrap: anywhere;
-}
-
-.route-target:hover {
-    background: none;
 }
 
 /* the globe: open a route over http, beside the resolvable target */
@@ -2195,13 +2204,6 @@ dialog.save-as.open-page {
     cursor: pointer;
     vertical-align: middle;
     opacity: .7;
-    text-decoration: none;
-}
-
-.route-globe:hover {
-    background: none;
-    color: var(--link);
-    opacity: 1;
     text-decoration: none;
 }
 
@@ -2865,14 +2867,59 @@ button.machine-tile:focus-visible {
 .network-sub { color: var(--faint); font-size: 10.5px; }
 .network-count { color: var(--faint); font-size: 10.5px; margin-left: auto; }
 
-.network-rows .mpanel-row { grid-template-columns: minmax(9rem, 1fr) 1.6fr; }
+/* ONE GRID PER TABLE, NOT PER ROW: the rows subgrid into the table's tracks, so the
+   label column ends and the value column starts at the same x on every line (a grid
+   per row sizes each row's tracks to its own content, which is what made the peer
+   columns ragged). */
+.network-rows {
+    display: grid;
+    grid-template-columns: minmax(9rem, 1fr) 1.6fr;
+    column-gap: .6rem;
+}
 
-.network-peers { display: flex; flex-direction: column; }
+.network-rows .mpanel-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+}
+
+.network-rows .mpanel-empty { grid-column: 1 / -1; }
+
+/* a roster machine's reach, nested as the machine says it: protocol / transport / uri.
+   one line per uri; the protocol and transport cells are blank on a transport's
+   continuation lines, so "mcp => https://… / ws://… / http://…" reads as one group. */
+.network-endpoints {
+    display: grid;
+    grid-template-columns: max-content 3.1rem minmax(0, 1fr);
+    column-gap: .45rem;
+    row-gap: .06rem;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.network-endpoint { display: contents; }
+
+.network-protocol {
+    color: var(--mred);
+    font-weight: 600;
+}
+
+.network-transport { color: var(--dim); }
+
+.network-uri { color: var(--fg); overflow-wrap: anywhere; }
+
+.network-peers {
+    display: grid;
+    grid-template-columns: minmax(10rem, 1.25fr) 4.6rem minmax(9rem, 1fr) auto;
+    column-gap: .6rem;
+}
+
+.network-peers .mpanel-empty { grid-column: 1 / -1; }
 
 .network-peer {
+    grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: minmax(10rem, 1.25fr) minmax(9rem, 1fr) auto;
-    gap: .6rem;
+    grid-template-columns: subgrid;
     align-items: baseline;
     padding: .22rem 0;
     border-top: 1px solid var(--line);
@@ -2893,13 +2940,22 @@ button.machine-tile:focus-visible {
     border: 1px solid var(--line);
     border-radius: 3px;
     padding: 0 .25rem;
-    margin-left: .35rem;
+    justify-self: start;
+    align-self: center;
+    /* the tag is one word: never break it between letters when its track is narrow */
+    white-space: nowrap;
+    overflow-wrap: normal;
 }
+
+/* which side dialed: in = it reached us, out = we reached it (prefixed, because a
+   bare .out is the console's log tone) */
+.network-dir-in { color: var(--faint); }
+.network-dir-out { color: var(--mred); border-color: var(--mred); }
 
 /* a ws peer is an instance: clicking it points the page's data at it */
 .network-peer.instance { cursor: pointer; }
 .network-peer.instance:hover { background: rgba(255, 255, 255, .035); }
-.network-peer.instance .network-target { color: var(--link); }
+.network-peer.instance .network-target { color: var(--fg); }
 
 #instance { color: var(--fg); }
 #instance-local { margin-left: .5rem; font-size: 10.5px; }
@@ -4092,14 +4148,6 @@ dialog.save-as.cluster textarea {
     color: inherit;
     font: inherit;
     cursor: pointer;
-    text-decoration: underline dotted;
-    text-underline-offset: 2px;
-    text-decoration-color: var(--line-hi);
-}
-
-.prof-ref:hover {
-    color: var(--fg);
-    text-decoration-color: var(--mred);
 }
 
 .prof-num {

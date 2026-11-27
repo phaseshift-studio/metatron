@@ -902,13 +902,12 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         })();
         /* the tree and the tiles are the VM's; frames pushed from the console
            and the tile statistics must both stay fresh (the first load can miss
-           while the reader socket is still connecting) */
-        setInterval(() => {
-            if (box.isConnected && !document.hidden) {
-                loadTree();
-                load();
-            }
-        }, 4000);
+           while the reader socket is still connecting) — one refresh at a time,
+           backing off when the machine is slow */
+        pollPanel(box, async () => {
+            await loadTree();
+            await load();
+        }, 8000);
         return box;
     }
 
@@ -921,7 +920,27 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
        client and tools; the `#` route templates are rendered dimmed). */
     function networkPanel(env, api) {
         const box = node("div", "mpanel network-panel");
-        const evalJson = (api && api.evalJson) || (() => Promise.resolve(null));
+        /* THE NETWORK IS READ AS THE MACHINE'S OWN DATA (x-mtron), never JSON: JSON drops
+           tids and hands every nested rec back as one string, which is why a roster row
+           read as a brace dump instead of the endpoints the machine carries. */
+        const evalMtron = (api && api.mtron) || (() => Promise.resolve(""));
+        const plain = (obj) => {
+            if (obj == null) return undefined;
+            if (typeof obj !== "object") return obj;
+            if (obj.isNoObj && obj.isNoObj()) return null;
+            if (obj.isUri && obj.isUri()) return obj.js.toString();
+            if (obj.isStr && obj.isStr()) return obj.js;
+            if (obj.isInt && obj.isInt()) return obj.js;
+            if (obj.isReal && obj.isReal()) return obj.js;
+            if (obj.isBool && obj.isBool()) return obj.js;
+            if (obj.isLst && obj.isLst()) return obj.js.map(plain);
+            if (obj.isRec && obj.isRec()) {
+                const rec = {};
+                for (const [key, value] of obj.js) rec[key.toString()] = plain(value);
+                return rec;
+            }
+            return obj.js;
+        };
         const declared = String((env && env.vid) || "/network");
         const dynamic = declared.charAt(0) === "~";
         let frame = (api && api.currentFrame) ? api.currentFrame() : null;
@@ -929,9 +948,18 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
            the frame: an absolute /a/b/network reads only the child's own slot, but
            the roster and peers are shared, so they live at the parent */
         const base = declared.replace(/\/+$/, "") || "/network";
-        const readFresh = (vid) => evalJson((dynamic && frame)
-            ? "move(<" + frame + ">).*<" + vid + ">"
-            : "*<" + vid + ">");
+        const readFresh = async (vid) => {
+            const expr = (dynamic && frame)
+                ? "move(<" + frame + ">).*<" + vid + ">"
+                : "*<" + vid + ">";
+            const text = String((await evalMtron(expr)) || "").trim();
+            if (!text) return null;
+            try {
+                return plain(parse(text));
+            } catch (ignored) {
+                return null;
+            }
+        };
         let token = 0;
 
         const head = node("div", "mpanel-head");
@@ -976,10 +1004,66 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
             return el;
         }
 
-        function endpoints(value) {
-            if (value == null) return "—";
-            if (Array.isArray(value)) return value.map((item) => brief(item)).join(" · ");
-            return brief(value);
+        /* A MACHINE'S REACH IS NESTED: a protocol (mtron, mcp), each reachable over
+           transports (ws, http, https), each transport at one or more uris. render that
+           nesting — protocol, transport, uri — instead of flattening it into one line:
+           "mtron / ws => ws://host:8555/mtron, mcp => https://…, ws://…, http://…". */
+        function endpointsOf(value) {
+            const table = node("div", "network-endpoints");
+            const line = (protocol, transport, uri) => {
+                const el = node("div", "network-endpoint");
+                el.appendChild(node("span", "network-protocol", protocol || ""));
+                el.appendChild(node("span", "network-transport", transport || ""));
+                el.appendChild(node("span", "network-uri", uri == null ? "" : String(uri)));
+                table.appendChild(el);
+            };
+            const uris = (target) => (Array.isArray(target) ? target : [target]).filter((uri) => uri != null);
+            const isRec = (v) => v != null && typeof v === "object" && !Array.isArray(v);
+            if (value == null) {
+                line("", "", "");
+                return table;
+            }
+            if (typeof value === "string") {
+                line("", "", value);
+                return table;
+            }
+            if (isRec(value)) {
+                const entries = Object.entries(value);
+                const protocols = entries.filter(([, transports]) => isRec(transports));
+                if (protocols.length) {
+                    /* the protocol is written ONCE, beside its first transport: every
+                       further line of that protocol leaves the cell blank, so the group
+                       reads as "mtron: ws at …, mcp at …, …, …" */
+                    protocols.forEach(([protocol, transports]) => {
+                        let named = false;
+                        Object.entries(transports).forEach(([transport, target]) => {
+                            let carried = false;
+                            uris(target).forEach((uri) => {
+                                line(named ? "" : protocol, carried ? "" : transport, uri);
+                                named = true;
+                                carried = true;
+                            });
+                        });
+                    });
+                    return table;
+                }
+                entries.forEach(([transport, target]) => {
+                    uris(target).forEach((uri) => line("", transport, uri));
+                });
+                return table;
+            }
+            uris(value).forEach((uri) => line("", "", uri));
+            return table;
+        }
+
+        /* a row whose value is the endpoint nesting, not a one-line summary */
+        function valueRow(label, value) {
+            const el = node("div", "mpanel-row");
+            el.appendChild(node("span", "mpanel-k", label));
+            const cell = node("span", "mpanel-v");
+            cell.appendChild(endpointsOf(value));
+            el.appendChild(cell);
+            return el;
         }
 
         function schemeOf(key, origin) {
@@ -993,9 +1077,26 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
             const client = member.client && typeof member.client === "object" ? member.client : {};
             const template = String(key).includes("#");
             const rowEl = node("div", "network-peer" + (template ? " template" : ""));
-            const keyEl = node("span", "network-key", key);
-            if (template) keyEl.appendChild(node("span", "network-tag", "template"));
-            rowEl.appendChild(keyEl);
+            rowEl.appendChild(node("span", "network-key", key));
+            /* the tag has a TRACK of its own, between key and target, so every row's tag
+               starts at the same x instead of trailing the key's varying width */
+            if (template) {
+                rowEl.appendChild(node("span", "network-tag", "template"));
+            } else {
+                /* WHICH SIDE DIALED: Network.Helper.mintPeer records `host` only when the
+                   call site HAS a dialable address, and leaves it null on the inbound side
+                   (an ephemeral client port is not a place to dial back to). host present
+                   = outgoing (we dialed), host absent = incoming (it dialed us). */
+                const outbound = member.host != null;
+                /* the class carries the panel's prefix: a bare `out`/`in` would collide
+                   with the console's log-line tones (.out is a padded block) */
+                const dir = node("span", "network-tag network-dir network-dir-" + (outbound ? "out" : "in"),
+                    outbound ? "out" : "in");
+                dir.title = outbound
+                    ? "outgoing: this machine dialed the peer"
+                    : "incoming: the peer dialed this machine (no dialable host)";
+                rowEl.appendChild(dir);
+            }
             const origin = member.origin || member.host || "—";
             rowEl.appendChild(node("span", "network-target", String(origin)));
             const note = [schemeOf(key, member.origin)];
@@ -1028,7 +1129,7 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 prefixRows.textContent = "";
                 prefixRowsOf
                     .sort(([a], [b]) => String(a).localeCompare(String(b)))
-                    .forEach(([key, value]) => prefixRows.appendChild(row(String(key), endpoints(value))));
+                    .forEach(([key, value]) => prefixRows.appendChild(valueRow(String(key), value)));
                 if (!prefixRowsOf.length) prefixRows.appendChild(node("div", "mpanel-empty", "no prefixes"));
                 const roster = await readFresh(base + "/roster");
                 if (my !== token) return;
@@ -1036,14 +1137,14 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 const authorities = Object.keys(machines).sort();
                 knownRows.textContent = "";
                 const discover = roster && roster.discover && typeof roster.discover === "object" ? roster.discover : null;
-                authorities.forEach((authority) => knownRows.appendChild(row(authority, endpoints(machines[authority]))));
+                authorities.forEach((authority) => knownRows.appendChild(valueRow(authority, machines[authority])));
                 /* discover is how the names got here, so it closes the section it explains */
                 if (discover) {
                     const sources = Object.keys(discover).sort();
                     if (sources.length) knownRows.appendChild(row("discover", sources.join(" · ")));
                 }
                 if (!discover && !authorities.length) knownRows.appendChild(node("div", "mpanel-empty", "no roster"));
-                sectionHead(knownHead, "known", "roster", authorities.length);
+                sectionHead(knownHead, "roster", "known", authorities.length);
 
                 const peers = await readFresh(base + "/peer");
                 if (my !== token) return;
@@ -1053,7 +1154,7 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 /* the summary follows the section order below it: what is connected, then
                    what is known — each number stays with its own word */
                 summary.textContent = connected.length + " connected · " + authorities.length + " known";
-                sectionHead(peerHead, "connected", "peer", connected.length);
+                sectionHead(peerHead, "peer", "connected", connected.length);
                 peerRows.textContent = "";
                 connected.forEach(([key, value]) => peerRows.appendChild(peerRow(key, value)));
                 templates.forEach(([key, value]) => peerRows.appendChild(peerRow(key, value)));
@@ -1068,8 +1169,8 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         }
 
         sectionHead(prefixHead, "prefix", "resolved", null);
-        sectionHead(knownHead, "known", "roster", null);
-        sectionHead(peerHead, "connected", "peer", null);
+        sectionHead(knownHead, "roster", "known", null);
+        sectionHead(peerHead, "peer", "connected", null);
         if (dynamic) {
             document.addEventListener("metatron:frame", (ev) => {
                 if (!box.isConnected) return;
@@ -1079,11 +1180,53 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         }
         load();
         /* the roster and the peers move; the api.read cache would pin them, so the
-           poll takes the uncached socket read */
-        setInterval(() => {
-            if (box.isConnected && !document.hidden) load();
-        }, 5000);
+           poll takes the uncached socket read — one at a time, backing off when the
+           machine is slow */
+        /* a panel read is a COMPILE on the machine (0.3-0.6 s on a dev box, more when it is
+           busy), so the tick is slow on purpose: the network's membership rarely changes,
+           and one page polling it every 5 s is what kept a loaded machine behind */
+        pollPanel(box, () => load(), 12000);
         return box;
+    }
+
+    /* A PANEL'S POLL MUST NEVER STACK: one read in flight, and when the machine is slow
+       the next tick is pushed back (5 s → 10 s → 20 s → 40 s → 60 s) instead of queueing
+       another read behind the one that is still running. a labouring machine otherwise
+       drowns in its own polls — which is what "the page hangs" looks like. */
+    function pollPanel(box, task, fast) {
+        let delay = fast || 5000;
+        let timer = null;
+        let busy = false;
+        const schedule = (wait) => {
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(tick, wait);
+        };
+        const tick = async () => {
+            if (!box.isConnected) return;
+            if (document.hidden || busy) {
+                schedule(delay);
+                return;
+            }
+            busy = true;
+            const began = Date.now();
+            try {
+                await task();
+            } catch (ignored) {
+                /* a panel read that fails is the machine's news to tell, not a crash */
+            } finally {
+                busy = false;
+            }
+            const spent = Date.now() - began;
+            delay = spent > (fast || 5000) * 0.6 ? Math.min(delay * 2, 60000) : (fast || 5000);
+            if (box.isConnected) schedule(delay);
+        };
+        /* a STAGGERED first tick: several panels mounting together would otherwise fire
+           their first read in the same frame — the one burst a slowly-booting page pays
+           for on every load */
+        schedule(delay * (0.5 + Math.random()));
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
     }
 
     register("/m/mach/component/network", networkPanel);
@@ -1356,6 +1499,46 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
        holds. The client does NOT carry resources or prompts — the mcp SERVER does
        (mcp_server::[tool, resource, prompt]) and nothing connects them through to the
        client yet — so those two menus are placeholders that say exactly that. */
+    /* one probe batch per machine, cached: which prefix each rewrite rule lives under.
+       the batch is capped as a whole (a slow machine leaves the flat table in place
+       instead of holding the panel), and it borrows the background reader. */
+    const PROFILE_PREFIXES = new Map();
+    const PROFILE_RECENT = new Map();
+    /* how long a profile snapshot may be reused (close/reopen) before a fresh one is read */
+    const PROFILE_TTL = 10000;
+    function profilePrefixMap(api) {
+        const apart = api && typeof api.mtronApart === "function" ? api.mtronApart : api.mtron;
+        const key = String((api && api.instance) || "");
+        if (PROFILE_PREFIXES.has(key)) return PROFILE_PREFIXES.get(key);
+        const paths = (text) => {
+            const seen = new Set();
+            (String(text == null ? "" : text).match(/\/[A-Za-z0-9_.\/-]+/g) || []).forEach((path) => seen.add(path));
+            return [...seen];
+        };
+        const cap = (promise) => Promise.race([
+            promise.catch(() => ""),
+            new Promise((resolve) => setTimeout(() => resolve(""), 2500))
+        ]);
+        const pending = (async () => {
+            const map = new Map();
+            const sets = paths(String((await cap(apart("*/instset>>reference"))) || ""));
+            /* four lanes: the probes are independent reads, so they need not queue */
+            const answers = await Promise.all(sets.map((set, index) =>
+                cap(apart("*<" + set + "/inst/rewrite/+>", index))));
+            answers.forEach((answer) => {
+                paths(answer).forEach((vid) => {
+                    /* a vid carries its signature as a query: the address is the path */
+                    const path = vid.split("?")[0];
+                    if (!/\/inst\/rewrite\/[^/]+$/.test(path)) return;
+                    map.set(f(path).name(), f(path).retract(1).toString());
+                });
+            });
+            return map;
+        })();
+        PROFILE_PREFIXES.set(key, pending);
+        return pending;
+    }
+
     /* ── profiling::T — where the time went ────────────────────────────────────
        the machine's own timings: a min/max per stage (rewrite, resolve, apply), the
        resolve and apply sub-stages with their share of their stage, every rewrite rule
@@ -1363,7 +1546,11 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
        cache counters — and the machine's rendered `>>format` text, the same table the
        console prints. read by address when the card has one, else from the expression
        the card was opened with (how a compiler's profile mark opens it). */
-    register("/m/inst/profile/profiling", async function (env, api) {
+    /* THE PANEL MOUNTS AT ONCE and fills when the machine answers. profile() runs the
+       chain about twenty times, and a slow machine must not leave the card sitting on
+       "panel…" with no sign of life: the box (and its heartbeat) is on screen while the
+       read is in flight. */
+    register("/m/inst/profile/profiling", (env, api) => {
         const box = node("div", "mpanel prof-panel");
         const note = node("div", "mpanel-empty", "reading the profile …");
         box.appendChild(note);
@@ -1372,6 +1559,11 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
             note.textContent = "no profile to read";
             return box;
         }
+        fillProfile(env, api, box, note, source);
+        return box;
+    });
+
+    async function fillProfile(env, api, box, note, source) {
         const field = (rec, name) => {
             if (!rec || !rec.isRec || !rec.isRec()) return null;
             for (const [key, value] of rec.js) if (key.toString() === name) return value;
@@ -1385,8 +1577,40 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         const ms = (value) => (value == null ? "—" : value.toFixed(3));
         const pct = (value) => (value == null ? "" : value.toFixed(1) + "%");
         let profile = null;
+        /* the snapshot's key, hoisted: the shelf countdown below reads the same entry */
+        let cacheKey = "";
         try {
-            const text = String((await api.mtron(source)) || "").trim();
+            /* PROFILE() IS THE EXPENSIVE HALF: it runs the chain ~20 times, and on a busy
+               machine that is seconds. say so while it works instead of a bare "reading…". */
+            const started = Date.now();
+            const heartbeat = setInterval(() => {
+                const seconds = Math.round((Date.now() - started) / 1000);
+                note.textContent = "profiling … " + seconds + " s (the machine runs the chain about twenty times)";
+            }, 1500);
+            /* never the reason a node test run (or a closed tab) stays alive */
+            if (heartbeat && typeof heartbeat.unref === "function") heartbeat.unref();
+            /* OPENING THE SAME PANEL AGAIN IS NOT A REASON TO RUN THE PROFILER AGAIN: the
+               rec is a snapshot, so a fresh one is reused for ten seconds — close, reopen,
+               and the panel comes back without touching the machine. */
+            cacheKey = String((api && api.instance) || "") + " " + source;
+            const cached = PROFILE_RECENT.get(cacheKey);
+            /* THE PROFILE READ RIDES A BACKGROUND LANE: on the page's shared chain it
+               queues behind the panels' polls (a roster read can take seconds), which is
+               exactly what the heartbeat then counts. */
+            const read = (expr, lane) => (api && typeof api.mtronApart === "function")
+                ? api.mtronApart(expr, lane)
+                : (api && typeof api.mtron === "function" ? api.mtron(expr) : Promise.resolve(""));
+            let text = "";
+            try {
+                if (cached && Date.now() - cached.at < PROFILE_TTL) {
+                    text = cached.text;
+                } else {
+                    text = String((await read(source, 0)) || "").trim();
+                    if (text) PROFILE_RECENT.set(cacheKey, {at: Date.now(), text: text});
+                }
+            } finally {
+                clearInterval(heartbeat);
+            }
             const value = parse(text);
             profile = value && value.isRec && value.isRec() ? value
                 : (value && value.isObjs && value.isObjs() ? [...value.js].find((m) => m && m.isRec && m.isRec()) : null);
@@ -1472,68 +1696,79 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         subStages(field(profile, "resolve"), "resolve sub-stages");
         subStages(field(profile, "apply"), "apply sub-stages");
 
-        /* REWRITE RULES, FOLDED BY PREFIX: a rule's name is relative, so the machine's
-           rewrite tables supply the addresses — the instset's own reference lists the sets,
-           each set's `inst/rewrite/+` answers its rules' vids, and a vid's
-           retract(1) is the accordion key (/m/db/grph/inst/rewrite for gremlin_where,
-           /m/db/tble/inst/rewrite for sql_where). */
+        /* REWRITE RULES: drawn FLAT at once, then folded by prefix if the machine's own
+           rewrite tables answer — the fold never sits on the render path. A rule's name is
+           relative, so the instset reference lists the sets, each set's `inst/rewrite/+`
+           answers its rules' vids, and a vid's retract(1) is the accordion key
+           (/m/db/grph/inst/rewrite for gremlin_where). The probes ride a reader of their
+           own (mtronApart) with a cap, so they cannot stall the page or the panel. */
         const rewrite = field(profile, "rewrite");
         const rules = rewrite ? field(rewrite, "rules") : null;
         const ruleRows = rules && rules.isLst && rules.isLst() ? [...rules.js] : [];
         if (ruleRows.length) {
             section("rewrite rules");
-            const paths = (text) => {
-                const seen = new Set();
-                (String(text == null ? "" : text).match(/\/[A-Za-z0-9_.\/-]+/g) || []).forEach((path) => seen.add(path));
-                return [...seen];
-            };
-            const prefixByRule = new Map();
-            try {
-                const setText = String((await api.mtron("*/instset>>reference")) || "");
-                const sets = paths(setText);
-                const answers = await Promise.all(sets.map((set) =>
-                    api.mtron("*<" + set + "/inst/rewrite/+>").catch(() => "")));
-                answers.forEach((answer) => {
-                    paths(answer).forEach((vid) => {
-                        /* a vid carries its signature as a query: the address is the path */
-                        const path = vid.split("?")[0];
-                        if (!/\/inst\/rewrite\/[^/]+$/.test(path)) return;
-                        prefixByRule.set(f(path).name(), f(path).retract(1).toString());
+            const entries = ruleRows
+                .map((rule) => ({
+                    name: String(field(rule, "name") || "?"),
+                    in: num(field(rule, "in")),
+                    out: num(field(rule, "out")),
+                    time: num(field(rule, "time"))
+                }))
+                .sort((a, b) => (b.time || 0) - (a.time || 0));
+            const flat = tableOf(["rule", "insts in", "insts out", "time (ms)"],
+                entries.map((rule) => [uriLink(rule.name, rule.name), rule.in, rule.out, ms(rule.time)]));
+            box.appendChild(flat);
+            /* THE PROBES ASK FOR PATHS THAT MAY NOT EXIST (a set without rewrite rules),
+               and every such read fails and prints its apply stack at the machine's
+               console. so folding is ASKED FOR: the flat table is what opening the panel
+               costs, and the accordion is one deliberate click. */
+            const foldBtn = node("button", "ghost", "fold by prefix");
+            foldBtn.type = "button";
+            foldBtn.title = "group the rules by the instruction set that owns them (reads the machine's rewrite tables)";
+            box.appendChild(foldBtn);
+            foldBtn.addEventListener("click", () => {
+                foldBtn.remove();
+                const folding = node("div", "prof-note", "folding by prefix…");
+                box.appendChild(folding);
+                profilePrefixMap(api).then((prefixByRule) => {
+                folding.remove();
+                if (!flat.isConnected || !prefixByRule.size) return;
+                const groups = new Map();
+                entries.forEach((rule) => {
+                    const prefix = prefixByRule.get(rule.name) || "—";
+                    if (!groups.has(prefix)) groups.set(prefix, []);
+                    groups.get(prefix).push({
+                        name: rule.name,
+                        vid: prefixByRule.get(rule.name) ? prefix + "/" + rule.name : rule.name,
+                        in: rule.in, out: rule.out, time: rule.time
                     });
                 });
-            } catch (ignored) {
-                /* no map: every rule folds under one group */
-            }
-            const groups = new Map();
-            ruleRows.forEach((rule) => {
-                const name = String(field(rule, "name") || "?");
-                const prefix = prefixByRule.get(name) || "—";
-                if (!groups.has(prefix)) groups.set(prefix, []);
-                groups.get(prefix).push({
-                    name: name, vid: prefixByRule.get(name) ? prefix + "/" + name : name,
-                    in: num(field(rule, "in")), out: num(field(rule, "out")), time: num(field(rule, "time"))
+                const ordered = [...groups.entries()]
+                    .map(([prefix, rows]) => ({
+                        prefix: prefix, rows: rows,
+                        time: rows.reduce((sum, row) => sum + (row.time || 0), 0)
+                    }))
+                    .sort((a, b) => b.time - a.time);
+                const holder = node("div", "prof-rules");
+                ordered.forEach((group) => {
+                    const fold = document.createElement("details");
+                    fold.className = "prof-group";
+                    /* the biggest spender starts open; the rest are one click away */
+                    fold.open = group === ordered[0];
+                    const head = document.createElement("summary");
+                    head.className = "prof-group-head";
+                    head.appendChild(node("span", "prof-group-name", group.prefix));
+                    head.appendChild(node("span", "prof-group-meta",
+                        group.rows.length + (group.rows.length === 1 ? " rule" : " rules") + " · " + ms(group.time) + " ms"));
+                    fold.appendChild(head);
+                    fold.appendChild(tableOf(["rule", "insts in", "insts out", "time (ms)"],
+                        group.rows.map((rule) => [uriLink(rule.name, rule.vid), rule.in, rule.out, ms(rule.time)])));
+                    holder.appendChild(fold);
                 });
-            });
-            const ordered = [...groups.entries()]
-                .map(([prefix, rows]) => ({
-                    prefix: prefix, rows: rows.sort((a, b) => (b.time || 0) - (a.time || 0)),
-                    time: rows.reduce((sum, row) => sum + (row.time || 0), 0)
-                }))
-                .sort((a, b) => b.time - a.time);
-            ordered.forEach((group) => {
-                const fold = document.createElement("details");
-                fold.className = "prof-group";
-                /* the biggest spender starts open; the rest are one click away */
-                fold.open = group === ordered[0];
-                const head = document.createElement("summary");
-                head.className = "prof-group-head";
-                head.appendChild(node("span", "prof-group-name", group.prefix));
-                head.appendChild(node("span", "prof-group-meta",
-                    group.rows.length + (group.rows.length === 1 ? " rule" : " rules") + " · " + ms(group.time) + " ms"));
-                fold.appendChild(head);
-                fold.appendChild(tableOf(["rule", "insts in", "insts out", "time (ms)"],
-                    group.rows.map((rule) => [uriLink(rule.name, rule.vid), rule.in, rule.out, ms(rule.time)])));
-                box.appendChild(fold);
+                flat.replaceWith(holder);
+                }).catch(() => {
+                    folding.remove();
+                });
             });
             const total = rewrite ? field(rewrite, "total") : null;
             if (total) {
@@ -1578,19 +1813,53 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 + " · hit rate " + (hit == null ? "—" : (hit * 100).toFixed(1) + "%")));
         }
 
-        /* the machine's own rendering, exactly the text the console's `>>format` prints */
-        const formatBox = node("pre", "prof-format", "reading the formatted table …");
+        /* the machine's own rendering, exactly the text the console's `>>format` prints —
+           asked for, not fetched on open: one more run of the profiler for a table the
+           panel already draws is the last thing a busy machine needs */
         section("format");
+        const formatBox = node("pre", "prof-format", "");
+        formatBox.hidden = true;
+        const formatBtn = node("button", "ghost", "format");
+        formatBtn.type = "button";
+        formatBtn.title = "the machine's own text table (>>format)";
+        formatBtn.addEventListener("click", async () => {
+            formatBtn.disabled = true;
+            formatBtn.textContent = "formatting…";
+            try {
+                const text = String((await read(env.vid ? "*<" + env.vid + ">>>format" : source + ">>format", 1)) || "").trim();
+                const value = parse(text);
+                formatBox.textContent = value && value.isStr && value.isStr() ? value.js : text;
+                formatBox.hidden = false;
+                formatBtn.remove();
+            } catch (problem) {
+                formatBox.textContent = "no formatted table: " + (problem && problem.message ? problem.message : problem);
+                formatBox.hidden = false;
+                formatBtn.disabled = false;
+                formatBtn.textContent = "format";
+            }
+        });
+        box.appendChild(formatBtn);
         box.appendChild(formatBox);
-        try {
-            const text = String((await api.mtron(env.vid ? "*<" + env.vid + ">>>format" : source + ">>format")) || "").trim();
-            const value = parse(text);
-            formatBox.textContent = value && value.isStr && value.isStr() ? value.js : text;
-        } catch (problem) {
-            formatBox.textContent = "no formatted table: " + (problem && problem.message ? problem.message : problem);
+        note.remove();
+        /* the snapshot's shelf life, counting down in the panel: a profile is a moment,
+           and the panel reuses it for a few seconds so close/reopen costs nothing */
+        const stamp = PROFILE_RECENT.get(cacheKey);
+        if (stamp) {
+            const shelf = node("div", "prof-note prof-shelf", "");
+            box.insertBefore(shelf, box.firstChild);
+            const paint = () => {
+                const left = Math.max(0, Math.ceil((PROFILE_TTL - (Date.now() - stamp.at)) / 1000));
+                shelf.textContent = left > 0
+                    ? "snapshot · reusable for " + left + " s"
+                    : "snapshot expired — reopening reads a fresh profile";
+                if (left <= 0) clearInterval(tick);
+            };
+            const tick = setInterval(paint, 1000);
+            /* never the reason a node test run (or a closed tab) stays alive */
+            if (tick && typeof tick.unref === "function") tick.unref();
+            paint();
         }
-        return box;
-    });
+    }
 
     register("/m/web/mcp/mcp_client", async function (env, api) {
         const box = node("div", "mpanel mcp-panel");
@@ -2551,6 +2820,96 @@ function compilerPanel(env, api) {
     if (profileBtn) form.appendChild(profileBtn);
     box.appendChild(form);
 
+    /* WHICH COMPONENTS THIS MACHINE COMPOSES: ~/compiler names the parser, rewriter,
+       resolver (and its selector/binder) and typer in use — each a rec whose TYPE is
+       the implementation (mtron_parser, scoring_resolver, specificity_selector,
+       generic_binder, fixpoint_rewriter, typer). shown as a small list above the
+       compile tree and echoed beside each stage's rail. */
+    const components = node("div", "compiler-components");
+    box.appendChild(components);
+    const impl = {};
+    const componentsReady = (async () => {
+        try {
+            const text = String((await api.mtron("*<~/compiler>")) || "").trim();
+            const rec = text ? parse(text) : null;
+            const at = (obj, name) => {
+                if (!obj || !obj.isRec || !obj.isRec()) return null;
+                for (const [key, value] of obj.js) if (key.toString() === name) return value;
+                return null;
+            };
+            const nameOf = (obj) => {
+                if (!obj || !obj.tid) return null;
+                try {
+                    return String(obj.tid.name());
+                } catch (ignored) {
+                    return null;
+                }
+            };
+            const resolver = at(rec, "resolver");
+            /* ONE WRAPPING STRIP, NOT A TWO-COLUMN TABLE: the card is four grid columns
+               wide for the code, and a name/impl pair per row left most of that width
+               blank. the components flow inline and wrap only when the card is narrow. */
+            const base = String((env && env.vid) || "~/compiler").replace(/\/+$/, "");
+            /* every pair OPENS the component it names: the modal reads that address and
+               shows the rec (mtron/json), the same card any other uri gets */
+            const pair = (label, value, sub, path) => {
+                const el = node("span", "compiler-component" + (sub ? " sub" : ""));
+                el.appendChild(node("span", "compiler-component-name", label));
+                el.appendChild(node("span", "compiler-component-impl", value));
+                const vid = path ? base + "/" + path : null;
+                if (vid && api && typeof api.open === "function") {
+                    el.classList.add("openable");
+                    el.title = "open " + vid;
+                    el.addEventListener("click", () => api.open({
+                        vid: vid,
+                        raw: "*<" + vid + ">",
+                        shortTid: label,
+                        expr: "*<" + vid + ">"
+                    }));
+                }
+                return el;
+            };
+            const top = (label, value) => {
+                if (!value) return false;
+                impl[label] = value;
+                components.appendChild(pair(label, value, false, label));
+                return true;
+            };
+            const separator = () => {
+                if (components.children.length) components.appendChild(node("span", "compiler-sep", "·"));
+            };
+            const first = top("parser", nameOf(at(rec, "parser")));
+            separator();
+            const second = top("rewriter", nameOf(at(rec, "rewriter")));
+            separator();
+            const third = top("resolver", nameOf(resolver));
+            /* the resolver's parts sit in one parenthesised group after it */
+            const selector = nameOf(at(resolver, "selector"));
+            const binder = nameOf(at(resolver, "binder"));
+            if (third && (selector || binder)) {
+                const group = node("span", "compiler-subgroup");
+                group.appendChild(node("span", "compiler-paren", "("));
+                if (selector) {
+                    impl.selector = selector;
+                    group.appendChild(pair("selector", selector, true, "resolver/selector"));
+                    if (binder) group.appendChild(node("span", "compiler-sep", "·"));
+                }
+                if (binder) {
+                    impl.binder = binder;
+                    group.appendChild(pair("binder", binder, true, "resolver/binder"));
+                }
+                group.appendChild(node("span", "compiler-paren", ")"));
+                components.appendChild(group);
+            }
+            separator();
+            top("typer", nameOf(at(rec, "typer")));
+            if (components.lastChild && components.lastChild.classList.contains("compiler-sep"))
+                components.lastChild.remove();
+        } catch (ignored) {
+            /* no composition to show: the tree still compiles */
+        }
+    })();
+
     const tree = node("div", "compiler-tree");
     box.appendChild(tree);
 
@@ -2597,6 +2956,9 @@ function compilerPanel(env, api) {
         const span = node("span", "cnode-label", shown);
         if (shown !== full) span.title = full;
         h.appendChild(span);
+        /* the RAIL stays a name column: an implementation suffix here widened the rail past
+           the label and ellipsized it (resolver → "resolv…"). the implementation is the
+           components list above the tree. */
         return h;
     }
     /* a stage's code, with the `?` that opens its explanation: every code::T in
@@ -2665,6 +3027,7 @@ function compilerPanel(env, api) {
         tree.appendChild(status);
 
         try {
+            await componentsReady;
             const src = "[" + quote1(expr) + "]";
 
             /* 1. parse — present it the moment it lands */

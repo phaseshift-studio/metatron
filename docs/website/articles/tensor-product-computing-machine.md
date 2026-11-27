@@ -154,8 +154,8 @@ rejects its object gives the empty stream, $f_i(x) = 0$, and the monad it would 
 
 ```mtron
 mtron> {1,2,3}.is(gt(1))
-==>2
 ==>3
+==>2
 ```
 The machine also walks a dead monad into its next instruction when that instruction's domain admits zero, and applies
 the instruction to the empty stream. That is how an initial instruction gives its seed, and for a linear instruction
@@ -372,8 +372,8 @@ and two monads that reach the same object bulk however they got there. A barrier
 ```mtron
 mtron> {1,2,3}.plus(1).mult(2)
 ==>4
-==>6
 ==>8
+==>6
 ```
 In metatron, a halted monad's objects are handed to the computer's halt hook (`BasicSwarmComputer.makeOnHalt`), which
 appends them to the halted pool. The result is `objs(halted)`, which bulks as it is built.

@@ -707,7 +707,7 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 ==&gt;boot=&gt;[args=&gt;[
      log=&gt;info,
      boot=&gt;&lt;boot/docs.mtron&gt;,
-     local=&gt;&lt;01a5502ee172&gt;],
+     local=&gt;booger],
     file=&gt;&lt;boot/docs.mtron&gt;@boot/file]
 ==&gt;v1=&gt;[name=&gt;'marko',
     age=&gt;29,
@@ -969,7 +969,7 @@ mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(throw()),max=&gt;
 mtron&gt; 15.band(10,20)     ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)     ​7​
-==&gt;fail::[noobj]@/processor/fail/4
+==&gt;fail::[noobj]@/processor/fail/5
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(-100),max=&gt;?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
 mtron&gt; 15.band(10,20)     ​8​
 ==&gt;15

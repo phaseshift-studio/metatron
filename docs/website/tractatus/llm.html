@@ -655,22 +655,24 @@ Two example models are provided below.</p>
                protocol =&gt; ollama,
                host     =&gt; http://localhost:11434,
                llm      =&gt; &lt;qwen3.5:4b&gt;]
-==&gt;fail::[parse error at line 1, col 1: unable to construct model::T: fail::['inst apply failure: java.net.ConnectException (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]']['java.net.ConnectException [SocketChannelImpl&lt;204&gt;]']['fail']['fail']['fail']
-   	while parsing: model::[provider =&gt; ollama,
-                  protocol =&gt; ollama,
-                  host     =&gt; http://localhost:11434,
-                  llm      =&gt; &lt;qwen3.5:4b&gt;]]
+==&gt;model::[skill=&gt;[completion,vision,tools,thinking],
+           size=&gt;gB::3.1571,
+           context=&gt;262144,
+           provider=&gt;ollama,
+           protocol=&gt;ollama,
+           host=&gt;http://localhost:11434,
+           llm=&gt;&lt;qwen3.5:4b&gt;]
 mtron&gt; model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
                api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
                provider =&gt; deepseek,
                protocol =&gt; openai,
                llm      =&gt; &lt;deepseek-v4-pro&gt;]
-==&gt;fail::[parse error at line 1, col 1: unable to construct model::T: fail::['inst apply failure: {"error":{"message":"Authentication Fails (auth header format should be Bearer sk-...) (request_id: aa2cc1e8-7260-40e8-9993-e5f95c2a7d12)","type":"authentication_error","param":null,"code":"invalid_request_error"}} (at /m/inst/ctor) [JdkHttpClient&lt;112&gt;]']['{"error":{"message":"Authentication Fails (auth header format should be Bearer sk-...) (request_id: aa2cc1e8-7260-40e8-9993-e5f95c2a7d12)","type":"authentication_error","param":null,"code":"invalid_request_error"}} [JdkHttpClient&lt;112&gt;]']
-   	while parsing: model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
-                  api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
-                  provider =&gt; deepseek,
-                  protocol =&gt; openai,
-                  llm      =&gt; &lt;deepseek-v4-pro&gt;]]</code></pre>
+==&gt;model::[name=&gt;deepseek-v4-pro,
+           host=&gt;&lt;https://api.deepseek.com/v1&gt;,
+           api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
+           provider=&gt;deepseek,
+           protocol=&gt;openai,
+           llm=&gt;deepseek-v4-pro]</code></pre>
 </div>
 </div>
 <!--
@@ -1091,6 +1093,27 @@ And since, metatron is able to map common data formats to `obj`, its possible to
 [source,mtron]
 ----
 mtron> *<fs:skills/mtron/SKILL.md>
+==>
+   markdown::"---
+   name: mtron
+   description: understanding the language used to control metatron
+   ---
+
+   # mtron: traversing the metatron graph
+
+   mtron is a functional, fluent, monadic language that manipulates the metatron environment.
+
+   To understand mtron, it's necessary to first understand how language, structure, and process are organized in metatron.
+
+   metatron's **structure** is abstractly defined as a [split graph](https://en.wikipedia.org/wiki/Split_graph) composed of
+   two vertex sets:
+   $V = U \cup O$. The set $U$ is the set of [uris](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) (**uniform
+   resource identifiers**) and they maintain an _intra-edge_ set defined by uri **path adjacency**. The set $O$ is the set
+   of objs (objects) whose _intra-edge_ set denote **shared/coupled state**. Finally, there exists a bi-directional
+   **inter-edge** set linking the uris in $U$ to
+   the objs in $O$ in a **reference/referent** relationship.
+
+   ...
 ----
 
 [discrete]

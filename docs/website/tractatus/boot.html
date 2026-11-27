@@ -578,33 +578,33 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
    """
 ==&gt;[stdin=&gt;block(/sys/io/stdin?str&lt;=(){&lt;j&gt;}),
     stdout=&gt;/sys/io/stdout?#{?}&lt;=(#{?}::T){&lt;j&gt;}]
-==&gt;[f0531a46=&gt;virtual::[
+==&gt;[&lt;615f4deb&gt;=&gt;virtual::[
      code=&gt;λ(#{*}::T){&lt;j&gt;},
      source=&gt;!*/processor/analyzer,
      rhs=&gt;!λawait(){&lt;j&gt;},
      lhs=&gt;noobj,
      state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.11:27/00/20/17/121?tz=+0000&gt;,
+     time=&gt;datetime::&lt;//2026.11:27/03/26/02/607?tz=-0700&gt;,
      runtime=&gt;!λ(){&lt;j&gt;},
-     ...(1 more)]@/sys/thread/f0531a46,
+     ...(1 more)]@/sys/thread/615f4deb,
     executor=&gt;thread_executor::[
-     stop=&gt;[!*/sys/thread/f0531a46],
+     stop=&gt;[!*/sys/thread/615f4deb],
      run=&gt;[!*/sys/thread/main]]@/sys/thread/executor,
     main=&gt;core::[
      code=&gt;λ(#{*}::T){&lt;j&gt;},
      rhs=&gt;!λawait(){&lt;j&gt;},
      lhs=&gt;noobj,
      state=&gt;run,
-     time=&gt;datetime::&lt;//2026.11:27/00/20/17/199?tz=+0000&gt;,
+     time=&gt;datetime::&lt;//2026.11:27/03/26/02/683?tz=-0700&gt;,
      runtime=&gt;!λ(){&lt;j&gt;}]@/sys/thread/main]
-==&gt;[LANGUAGE=&gt;'en_US:en',
-    PATH=&gt;'/opt/java/openjdk/bin:/usr/local/s...',
-    JAVA_HOME=&gt;'/opt/java/openjdk',
-    MAVEN_CONFIG=&gt;'/root/.m2',
-    MAVEN_PROJECTBASEDIR=&gt;'/work',
-    OLDPWD=&gt;'/work',
-    LANG=&gt;'en_US.UTF-8',
-    ...(12 more)]</code></pre>
+==&gt;[PATH=&gt;'/home/killswitch/.local/bin:/home/...',
+    XAUTHORITY=&gt;'/home/killswitch/.Xauthority',
+    XMODIFIERS=&gt;'@im=ibus',
+    GDMSESSION=&gt;'cinnamon',
+    XDG_DATA_DIRS=&gt;'/usr/share/cinnamon:/home/killswit...',
+    HSA_OVERRIDE_GFX_VERSION=&gt;'10.3.0',
+    HERMES_HOME=&gt;'/home/killswitch/.hermes_clone',
+    ...(66 more)]</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -668,16 +668,16 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; */sys/env/+/.take(10)
-==&gt;/sys/env/LANGUAGE=&gt;'en_US:en'
-==&gt;/sys/env/PATH=&gt;'/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-==&gt;/sys/env/JAVA_HOME=&gt;'/opt/java/openjdk'
-==&gt;/sys/env/MAVEN_CONFIG=&gt;'/root/.m2'
-==&gt;/sys/env/MAVEN_PROJECTBASEDIR=&gt;'/work'
-==&gt;/sys/env/OLDPWD=&gt;'/work'
-==&gt;/sys/env/LANG=&gt;'en_US.UTF-8'
-==&gt;/sys/env/TESTCONTAINERS_HOST_OVERRIDE=&gt;'192.168.1.61'
-==&gt;/sys/env/MAVEN_OPTS=&gt;'--enable-native-access=ALL-UNNAMED   -Dmaven.repo.local=/work/.build/m2/repository -Djansi.tmpdir=/work/.build/m2/jansi'
-==&gt;/sys/env/MAVEN_HOME=&gt;'/work/.m2/wrapper/dists/apache-maven-3.10.0/dae9a06d'</code></pre>
+==&gt;/sys/env/PATH=&gt;'/home/killswitch/.local/bin:/home/killswitch/.bun/bin:/home/killswitch/.npm-global/bin:/usr:/opt/rocm-6.4.0/bin:/opt/rocm/bin:/home/killswitch/.opencode/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/software/miniconda3/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/.sdkman/candidates/maven/current/bin:/home/killswitch/.sdkman/candidates/jbang/current/bin:/home/killswitch/.sdkman/candidates/java/current/bin:/home/killswitch/.local/bin:/home/killswitch/.elan/bin:/home/killswitch/.cargo/bin:/home/killswitch/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/killswitch/.lmstudio/bin:/home/killswitch/software/ijhttp:/home/killswitch/.surrealdb:/home/killswitch/.lmstudio/bin:/home/killswitch/go/bin:/home/killswitch/.local/bin'
+==&gt;/sys/env/XAUTHORITY=&gt;'/home/killswitch/.Xauthority'
+==&gt;/sys/env/XMODIFIERS=&gt;'@im=ibus'
+==&gt;/sys/env/GDMSESSION=&gt;'cinnamon'
+==&gt;/sys/env/XDG_DATA_DIRS=&gt;'/usr/share/cinnamon:/home/killswitch/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share:/var/lib/snapd/desktop'
+==&gt;/sys/env/HSA_OVERRIDE_GFX_VERSION=&gt;'10.3.0'
+==&gt;/sys/env/HERMES_HOME=&gt;'/home/killswitch/.hermes_clone'
+==&gt;/sys/env/GTK_IM_MODULE=&gt;'ibus'
+==&gt;/sys/env/DBUS_SESSION_BUS_ADDRESS=&gt;'unix:path=/run/user/1000/bus'
+==&gt;/sys/env/METATRON_HOME=&gt;'/home/killswitch/software/metatron'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>

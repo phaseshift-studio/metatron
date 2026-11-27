@@ -977,6 +977,25 @@ mtron&gt; {1,2,3}-&lt;[plus(1),plus(2)]          [-- {[2,3],[3,4],[4,5]}  (each 
 ==&gt;[3,4]
 ==&gt;[4,5]
 </code></pre>
+<h4>partition (<code>partition(p, k =&gt; c, …)</code>)</h4>
+<p>Each member goes to the lane its key names, where a branch sends it to every lane: <code>p</code> keys each member once (a uri, or
+an int read as its decimal spelling), <code>&lt;#&gt;</code> takes the members no key names, and a zeroable lane (<code>{?}&lt;a&gt;</code>) takes the
+members keyed noobj. A partition is a barrier: its dom gathers the whole lhs by default, and a smaller maximum makes it
+a lazy barrier (<code>?&lt;=int{2}</code> a page, <code>?&lt;=int{?}</code> one member at a time). A key that names a place (<code>//a</code>) runs its lane
+there: see menu entry X of the <a href="distributed-computing-mtron.html">distributed computing reference</a>.</p>
+<pre><code class="language-mtron">mtron&gt; {1,2,3,4}.partition(mod(2), &lt;0&gt; =&gt; plus(10), &lt;1&gt; =&gt; plus(20))     [-- the evens to &lt;0&gt;, the odds to &lt;1&gt; --]
+==&gt;12
+==&gt;14
+==&gt;21
+==&gt;23
+mtron&gt; {1,2,3,4}.partition(mod(2), &lt;0&gt; =&gt; sum(), &lt;1&gt; =&gt; sum())           [-- {6,4}  (each lane folds its whole share) --]
+==&gt;6
+==&gt;4
+mtron&gt; {1,2,3}.partition(mod(3), &lt;0&gt; =&gt; id(), &lt;#&gt; =&gt; plus(100))          [-- 3 keys &lt;0&gt;, and the rest takes 1 and 2 --]
+==&gt;3
+==&gt;101
+==&gt;102
+</code></pre>
 <h4>conditional branch: <code>-&lt;|[?pred=&gt;a, _=&gt;b]</code></h4>
 <pre><code class="language-mtron">mtron&gt; 1-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]          [-- 1=&gt;3  (1 fails ?&gt;1, so the default branch +2 takes it) --]
 ==&gt;1=&gt;3
@@ -1068,6 +1087,9 @@ mtron&gt; [1,2]@a &gt;&gt;= [_,+4]                      [-- [1,6]@a  (second ele
 mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  (remove field b) --]
 ==&gt;[a=&gt;1]
 mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;architect]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;developer]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;oracle]
 </code></pre>
 <p><code>@</code> means &quot;anchor the write-back to the VID&quot; (persist).  <code>*</code> means &quot;anonymous copy&quot; (no write-back):</p>
 <pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back   --]

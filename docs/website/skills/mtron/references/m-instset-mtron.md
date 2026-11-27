@@ -520,6 +520,28 @@ mtron> {1,2,3}-<[plus(1),plus(2)]          [-- {[2,3],[3,4],[4,5]}  (each member
 ==>[3,4]
 ==>[4,5]
 ```
+### partition (`partition(p, k => c, …)`)
+
+Each member goes to the lane its key names, where a branch sends it to every lane: `p` keys each member once (a uri, or
+an int read as its decimal spelling), `<#>` takes the members no key names, and a zeroable lane (`{?}<a>`) takes the
+members keyed noobj. A partition is a barrier: its dom gathers the whole lhs by default, and a smaller maximum makes it
+a lazy barrier (`?<=int{2}` a page, `?<=int{?}` one member at a time). A key that names a place (`//a`) runs its lane
+there: see menu entry X of the [distributed computing reference](distributed-computing-mtron.md).
+
+```mtron
+mtron> {1,2,3,4}.partition(mod(2), <0> => plus(10), <1> => plus(20))     [-- the evens to <0>, the odds to <1> --]
+==>12
+==>14
+==>21
+==>23
+mtron> {1,2,3,4}.partition(mod(2), <0> => sum(), <1> => sum())           [-- {6,4}  (each lane folds its whole share) --]
+==>6
+==>4
+mtron> {1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100))          [-- 3 keys <0>, and the rest takes 1 and 2 --]
+==>3
+==>101
+==>102
+```
 ### conditional branch: `-<|[?pred=>a, _=>b]`
 
 ```mtron
@@ -636,6 +658,9 @@ mtron> [1,2]@a >>= [_,+4]                      [-- [1,6]@a  (second element +4) 
 mtron> [a=>1,b=>2] >>= [b=>none]               [-- [a=>1]  (remove field b) --]
 ==>[a=>1]
 mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
+==>[name=>'Micky Mouse',role=>architect]
+==>[name=>'Micky Mouse',role=>developer]
+==>[name=>'Micky Mouse',role=>oracle]
 ```
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
 

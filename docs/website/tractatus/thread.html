@@ -704,9 +704,9 @@ core::[code=&gt;expensive_computation]            [-- &lt;3&gt; --]</code></pre>
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; */sys/thread/executor/run
 ==&gt;[,]
 mtron&gt; */sys/thread/executor/stop
-==&gt;[!*/sys/thread/f0531a46,
+==&gt;[!*/sys/thread/615f4deb,
     !*/sys/thread/main,
-    !*/sys/thread/d66e0321]
+    !*/sys/thread/59eda4ee]
 mtron&gt; */sys/thread/executor/stop/+/source
 ==&gt;analyzer{2}::[analysis=&gt;!λ(#{*}::T){&lt;j&gt;},mute=&gt;!λ(#{*}::T){&lt;j&gt;}]
 mtron&gt; */sys/thread/executor/stop/+/source/source</code></pre>
@@ -729,7 +729,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:27/00/29/31/546?tz=+0000&gt;,
+             time=&gt;datetime::&lt;//2026.11:27/03/26/14/433?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -748,7 +748,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:27/00/29/31/546?tz=+0000&gt;,
+             time=&gt;datetime::&lt;//2026.11:27/03/26/14/433?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -775,7 +775,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; *ab
-==&gt;'BABABABABABA'</code></pre>
+==&gt;'BABABABAABBA'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -841,7 +841,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
           rhs=&gt;!λawait(){&lt;j&gt;},
           lhs=&gt;noobj,
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:27/00/20/17/199?tz=+0000&gt;,
+          time=&gt;datetime::&lt;//2026.11:27/03/26/02/683?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;},
           result=&gt;noobj]@/sys/thread/main
 mtron&gt; */sys/thread/main?docq
@@ -850,7 +850,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:27/00/20/17/199?tz=+0000&gt;,
+           time=&gt;datetime::&lt;//2026.11:27/03/26/02/683?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>

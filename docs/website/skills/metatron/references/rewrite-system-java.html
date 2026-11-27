@@ -694,7 +694,19 @@ difference: the rewrite checks <strong>which space</strong> the data lives in, a
 <ol>
 <li><code>Rewriter.search().match().rewrite()</code> finds a matching instruction sequence</li>
 <li>The rewrite function checks <code>spaceType.isInstance(space)</code> — wrong space type → skip</li>
-<li><code>matchPredicate</code> and <code>matchSpacePredicate</code> guards run — fail → return original unchanged</li>
+<li><code>matchPredicate</code> and <code>matchSpacePredicate</code> guards run — fail → return original unchanged. A plan that reads a
+source (<code>matchFromOrAt(reads)</code>, and <code>CommonRewrites.countRewrite</code>'s match) stands in only for one that reads every
+entry of one collection, <code>collection/+</code>: <code>table/1</code>, <code>table</code> and <code>table/#</code> are left to the walk. A plan that answers
+entries (count, take, skip, where, select, order, dedup: <code>DBRewriteBuilder::answersEveryEntry</code>) also wants nothing
+below the entry, since <code>collection/+/field</code> answers the field's values. A sum
+(<code>collection/+/field</code>, or <code>collection/+&gt;&gt;field</code> for the shift form) or a mean (<code>collection/+/field</code>) reads one field
+of each entry (<code>DBRewriteBuilder::readsEveryEntry</code>). <code>DBRewriteBuilder.fieldPath</code> names the field, one concrete
+field with no wildcard below it, no branched path (<code>+/{value,id}</code>), and no shift key that is not a uri (<code>&gt;&gt;'x'</code>, or
+the branch <code>&gt;&gt;{value,id}</code>, which the fold leaves out). The space vets the rest: a path below the field is a
+document's dotted path, though not an index (<code>tags/0</code>, <code>tags/-1</code>), and no column's. The kv pushdowns, which read the path below a table as a key prefix, do not ask.
+Before any of these, <code>build()</code> leaves a match holding a <code>take</code> or a <code>skip</code> of a negative count as it is, for every
+plan, the kv ones too: the walk counts it from the end (<code>[1,2,3]&gt;-.take(-2)</code> answers <code>{3,2}</code>), which no store's
+limit or offset says.</li>
 <li>Native lambda executes against the database, receiving the coefficient for cardinality tracking</li>
 <li>The matched sequence is replaced with a single native instruction</li>
 </ol>

@@ -143,6 +143,13 @@ function watchPulse(instance) {
     connect();
 }
 
+/* the reader pool a panel's background probes use: one per instance, so their reads
+   run beside the page's rather than in front of them */
+function apartReaders(instance, lane) {
+    if (!instance.readersApart) instance.readersApart = [new Map(), new Map(), new Map(), new Map()];
+    return instance.readersApart[Number(lane || 0) % instance.readersApart.length];
+}
+
 function setDot(el, state) {
     if (!el) return;
     el.classList.remove("down", "busy", "up", "warn", "bad");
@@ -1147,6 +1154,7 @@ function mountObjPanel(objCard, host, env) {
         instance: owner.wsBase,
         fsspaces: () => owner.fsspaces || [],
         mtron: (expr) => evalMtronOn(owner, expr),
+        mtronApart: (expr, lane) => evalMtronOn(owner, expr, apartReaders(owner, lane)),
         open: (env) => inspectReference(env || {}),
         at: (text) => {
             if (host.at) host.at.textContent = text;
@@ -1875,10 +1883,13 @@ async function loadFsspaces(instance) {
 /* evaluate one expression on the x-mtron (structural) socket — unit- and
    vid-preserving; the json codec drops tids/vids, so the stats strip and
    the panels that need the raw machine form read through here. */
-function evalMtronOn(instance, expr) {
+function evalMtronOn(instance, expr, pool) {
     const mime = "application/x-mtron";
-    const reader = readerFor(mime, instance.readers);
-    const run = reader.chain.then(() => connectReader(mime, instance.wsBase, instance.readers)).then((socket) => new Promise((resolve) => {
+    /* a BACKGROUND read passes its own pool: its chain is separate, so a panel's probes
+       (which are several reads deep) never queue the page's polls behind them */
+    const readers = pool || instance.readers;
+    const reader = readerFor(mime, readers);
+    const run = reader.chain.then(() => connectReader(mime, instance.wsBase, readers)).then((socket) => new Promise((resolve) => {
         /* a dead socket answers "" at once, not at the timeout: the reader is
            queued, so one aborted request (a sys_stat the machine drops) must not
            stall every panel read behind it */
@@ -1910,6 +1921,18 @@ function evalMtron(expr) {
    (the reply never comes, the connection closes), and the strip must say so instead
    of staying blank while the poll keeps killing a socket every tick. */
 async function loadStats() {
+    /* NEVER TWO IN FLIGHT: a slow sys_stat() would otherwise be queued behind its own
+       predecessor every poll tick, on the same reader every panel reads through */
+    if (loadStats.busy) return;
+    loadStats.busy = true;
+    try {
+        await loadStatsNow();
+    } finally {
+        loadStats.busy = false;
+    }
+}
+
+async function loadStatsNow() {
     if (!active) return;
     const instance = active;
     let text = "";
@@ -2302,6 +2325,13 @@ $("#popup").addEventListener("click", (ev) => {
     if (ev.target !== el) return;
     if (el.dataset.resizing) return;
     if (Date.now() - Number(el.dataset.resizedAt || 0) < 400) return;
+    /* A CLICK JUST PAST THE EDGE IS NOT A VOTE TO CLOSE: the history keys sit at the
+       panel's bottom-left corner, and a click a few pixels beyond them used to dismiss
+       the panel. the box gets a 20px collar where a click still counts as inside. */
+    const rect = el.getBoundingClientRect();
+    const collar = 20;
+    if (ev.clientX >= rect.left - collar && ev.clientX <= rect.right + collar
+        && ev.clientY >= rect.top - collar && ev.clientY <= rect.bottom + collar) return;
     el.close();
 });
 $("#popup").addEventListener("close", () => {
@@ -2374,12 +2404,15 @@ if (homeSource) {
 
 refresh();
 loadServers();
+/* 30 s, not 15: refresh() reads sys_stat and loadServers() reads the roster, and both are
+   compiled evaluations on the machine — the strip and the server list do not change fast
+   enough to pay for them every fifteen seconds */
 setInterval(() => {
     if (!document.hidden) {
         refresh();
         loadServers();
     }
-}, 15000);
+}, 30000);
 document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
         refresh();

@@ -212,7 +212,19 @@ RewriteBuilder.forDatabase(tbleSpace.class)
 
 1. `Rewriter.search().match().rewrite()` finds a matching instruction sequence
 2. The rewrite function checks `spaceType.isInstance(space)` — wrong space type → skip
-3. `matchPredicate` and `matchSpacePredicate` guards run — fail → return original unchanged
+3. `matchPredicate` and `matchSpacePredicate` guards run — fail → return original unchanged. A plan that reads a
+   source (`matchFromOrAt(reads)`, and `CommonRewrites.countRewrite`'s match) stands in only for one that reads every
+   entry of one collection, `collection/+`: `table/1`, `table` and `table/#` are left to the walk. A plan that answers
+   entries (count, take, skip, where, select, order, dedup: `DBRewriteBuilder::answersEveryEntry`) also wants nothing
+   below the entry, since `collection/+/field` answers the field's values. A sum
+   (`collection/+/field`, or `collection/+>>field` for the shift form) or a mean (`collection/+/field`) reads one field
+   of each entry (`DBRewriteBuilder::readsEveryEntry`). `DBRewriteBuilder.fieldPath` names the field, one concrete
+   field with no wildcard below it, no branched path (`+/{value,id}`), and no shift key that is not a uri (`>>'x'`, or
+   the branch `>>{value,id}`, which the fold leaves out). The space vets the rest: a path below the field is a
+   document's dotted path, though not an index (`tags/0`, `tags/-1`), and no column's. The kv pushdowns, which read the path below a table as a key prefix, do not ask.
+   Before any of these, `build()` leaves a match holding a `take` or a `skip` of a negative count as it is, for every
+   plan, the kv ones too: the walk counts it from the end (`[1,2,3]>-.take(-2)` answers `{3,2}`), which no store's
+   limit or offset says.
 4. Native lambda executes against the database, receiving the coefficient for cardinality tracking
 5. The matched sequence is replaced with a single native instruction
 

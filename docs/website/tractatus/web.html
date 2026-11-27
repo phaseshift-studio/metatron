@@ -590,14 +590,18 @@ The structural <code>rec::T</code> DOM tree is opt-in.</p>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; html::T     ​1​
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
+==&gt;ERROR: /m/inst/from is not reachable from /.: no peer is dialed at http://phaseshift.studio
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​3​
+==&gt;ERROR: /m/inst/from is not reachable from /.: no peer is dialed at http://phaseshift.studio
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)/html/head/title     ​4​
 ==&gt;fail::[parse error at line 1, col 51:
      ...haseshift.studio/splash.html&gt;.as(rec::T)/html/head/title
                                                 ^
      expected an obj]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;     ​5​
-mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​</code></pre>
+==&gt;ERROR: /m/inst/from is not reachable from /.: no peer is dialed at http://phaseshift.studio?mimeq=application/x-mtron
+mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​
+==&gt;ERROR: /m/inst/from is not reachable from /.: no peer is dialed at http://phaseshift.studio</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -641,9 +645,13 @@ As such, REST resources can be enriched/typed to become active computational obj
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; *&lt;http://localhost:11434&gt;     ​1​
+==&gt;ERROR: /m/inst/from is not reachable from /.: no peer is dialed at http://localhost:11434
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;     ​2​
+==&gt;ERROR: /m/inst/from is not reachable from /.: no peer is dialed at http://localhost:11434
 mtron&gt; *&lt;http://localhost:11434/api/tags?mimeq=application/x-mtron&gt;     ​3​
-mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​</code></pre>
+==&gt;ERROR: /m/inst/from is not reachable from /.: no peer is dialed at http://localhost:11434?mimeq=application/x-mtron
+mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
+==&gt;ERROR: /m/inst/from is not reachable from /.: no peer is dialed at http://localhost:11434</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -699,7 +707,8 @@ mtron&gt; */m/ai/llm/inst/+?dom=model</code></pre>
             protocol=&gt; ollama,
             host    =&gt; &lt;http://localhost:11434&gt;,
             name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
-         .chat('are you there?')</code></pre>
+         .chat('are you there?')
+==&gt;ERROR: /m/inst/from is not reachable from /.: no peer is dialed at http://localhost:11434?mimeq=application/x-mtron</code></pre>
 </div>
 </div>
 <div class="colist arabic">

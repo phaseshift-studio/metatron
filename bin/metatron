@@ -18,6 +18,19 @@ set -euo pipefail
 # ── resolve project root ───────────────────────────────────────────
 cd "$(dirname "$(readlink -f "$0")")/.."
 
+# A failed Maven run used to `exit` with its own status and print nothing when its log
+# held only WARNING lines (that is exactly how an unwritable .mtron-classpath looked).
+mvn_exit() {  # mvn_exit LOGFILE STATUS
+    if [ "$2" -ne 0 ]; then
+        echo "==> maven failed (exit $2); last lines of its log:" >&2
+        tail -n 20 "$1" 2>/dev/null >&2 || true
+        rm -f "$1"
+        exit "$2"
+    fi
+    grep -v "^WARNING:" "$1" 2>/dev/null >&2 || true
+    rm -f "$1"
+}
+
 # ── project Maven settings, without shadowing the developer's ──────
 # conf/maven-settings.xml mirrors the DEAD "Paho Releases" repository (declared by the
 # transitive moquette-parent POM) to Central; without it, Maven's plugin-prefix scan sits
@@ -165,9 +178,7 @@ else
             MVN_EXIT=$?
         fi
         set -e
-        grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null >&2 || true
-        rm -f "$MVN_LOG"
-        if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
+        mvn_exit "$MVN_LOG" "$MVN_EXIT"
         # Record the pom this cache was resolved from.  Best effort: an
         # unwritable checkout must not fail the boot — it only costs a
         # re-resolve next time.
@@ -195,9 +206,7 @@ else
         wait $!
         MVN_EXIT=$?
         set -e
-        grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null >&2 || true
-        rm -f "$MVN_LOG"
-        if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
+        mvn_exit "$MVN_LOG" "$MVN_EXIT"
         STEP_RAN=1
     fi
     # Spinner already emits \n when done.  Only need this when nothing ran.
