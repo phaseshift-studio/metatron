@@ -34,9 +34,8 @@ import(/m/web,web);
 import(/m/db/tble);
 import(/m/dev/dckr);
 
-
 fsspace::[pattern => fs:#,
-          q       => [mimeq::[=>]],
+          q       => [mimeq::[=>], analq::[=>]],
           route   => [fs: => <.>]]@~/memory/space/fs/root;
 
 [== calls boot modules to load spaces ==]
@@ -52,5 +51,6 @@ http_client::[host => <https://#>];
 mdns_discovery::[=>];
 *boot/args/console.?=true.
   else(print('{{g}}docker boot complete — ws 0.0.0.0:8555, http 0.0.0.0:8777{{X}}\n').
-       print('{{g}}a simple remote console: {{y}}wsplus {{b}}ws://localhost:8555/mtron{{X}}\n')).
+       print('{{g}}remote console: {{y}}wsplus {{b}}ws://localhost:8555/mtron{{X}}\n').
+       print('{{g}}splash page:    {{y}}splash {{b}}http://${/network/host}:8777}{{X}}\n').
        -<[[=>]@/sys/console.as(console::T)];
