@@ -1014,15 +1014,19 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
     /**
      * A furi has branches when some path segment carries a {@code {…}} branch: the whole segment ({@code a/{b,c}}),
-     * attached to it ({@code a{,/b}}), or a coefficient-marked atom ({@code {2}c}). Such a uri must be
-     * {@code < >}-quoted to be re-readable, since a bare token leading with {@code {…}} is a stream, not a uri.
+     * attached to it ({@code a{,/b}}), or a coefficient-marked atom ({@code {2}c}), or when the host is a branch of
+     * names ({@code //{ginger,chibi}/a}). Such a uri must be {@code < >}-quoted to be re-readable, since a bare token
+     * leading with {@code {…}} is a stream, not a uri.
      *
-     * @return whether the path carries a branch
+     * @return whether the path or the host carries a branch
      */
     default boolean hasBranches() {
         // a loop, not a stream: c() and c(k) ask this of every uri they count
         if (this.hasTemplates())
             return false;
+        final String host = this.host();
+        if (null != host && 0 <= host.indexOf('{'))
+            return true;
         for (final String segment : this.path())
             if (segment.indexOf('{') >= 0)
                 return true;
@@ -1366,6 +1370,19 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         static List<fURI> branches(final fURI furi) {
             if (!furi.hasBranches())
                 return List.of(furi);
+            // A HOST BRANCH IS A SUM OF NAMES (Marko, 2026-11-26): //{ginger,chibi}/a is //ginger/a + //chibi/a. A host
+            // holds no coefficient, so a numeric brace is names too ({0,1}, the names a spawn gives), never the range a
+            // path reads it as. Each name leads with its point, and each term's own branches expand in turn
+            final String host = furi.host();
+            if (null != host && 1 < host.length() && '{' == host.charAt(0) && '}' == host.charAt(host.length() - 1)) {
+                final List<fURI> terms = new ArrayList<>();
+                for (final String element : Singleton.splitBranchElements(host.substring(1, host.length() - 1))) {
+                    final int end = leadingCoefficient(element);
+                    final cInt point = -1 == end ? cInt.ONE() : cInt.of(element.substring(1, end));
+                    terms.addAll(branches(furi.host(element.substring(end + 1)).d(furi.d().mult(point))));
+                }
+                return terms;
+            }
             final List<fURI> branches = new ArrayList<>();
             for (final Tuple.Pair<String, cInt> term : expand(furi.pathString())) {
                 final fURI element = Singleton.f(term.get0());

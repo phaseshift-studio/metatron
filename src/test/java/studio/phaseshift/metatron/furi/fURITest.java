@@ -1234,7 +1234,8 @@ public class fURITest extends AbstractMetatronTest {
             // terms that differ in their host branch at the root, a hosted spelling as surely as a schemed one
             "//east/x             | //west/x                    | {//east/x,//west/x}",
             "//west/x{2}          | //east/x                    | {//east/x,{2}//west/x}",
-            "//east/x             | ws://west:1/x               | {//east/x,ws://west:1/x}"
+            "//east/x             | ws://west:1/x               | {//east/x,ws://west:1/x}",
+            "<//{west,east}/x>    | //north/x                   | {//east/x,//north/x,//west/x}"
     }, delimiter = '|')
     public void testPlus(final String f1, final String f2, final String expected) {
         final fURI furi1 = f(f1);
@@ -2407,6 +2408,12 @@ public class fURITest extends AbstractMetatronTest {
             "<http://a.com/{a,b/c}>                  % http://a.com/a|http://a.com/b/c",
             "<{//east/x,//west/x}>                   % //east/x|//west/x",
             "<{{2}//east/x,ws://west:1/x}>           % //east/x{2}|ws://west:1/x",
+            // a host branch is a sum of names, a numeric one too (a host holds no coefficient), and each name's term
+            // expands its own path branches in turn
+            "<//{east,west}/x>                       % //east/x|//west/x",
+            "<//{0,1}/x>                             % //0/x|//1/x",
+            "<//{{2}east,west}/x/{a,b}>              % //east/x/a{2}|//east/x/b{2}|//west/x/a|//west/x/b",
+            "<//{ginger,chibi}/a/{b,c}>              % //ginger/a/b|//ginger/a/c|//chibi/a/b|//chibi/a/c",
     }, delimiter = '%')
     void testBranches(final String furi, final String expected) {
         assertEquals(Arrays.asList(expected.split("\\|")), f(furi).branches().map(fURI::toString).toList());
@@ -2421,6 +2428,7 @@ public class fURITest extends AbstractMetatronTest {
     @CsvSource(value = {
             "<{//east/x,//west/x}>                   % east|west",
             "<{//east/x,ws://west:1/x}>              % east|west",
+            "<//{east,west}/x>                       % east|west",
             "<{//east/x,/y}>                         % east|null",
             // the hoist is untouched: a branch of absolute paths is still a path, and names no host
             "<{/east/x,/west/x}>                     % null|null",
