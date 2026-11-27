@@ -2414,6 +2414,8 @@ public class fURITest extends AbstractMetatronTest {
             "<//{0,1}/x>                             % //0/x|//1/x",
             "<//{{2}east,west}/x/{a,b}>              % //east/x/a{2}|//east/x/b{2}|//west/x/a|//west/x/b",
             "<//{ginger,chibi}/a/{b,c}>              % //ginger/a/b|//ginger/a/c|//chibi/a/b|//chibi/a/c",
+            // a wildcard host is a host like any other: the path's branch flattens under it
+            "<//+/{a,b}>                             % //+/a|//+/b",
     }, delimiter = '%')
     void testBranches(final String furi, final String expected) {
         assertEquals(Arrays.asList(expected.split("\\|")), f(furi).branches().map(fURI::toString).toList());

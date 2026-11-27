@@ -155,6 +155,9 @@ public class NetworkPrefixTest extends AbstractMetatronTest {
         Machine.current().network().registerPrefix(OTHER, OTHER_LOOP);
         assertEquals(f("<{loop://other/a,loop://self/a}>"), Machine.Helper.align(Machine.current(), f("//+/a")),
                 "//+/a is every name's /a");
+        // the path's branch flattens first (//+/{a,b} is //+/a + //+/b), and each term is every name's
+        assertEquals(f("<{loop://other/a,loop://other/b,loop://self/a,loop://self/b}>"),
+                Machine.Helper.align(Machine.current(), f("//+/{a,b}")), "//+/{a,b} is every name's /a and /b");
         Machine.write(f("/network/prefix"), noobj());
         assertEquals(fURI.Singleton.NOOBJ, Machine.Helper.align(Machine.current(), f("//+/a")), "no name, no term");
     }

@@ -689,6 +689,7 @@ public class UriTest extends AbstractAlgebraTest {
             // mtron reads a numeric brace in a written uri as a coefficient, so numeric names are spelled by template
             "<//{${'0,1'}}/a>.-<            % {<//0/a>,<//1/a>}",
             "<//{ginger,chibi}/a/{b,c}>.-<  % {<//ginger/a/b>,<//ginger/a/c>,<//chibi/a/b>,<//chibi/a/c>}",
+            "<//+/{a,b}>.-<                 % {<//+/a>,<//+/b>}",
             "<//east/a> + <//west/a>        % <{//east/a,//west/a}>",
             "{/a/b,/a/c,/a/b}.sum()         % </a/{{2}b,c}>",
             "{/a/b,/a/c}.sum()              % </a/{b,c}>",
