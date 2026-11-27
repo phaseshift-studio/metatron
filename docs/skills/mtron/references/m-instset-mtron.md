@@ -377,6 +377,20 @@ Distributes elements:
 {1,2,3}-<[plus(1),plus(2)]          [-- {[2,3],[3,4],[4,5]}  (each member against each branch) --]
 ```
 
+### partition (`partition(p, k => c, …)`)
+
+Each member goes to the lane its key names, where a branch sends it to every lane: `p` keys each member once (a uri, or
+an int read as its decimal spelling), `<#>` takes the members no key names, and a zeroable lane (`{?}<a>`) takes the
+members keyed noobj. A partition is a barrier: its dom gathers the whole lhs by default, and a smaller maximum makes it
+a lazy barrier (`?<=int{2}` a page, `?<=int{?}` one member at a time). A key that names a place (`//a`) runs its lane
+there: see menu entry X of the [distributed computing reference](distributed-computing-mtron.md).
+
+```mtron_pre
+{1,2,3,4}.partition(mod(2), <0> => plus(10), <1> => plus(20))     [-- the evens to <0>, the odds to <1> --]
+{1,2,3,4}.partition(mod(2), <0> => sum(), <1> => sum())           [-- {6,4}  (each lane folds its whole share) --]
+{1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100))          [-- 3 keys <0>, and the rest takes 1 and 2 --]
+```
+
 ### conditional branch: `-<|[?pred=>a, _=>b]`
 
 ```mtron_pre

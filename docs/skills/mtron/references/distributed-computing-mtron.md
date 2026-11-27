@@ -336,7 +336,7 @@ the fold ships over the bag it hands on. A read is untyped (`#`) on the planning
 at int and real) or a sum (a str sum is not commutative) over one stays home; `count` and `order` recombine through
 derivations that hold at any carrier. At the owner, the lane is compiled there, so a database space holding `/p` can
 take the fold natively (C's `native_count`). Pinned by the B and C rows of `AbstractDistributedComputingTest`.
-`X` done 2026-11-27 — `partition(p, k => c, …)`, the branch whose lanes are guarded by the fibres of `p`, which runs
+`X` done 2026-11-27 — `partition(p, k => c, …)`, the branch whose lanes are guarded by the fibers of `p`, which runs
 once per obj: each obj goes to the lane its key names. A key naming two lanes sends it to both, an unmatched key goes
 to `<#>`, an obj keyed noobj goes to each zeroable lane (`{?}//a`), and an obj no lane takes fails the call. A hosted
 key is a place, and its lane is the cut its program runs in there, so each place is sent its share alone (data
@@ -723,7 +723,7 @@ instruction is still bare when `law_shard` runs, before resolution, so it stays 
 ### X — partition by key (the shuffle)
 
 `partition(p, k_1 => c_1, …)` sends each obj to the lane its key names, where a branch sends it to every lane. It is
-the branch whose lanes are guarded by the fibres of `p`, $\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i
+the branch whose lanes are guarded by the fibers of `p`, $\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i
 \mathrm{filter}(p = k_i)\,c_i$, so the branch's laws hold of it, and `p` runs once per obj where the guarded branch
 runs every guard. What `p` answers is applied to the obj in turn, so a stored function (`*/pf`: an instruction, a code
 or a key template) keys it as `mod(2)` does; a key is a uri, or an int read as its decimal spelling.

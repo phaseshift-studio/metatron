@@ -553,7 +553,7 @@ $$
 \mathrm{partition}(p,\ k_1 \Rightarrow c_1, \ldots, k_n \Rightarrow c_n) = \phi_{k_1}\,c_1 + \cdots + \phi_{k_n}\,c_n ,
 $$
 
-the branch whose lanes are guarded by the fibres of $p$, with $p$ evaluated once per member. A key that names a place,
+the branch whose lanes are guarded by the fibers of $p$, with $p$ evaluated once per member. A key that names a place,
 `//a`, runs its lane there, so each place is sent its share alone.
 
 A partition routes a batch, so it is a barrier instruction: its domain coefficient is $\{*\}$ unless stated, and it
@@ -561,7 +561,7 @@ gathers the whole stream and sends each lane its share once, where a branch's de
 smaller maximum makes it a lazy barrier, $\{n\}$ a page and $\{?\}$ one member at a time.
 
 Distribution and co-location are one idea. A key computed from the member distributes the data, each place folding
-its key's fibre. A key that names where a member's data lives co-locates the two: the members are keys, and each lane
+its key's fiber. A key that names where a member's data lives co-locates the two: the members are keys, and each lane
 reads what its keys address where it is held. Keyed by the places themselves, the partition is the data-local read of
 *The Shard Identity* again, its owners named by the keys rather than by the address:
 
@@ -574,11 +574,11 @@ reads what its keys address where it is held. Keyed by the places themselves, th
 <aside class="deep-dive">
 
 **Partition or branch?** From the stream ring's point of view a partition is a branch, its lanes guarded by the
-fibres of one function. In practice the two differ, and the difference is why the partition is an instruction of its
+fibers of one function. In practice the two differ, and the difference is why the partition is an instruction of its
 own.
 
-**Proposition (the fibres are a partition of unity).** On a stream whose keys all lie among the $k_i$, the guards are
-idempotent, orthogonal, and complete:
+**Proposition (the fibers are a partition of unity).** Let the keys $k_1, \ldots, k_n$ be pairwise distinct. On a
+stream whose keys all lie among them, the guards are idempotent, orthogonal, and complete:
 
 $$
 \phi_k\,\phi_k = \phi_k, \qquad \phi_k\,\phi_{k'} = 0 \quad (k \neq k'), \qquad \phi_{k_1} + \cdots + \phi_{k_n} = 1 .
@@ -589,7 +589,7 @@ two keys, and every member has one of the $k_i$. ◻
 
 Three consequences follow. Identical lanes collapse, $\sum_i \phi_{k_i}\,c = c$, where a branch of $n$ copies of $c$
 is $\{n\}c$. A key naming two lanes names their branch, $\phi_k\,c_1 + \phi_k\,c_2 = \phi_k\,(c_1 + c_2)$. And the
-fibres partition the seed, $x = \sum_i x\,\phi_{k_i}$, so the shard identity holds with them as its parts: for a
+fibers partition the seed, $x = \sum_i x\,\phi_{k_i}$, so the shard identity holds with them as its parts: for a
 floatable run $f$ and a cut $r$,
 
 $$
@@ -625,7 +625,7 @@ A partition evaluates $p$ once per member and routes the member to its lane:
 **No lane is read for its guard.** A planner could recover the cheap form from a guarded branch only by reading each
 lane's head as a guard, finding one function $p$ under all of them, and proving the guards orthogonal and complete:
 that means looking into code the user wrote for other reasons, and taking on proof obligations the branch never
-states. A partition states $p$ and its keys, so its fibres are orthogonal by construction, as each member has one key,
+states. A partition states $p$ and its keys, so its fibers are orthogonal by construction, as each member has one key,
 and the layout is read off the call. What the guarded reading leaves implicit becomes a rule of the instruction. A
 member whose key no lane names fails the call unless a `<#>` lane takes the rest. A member keyed nothing goes to every
 lane whose key is zeroable, `{?}//a`. And the routed member is its lane's input, so the lane can name it,
@@ -755,7 +755,7 @@ instruction's, as a program writes it, and no planner emits one yet.
   its answer does not move with it.
 - A coefficient is an index set: a span splits by its exponent, a point by its copies.
 - An address whose terms name machines is a seed already partitioned: each owner folds what it holds (B, C). A
-  partition is the shuffle's first step, the branch guarded by a key's fibres, $\sum_i \mathrm{filter}(p = k_i)\,c_i$;
+  partition is the shuffle's first step, the branch guarded by a key's fibers, $\sum_i \mathrm{filter}(p = k_i)\,c_i$;
   a key that names a place sends that place its share alone (X), and keyed by the owners it is B again.
 - [To be written: what is open — the shuffle and pipeline shapes, and the laws a fold would declare to reach them.]
 
