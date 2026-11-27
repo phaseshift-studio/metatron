@@ -33,6 +33,12 @@ jobs:
       - name: Build the uber-jar
         run: mvn -B package -DskipTests
 
+      # the image ships docs/website, and most of that tree is generated (index, articles,
+      # instset, the rendered skills): regenerate it here so /docs in the image is complete,
+      # not just the committed sources
+      - name: Build the docs site
+        run: bin/metatron-site markdown instset asciidoc header
+
       - name: Resolve project version
         id: version
         run: |

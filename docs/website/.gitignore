@@ -33,6 +33,9 @@
 !/asciinema
 !/lib
 !/js
+# ...and the stylesheets, for the same reason: css/ is hand-authored source (the portal's
+# stylesheet lives there with the site's own), not a rendered page
+!/css
 # The mtron training corpus is a build product: the extractor writes the corpus, its manifest,
 # the verification report, and the verified train/dev split. Regenerated on demand before a run,
 # never committed — see docs/skills/mtron/references/unsloth-training-mtron.md §1.
