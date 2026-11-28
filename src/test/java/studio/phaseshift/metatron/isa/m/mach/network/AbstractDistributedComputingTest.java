@@ -927,6 +927,9 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             // ... and two places answer bags of rels at once: no one trip is outstanding, so each reply is matched by the
             // tag its rels carry, which lands on each rel's last element (Marko's live trace, 2026-11-27)
             "{a=>b, x=>y}.partition(rshift() => {b => //1 => mult({b=>c, b=>d}), y => //2 => mult({y=>z, y=>w})})                    % {a=>c,a=>d,x=>z,x=>w}",
+            // ... and one place answers two bags of rels at once, so its socket holds two trips and no fallback can tell
+            // them apart: each reply is matched by the tag on its rels' last elements (Marko's live trace, 2026-11-28)
+            "{a=>b, x=>y}.partition(rshift() => {b => //1 => mult({b=>c, b=>d}), y => //1 => mult({y=>z, y=>w})})                    % {a=>c,a=>d,x=>z,x=>w}",
             // THE TOPOLOGY: each place is dealt a share of the four, at most all of them, and the partials merge at home
             "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => sum(), //2 => sum()}).explain()>>ext/topology/format.has('[{]4[}]──┤').count()                % 1",
             "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => sum(), //2 => sum()}).explain()>>ext/topology/format.has('─►//1─[{]0,4[}]─[{]1[}]─┐').count() % 1",

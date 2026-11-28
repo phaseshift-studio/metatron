@@ -58,6 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.REPLY_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -386,6 +387,20 @@ public interface WebSocketObj extends Rec, Closeable {
     }
 
     /**
+     * THE VID A FRAME'S TRIP RIDES ON: its own, or, as no spelling puts a vid on a rel, the trip tag where a rel's lands,
+     * on its last element (a=>b@<0x…> reads back with the vid on b). Only a hex tag is read off an element, where
+     * {@link #untagged} takes it. Read off the frame alone, a rel answer matched its trip only while it was its socket's
+     * one outstanding trip (2026-11-28).
+     */
+    static fURI vidOf(final Obj frame) {
+        if (null != frame.vid() || frame.isNoObj() || !(frame.isRel() || frame.isObjs()))
+            return frame.vid();
+        // a rel's tag on its last element, and a bag's on its members, the first standing for all (reply tags each)
+        final fURI found = vidOf(frame.isRel() ? frame.asRel().second() : frame.stream().findFirst().orElse(noobj()));
+        return null != found && CommonUtil.isHex(found.name()) ? found : null;
+    }
+
+    /**
      * THE AIR LOCK: the trip's tag comes off and the answer's own vid stays. A minted trip's reply carries its tag as
      * the vid's last segment, a hex literal (Marko, 2026-11-22); retracting it hands the caller the answer as the far
      * side addressed it, {@code g:V/1} for a graph element and no vid for an answer that had none. A frame whose vid
@@ -395,6 +410,9 @@ public interface WebSocketObj extends Rec, Closeable {
         // A REL'S TAG LANDS ON ITS LAST ELEMENT: the peer writes the tagged answer a=>b@<0x…>, which reads back with the vid
         // on b, as no spelling puts one on a rel, so the trip's tag is taken off the end it landed on (Marko, 2026-11-27:
         // "you are getting back the send/recv tag vid ... its leaking")
+        // ... AND A BAG'S ON EACH MEMBER, as reply tags a bag member by member: each is untagged as one answer is
+        if (reply.isObjs() && null == reply.vid())
+            return objs(reply.stream().map(WebSocketObj::untagged).toList());
         if (reply.isRel() && null == reply.vid()) {
             final Obj last = reply.asRel().second();
             return last.isRel() || (null != last.vid() && CommonUtil.isHex(last.vid().name()))
@@ -489,7 +507,7 @@ public interface WebSocketObj extends Rec, Closeable {
             // {-5}5@<0x…> filled its waiter as 5@<0x…>.
             this.at(uri(ON_MESSAGE), instLambda(ALL.any(), ALL.any(), (lhs, inst) -> {
                 final Map<fURI, Waiter> waiters = WAITERS.computeIfAbsent(this, k -> new ConcurrentHashMap<>());
-                final fURI vid = lhs.vid();
+                final fURI vid = vidOf(lhs);
                 final fURI trip = tripOf(vid);
                 Waiter waiter = null == trip ? null : waiters.remove(trip);
                 // an addressed request whose own address happens to end in a hex segment is correlated by the whole vid
