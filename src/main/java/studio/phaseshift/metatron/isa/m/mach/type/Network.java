@@ -299,8 +299,9 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         if (!full.hasScheme() || !full.hasHost())
             return vid;
         // THE WHOLE TAIL RIDES, and so do the qualifiers: an aligned spelling means what the spelled-out twin
-        // means, coefficient, poly and query included.
-        return Component.Prefix.Helper.substitute(full, vid, vid.pathString());
+        // means, coefficient, poly and query included. THE ORIGIN ALONE IS SPLICED: the row keeps the route its dial
+        // was declared with (/mtron), and kept in front of every tail it read //ginger/a at /mtron/a
+        return Component.Prefix.Helper.substitute(full.origin(), vid, vid.pathString());
     }
 
     /**
@@ -334,7 +335,9 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
             // goes in through the DOOR, in the spelling the door validates, so the strip happens in exactly one place
             // (and a legacy row the table still holds is repaired by the same pass).
             final Map<Obj, Obj> rows = new LinkedHashMap<>(this.prefixes().jvm());
-            rows.put(uri(label), uri(origin.origin()));
+            // THE ROW KEEPS WHAT WAS DECLARED, its route included (ws://ginger.local:8555/mtron): a dial by name needs the
+            // route, and an address aligns to the row's origin alone (alignPrefix) (Marko, 2026-11-27)
+            rows.put(uri(label), uri(origin));
             // WRITTEN THROUGH THIS NETWORK's OWN DOOR, at the field's RELATIVE address, not the machine gatekeeper:
             // Machine.write routes by where the CALLING THREAD stands, so a caller holding a frame's network from
             // outside that frame would file the name somewhere else (measured: an empty child table and a parent's
@@ -793,10 +796,11 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
                 // rec, which is re-typechecked on every later write, so it is refused with the key rather than stored.
                 if (label.isEmpty() || !row.getValue().isUri())
                     return Optional.empty();
-                // ... AND THE ORIGIN ALONE, as registerPrefix files it: the route a dial carries (ws://ginger.local:8555/mtron,
-                // a client's host) is the connection's, kept on its peer, while a row's value is spliced in front of every
-                // tail it aligns, so a route kept there read //ginger/a at /mtron/a
-                rows.put(uri(label.get()), uri(row.getValue().uriValue().origin()));
+                // ... AS DECLARED, as registerPrefix files it (Marko, 2026-11-27): the route a dial carries
+                // (ws://ginger.local:8555/mtron) stays in the row for a dial by name, and alignPrefix splices the origin
+                // alone in front of a tail, so //ginger/a never reads /mtron/a. Stored as the origin, a dial by name lost
+                // its /mtron and reached no endpoint
+                rows.put(uri(label.get()), row.getValue());
             }
             return Optional.of(rec(rows));
         }
@@ -1416,7 +1420,12 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
             // AN ALIAS IS A NAME FOR THE ORIGIN: resolve it here, so `connect(//ginger)` dials what the name
             // denotes. Whether that origin is dialable is the mapped value's business, not the alias's.
             final Machine machine = Machine.current();
-            final fURI uri = null == machine ? dialURI : Component.Prefix.Helper.align(machine, dialURI);
+            // A NAME DIALS ITS ROW AS DECLARED, route and all (ws://ginger.local:8555/mtron), where an address aligns to
+            // the row's origin alone: a dial needs the route, a place and a read must not carry it (Marko, 2026-11-27)
+            final Obj declared = null == machine || !dialURI.isHosted() || !dialURI.pathString().isEmpty() ? noobj()
+                    : Component.Prefix.Helper.effectivePrefix(machine.network(), f(dialURI.host()));
+            final fURI uri = declared.isUri() ? declared.uriValue()
+                    : null == machine ? dialURI : Component.Prefix.Helper.align(machine, dialURI);
             final String scheme = uri.scheme();
             final String dialerTid = null == scheme ? null : Signatures.dialerOf(scheme);
             final fURI dialer = null != handler ? handler

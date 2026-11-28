@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
@@ -206,21 +207,36 @@ public class NetworkPrefixTest extends AbstractMetatronTest {
     }
 
     /**
-     * A ROW IS THE ORIGIN IT DENOTES. A value written with the route its dial carries ({@code ws_client::[…]>>host})
-     * keeps the origin alone, as {@code registerPrefix} files it: a row's value is spliced in front of every tail its
-     * name aligns, so a kept route read {@code //svc/a} under it.
+     * A ROW KEEPS WHAT WAS DECLARED, ITS ROUTE INCLUDED (Marko, 2026-11-27): a value written with the route its dial
+     * carries ({@code ws_client::[…]>>host}) is stored as written, so a dial by name keeps it, while a name's tail aligns
+     * to the row's origin alone, as a route spliced in front of every tail read {@code //svc/a} under it. Stored as the
+     * origin, the deployed peers' dials by name lost their /mtron and reached no endpoint.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
             // the value written | the row stored | what the name's tail aligns to
-            "loop://self/mtron                % loop://self               % loop://self/sys/thread/main",
-            "loop://other:1/mtron             % loop://other:1            % loop://other:1/sys/thread/main",
-            "loop://other/a/b?c=1             % loop://other              % loop://other/sys/thread/main",
+            "loop://self/mtron                % loop://self/mtron         % loop://self/sys/thread/main",
+            "loop://other:1/mtron             % loop://other:1/mtron      % loop://other:1/sys/thread/main",
+            "loop://other/a/b?c=1             % loop://other/a/b?c=1      % loop://other/sys/thread/main",
     })
-    void testTheDoorKeepsTheOriginAlone(final String written, final String stored, final String aligned) {
+    void testTheDoorKeepsTheRowAsDeclared(final String written, final String stored, final String aligned) {
         Machine.write(f("/network/prefix"), rec(uri("//svc"), uri(written)));
-        assertEquals(f(stored), Machine.read(f("/network/prefix/svc")).uriValue(), "the row is the origin");
+        assertEquals(f(stored), Machine.read(f("/network/prefix/svc")).uriValue(), "the row is what was declared");
         assertEquals(f(aligned), Machine.Helper.align(Machine.current(), f("//svc/sys/thread/main")), "the tail rides on the origin");
+    }
+
+    /**
+     * A NAME DIALS ITS ROW AS DECLARED (Marko, 2026-11-27): connect(//svc) dials the row's route, where an address the
+     * name aligns takes the origin alone, so a dial by name reaches the endpoint its row was declared with.
+     */
+    @Test
+    void testANameDialsItsRowAsDeclared() {
+        Machine.write(f("/network/prefix"), rec(uri("//svc"), uri("loop://self/mtron")));
+        final Obj client = Network.Helper.dial(f("//svc"), null);
+        assertTrue(client.isRec(), () -> "the dial answers a client: " + client);
+        assertEquals(f("loop://self/mtron"), client.asRec().atDirect(uri(HOST)).uriValue(), "the dial keeps the declared route");
+        assertEquals(f("loop://self/sys/thread/main"), Machine.Helper.align(Machine.current(), f("//svc/sys/thread/main")),
+                "while an address aligns to the origin");
     }
 
     /**
