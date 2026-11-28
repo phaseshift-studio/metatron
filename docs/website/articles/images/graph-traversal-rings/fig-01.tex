@@ -1,74 +1,70 @@
-\begin{tikzpicture}[x=1cm, y=1cm,
-  v/.style={draw, circle, inner sep=0pt, minimum size=5pt},
-  lab/.style={font=\scriptsize\ttfamily},
-  tiny/.style={font=\tiny\ttfamily},
-  knows/.style={->, cyan, line width=0.6pt},
-  created/.style={->, orange, line width=0.6pt},
-  walk/.style={line width=1.8pt},
-  faint/.style={opacity=0.35}]
-% ---- the network: a traverser walks the modern graph ----
-\node[font=\small] at (1.75, 2.4) {a traverser walks the edges};
-\node[v, label={[lab]left:marko}] (marko) at (0, 0) {};
-\node[v, label={[lab]above:vadas}] (vadas) at (1.7, 1.1) {};
-\node[v, label={[lab]below:josh}] (josh) at (1.7, -0.5) {};
-\node[v, label={[lab]left:peter}] (peter) at (1.7, -1.9) {};
-\node[v, label={[lab]right:lop}] (lop) at (3.5, 0.3) {};
-\node[v, label={[lab]right:ripple}] (ripple) at (3.5, -1.2) {};
-\draw[knows, faint] (marko) -- (vadas);
-\draw[created, faint] (marko) -- (lop);
-\draw[created, faint] (peter) -- (lop);
-\draw[knows, walk] (marko) -- node[tiny, below left=-1pt] {knows} (josh);
-\draw[created, walk] (josh) -- (lop);
-\draw[created, walk] (josh) -- (ripple);
-\node[tiny, orange] at (2.75, -0.47) {created};
-\fill (marko) circle (2.2pt);
+\begin{equation*}
+% the traversal takes the site's --mred (#7a2518): its walk on the left, the entries it uses on the right
+\definecolor{lanecolor}{RGB}{122,37,24}%
+\begin{tikzpicture}[
+  vertex/.style={draw, rounded corners=2pt, thick, font=\small\ttfamily, inner sep=2.5pt},
+  edge/.style={thin, ->, >=stealth, opacity=0.5},
+  lane/.style={very thick, ->, >=stealth, color=lanecolor},
+  elabel/.style={font=\scriptsize\ttfamily},
+  cell/.style={draw, thick, minimum size=5mm, inner sep=0pt, font=\small},
+  hot/.style={cell, fill=lanecolor},
+  axis/.style={font=\scriptsize\ttfamily},
+  note/.style={font=\small}
+]
+% ---- the network: a traverser walks the edges ----
+\node[note] at (2.1, 2.75) {a traverser walks the edges};
+\node[vertex] (marko)  at (0, 0)      {marko};
+\node[vertex] (vadas)  at (2.1, 1.3)  {vadas};
+\node[vertex] (josh)   at (2.1, -0.6) {josh};
+\node[vertex] (peter)  at (2.1, -2.1) {peter};
+\node[vertex] (lop)    at (4.3, 0.4)  {lop};
+\node[vertex] (ripple) at (4.3, -1.4) {ripple};
+\draw[edge] (marko) -- node[elabel, above left=-2pt] {knows} (vadas);
+\draw[edge] (marko) -- node[elabel, above=-1pt, pos=0.62] {created} (lop);
+\draw[edge] (peter) -- node[elabel, left=1pt, pos=0.32] {created} (lop);
+\draw[lane] (marko) -- node[elabel, below left=-2pt] {knows} (josh);
+\draw[lane] (josh) -- node[elabel, above=-1pt, pos=0.4, sloped] {created} (lop);
+\draw[lane] (josh) -- node[elabel, below=-1pt, pos=0.4, sloped] {created} (ripple);
 % ---- phi: the walks onto the counts ----
-\draw[->, line width=0.8pt] (4.6, 0.25) -- node[above] {$\varphi$} node[tiny, below] {forget josh} (5.9, 0.25);
+\draw[thick, ->, >=stealth] (4.95, 0.3) -- node[above] {$\varphi$} node[elabel, below] {forget josh} (5.8, 0.3);
 % ---- the matrix: the label slices multiply ----
-\node[font=\small] at (9.1, 2.4) {the label slices multiply};
+\node[note] at (9.6, 2.75) {the label slices multiply};
 % A^knows: the row of marko, the columns of vadas and josh
-\node at (7.05, 1.8) {$\mathcal{A}^{\texttt{knows}}$};
-\fill[cyan, opacity=0.85] (6.6, 0.15) rectangle (7.05, 0.6);
-\fill[cyan, opacity=0.85] (7.05, 0.15) rectangle (7.5, 0.6);
-\draw (7.05, 0.15) -- (7.05, 0.6);
-\draw (6.6, 0.15) rectangle (7.5, 0.6);
-\node[tiny, anchor=east] at (6.55, 0.375) {marko};
-\node[tiny, anchor=south west, rotate=60] at (6.75, 0.65) {vadas};
-\node[tiny, anchor=south west, rotate=60] at (7.2, 0.65) {josh};
-\node at (7.75, 0.375) {$\cdot$};
+\node at (7.25, 2.05) {$\mathcal{A}^{\texttt{knows}}$};
+\node[cell] at (7.0, 0.4) {$1$};
+\node[hot]  at (7.5, 0.4) {$1$};
+\node[axis, anchor=east] at (6.7, 0.4) {marko};
+\node[axis, anchor=south west, rotate=60] at (6.95, 0.7) {vadas};
+\node[axis, anchor=south west, rotate=60] at (7.45, 0.7) {josh};
+\node[font=\large] at (8.1, 0.4) {$\cdot$};
 % A^created: the rows of vadas and josh, the columns of lop and ripple
-\node at (8.95, 1.8) {$\mathcal{A}^{\texttt{created}}$};
-\fill[orange, opacity=0.85] (8.5, -0.075) rectangle (8.95, 0.375);
-\fill[orange, opacity=0.85] (8.95, -0.075) rectangle (9.4, 0.375);
-\draw (8.5, -0.075) rectangle (9.4, 0.825);
-\draw (8.5, 0.375) -- (9.4, 0.375);
-\draw (8.95, -0.075) -- (8.95, 0.825);
-\node[tiny, anchor=east] at (8.45, 0.6) {vadas};
-\node[tiny, anchor=east] at (8.45, 0.15) {josh};
-\node[tiny, anchor=south west, rotate=60] at (8.65, 0.875) {lop};
-\node[tiny, anchor=south west, rotate=60] at (9.1, 0.875) {ripple};
-\node at (9.75, 0.375) {$=$};
+\node at (9.65, 2.05) {$\mathcal{A}^{\texttt{created}}$};
+\node[cell] at (9.4, 0.65)  {$0$};
+\node[cell] at (9.9, 0.65)  {$0$};
+\node[hot]  at (9.4, 0.15)  {$1$};
+\node[hot]  at (9.9, 0.15)  {$1$};
+\node[axis, anchor=east] at (9.1, 0.65) {vadas};
+\node[axis, anchor=east] at (9.1, 0.15) {josh};
+\node[axis, anchor=south west, rotate=60] at (9.35, 0.95) {lop};
+\node[axis, anchor=south west, rotate=60] at (9.85, 0.95) {ripple};
+\node at (10.55, 0.4) {$=$};
 % Z: the row of marko, the columns of lop and ripple, each a count of walks
-\node at (11.15, 1.8) {$\mathbf{Z}$};
-\draw (10.7, 0.15) rectangle (11.6, 0.6);
-\draw (11.15, 0.15) -- (11.15, 0.6);
-\node[font=\footnotesize] at (10.925, 0.375) {$1$};
-\node[font=\footnotesize] at (11.375, 0.375) {$1$};
-\node[tiny, anchor=east] at (10.65, 0.375) {marko};
-\node[tiny, anchor=south west, rotate=60] at (10.85, 0.65) {lop};
-\node[tiny, anchor=south west, rotate=60] at (11.3, 0.65) {ripple};
+\node at (12.4, 2.05) {$\mathbf{Z}$};
+\node[hot] at (12.15, 0.4) {$1$};
+\node[hot] at (12.65, 0.4) {$1$};
+\node[axis, anchor=east] at (11.85, 0.4) {marko};
+\node[axis, anchor=south west, rotate=60] at (12.1, 0.7) {lop};
+\node[axis, anchor=south west, rotate=60] at (12.6, 0.7) {ripple};
 % the join vertex: josh's column meets josh's row, and the product sums it away
-\draw[dashed] (7.275, 0.1) .. controls (7.4, -0.55) and (8.1, -0.55) .. (8.3, 0.1);
-\node[tiny] at (7.8, -0.6) {join: josh};
-\node at (8.95, -1.15) {$\mathbf{Z}_{i,j} = \sum_{l} \mathcal{A}^{\texttt{knows}}_{i,l}\,\mathcal{A}^{\texttt{created}}_{l,j}$};
+\draw[thick, dashed, color=lanecolor] (7.5, 0.1) .. controls (7.65, -0.6) and (8.45, -0.6) .. (8.65, 0.05);
+\node[elabel] at (8.1, -0.7) {join: josh};
+\node[note] at (9.6, -1.35) {$\mathbf{Z}_{i,j} = \sum_{l} \mathcal{A}^{\texttt{knows}}_{i,l}\,\mathcal{A}^{\texttt{created}}_{l,j}$};
 % ---- the two realizations in mtron ----
-\node[lab] at (1.75, -2.75) {g:V/1.out(knows).out(created)};
-\node[tiny] at (1.75, -3.2) {*knows * *created over recs keeps the walks:};
-\node[tiny] at (1.75, -3.55) {[marko=>\{josh=>ripple,josh=>lop\}]};
-\node[lab] at (8.95, -2.75) {*knows * *created};
-\node[tiny] at (8.95, -3.2) {over rels, the counts:};
-\node[tiny] at (8.95, -3.55) {\{marko=>ripple,marko=>lop\}};
-% ---- the labels ----
-\draw[knows] (4.55, -2.6) -- (5.05, -2.6) node[tiny, right] {knows};
-\draw[created] (4.55, -2.95) -- (5.05, -2.95) node[tiny, right] {created};
+\node[font=\small\ttfamily] at (2.1, -3.0) {g:V/1.out(knows).out(created)};
+\node[elabel] at (2.1, -3.45) {*knows * *created over recs keeps the walks:};
+\node[elabel] at (2.1, -3.85) {[marko=>\{josh=>ripple,josh=>lop\}]};
+\node[font=\small\ttfamily] at (9.6, -3.0) {*knows * *created};
+\node[elabel] at (9.6, -3.45) {over rels, the counts:};
+\node[elabel] at (9.6, -3.85) {\{marko=>ripple,marko=>lop\}};
 \end{tikzpicture}
+\end{equation*}
