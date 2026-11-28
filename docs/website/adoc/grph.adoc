@@ -849,3 +849,179 @@ A typical configuration partitions subgraphs by access frequency.
 Frequently traversed `knows`-edges reside in `memspace` (sub-millisecond reads).
 Rarely queried `purchases`-edges reside in `tblespace` (disk-backed).
 The vertex's `OUT` traversal remains a single expression regardless of how many spaces contribute edges.
+
+=== The Graph as an Algebra
+
+A `rec` is a relation, and so is a graph: written as its edges, a graph is a `rec`, and the `rec` algebra is the algebra of the graph's walks.
+`+` unions edges, and the edges that leave one vertex bulk under it, so the `rec` collapses on its tails into a sparse adjacency matrix: each key is a row, and its bulked value the row's nonzero columns.
+`*` is the walk join: each walk of the left grows at its last vertex by every edge of the right that leaves that vertex.
+The algebra keeps every walk whole.
+Forgetting a walk's interior, keeping only its first and last vertex, maps the algebra onto the matrix algebra of the adjacency matrix latexmath:[A], and the walk join onto the matrix product:
+
+latexmath:[\varphi(u \Rightarrow v_{1} \Rightarrow \cdots \Rightarrow w) = E_{uw} \qquad \varphi(R + S) = \varphi(R) + \varphi(S) \qquad \varphi(R * S) = \varphi(R)\,\varphi(S) \qquad \varphi(G) = \sum_{u \Rightarrow v \in E} E_{uv} = A]
+
+Here latexmath:[E_{uw}] is a matrix unit, with latexmath:[E_{uv}E_{vw} = E_{uw}] and latexmath:[E_{uv}E_{xw} = 0] for latexmath:[v \neq x]: a walk extends exactly when the next edge leaves its last vertex.
+
+[mtron]
+----
+[marko=>lop, marko=>vadas, marko=>josh, josh=>ripple, josh=>lop, peter=>lop]@modern    [-- <1> --]
+*modern * *modern                                                                     [-- <2> --]
+----
+<1> the edges of TinkerPop's modern graph, without their labels, collapse into the rows of latexmath:[A].
+<2> the walk join of latexmath:[A] with itself: marko reaches ripple and lop through josh, and the product keeps josh, where latexmath:[A^{2}] keeps only the count.
+
+[discrete]
+==== powers are walks of a length, and a traversal is a vector
+
+A span after a `rec` is a power of the walk join, whose image is the matrix power, and an entry of latexmath:[A^{n}] counts the walks of length latexmath:[n]:
+
+latexmath:[(A^{n})_{uw} = \#\{\, u \Rightarrow v_{1} \Rightarrow \cdots \Rightarrow v_{n-1} \Rightarrow w \,\} \qquad A^{0} = I]
+
+[mtron]
+----
+[marko=>lop, marko=>vadas, marko=>josh, josh=>ripple, josh=>lop, peter=>lop]{2}    [-- <1> --]
+[marko=>lop, marko=>vadas, marko=>josh, josh=>ripple, josh=>lop, peter=>lop]{3}    [-- <2> --]
+[marko=>lop, marko=>vadas, marko=>josh, josh=>ripple, josh=>lop, peter=>lop]{0}    [-- <3> --]
+----
+<1> latexmath:[A^{2}]: the same walks as `+*modern * *modern+`.
+<2> the modern graph's longest path has two edges, so latexmath:[A^{3} = 0], the empty `rec`: latexmath:[A] is nilpotent.
+<3> latexmath:[A^{0} = I], the identity arrow `+[_=>_]+` (written `+[id()=>id()]+`), the unit of `*`.
+
+A traversal starts at a vertex, the row vector latexmath:[x_{0} = e_{\mathrm{marko}}], and each step multiplies by latexmath:[A]:
+
+latexmath:[x_{n}^{\top} = x_{0}^{\top} A^{n}]
+
+The start is `+[#=>marko]+`, marko lifted into a relation from anywhere, and a step is `+* *modern+`.
+A span on the step's instruction repeats it, as Gremlin's `repeat()` does.
+
+[mtron]
+----
+[#=>marko] * *modern                 [-- <1> --]
+[#=>marko] * *modern * *modern       [-- <2> --]
+[#=>marko].{2}mult(*modern)          [-- <3> --]
+[#=>marko].{1,3}mult(*modern)        [-- <4> --]
+----
+<1> `g.V(marko).out()`.
+<2> `g.V(marko).out().out()`, each walk whole: Gremlin's `path()` costs nothing.
+<3> `repeat(out()).times(2)`.
+<4> `repeat(out()).emit().times(3)`: one answer per power, the third empty.
+
+[discrete]
+==== the closure is the sum of the powers
+
+latexmath:[A^{+} = \sum_{n \geq 1} A^{n} \qquad A^{*} = I + A^{+} \qquad A^{3} = 0 \implies A^{+} = A + A^{2}]
+
+A ranged span is a sum of powers, and `+{+}+` sums them all: the transitive closure.
+The modern graph is nilpotent, so its closure stops at latexmath:[A^{2}].
+A graph with a cycle has walks of every length, so its closure never stops, and a range bounds it instead.
+
+[mtron]
+----
+[marko=>lop, marko=>vadas, marko=>josh, josh=>ripple, josh=>lop, peter=>lop]{1,2}    [-- <1> --]
+[marko=>lop, marko=>vadas, marko=>josh, josh=>ripple, josh=>lop, peter=>lop]{+}      [-- <2> --]
+[a=>b, b=>c, c=>a]{1,4}                                                            [-- <3> --]
+----
+<1> latexmath:[A + A^{2}]: every walk of length one or two.
+<2> latexmath:[A^{+}], the same `rec`, as no walk is longer.
+<3> a 3-cycle has walks of every length, and `+{1,4}+` keeps those of length one to four.
+
+[discrete]
+==== the converse is the transpose
+
+A negative span is the converse, every walk reversed.
+Its image is the transpose, Gremlin's `in()` to the product's `out()`, and its laws are the transpose's:
+
+latexmath:[\varphi(R^{-1}) = \varphi(R)^{\top} \qquad (A^{\top})^{\top} = A \qquad (AB)^{\top} = B^{\top} A^{\top} \qquad (A^{n})^{\top} = (A^{\top})^{n}]
+
+The converse is no inverse: latexmath:[A A^{\top}] is co-citation, the vertices that share an out-neighbor, not latexmath:[I].
+A span follows a literal or a uri, never a read (`+*modern{-1}+` reads the address `+modern{-1}+`), so the converse is stored under a name of its own.
+
+[mtron]
+----
+[marko=>lop, marko=>vadas, marko=>josh, josh=>ripple, josh=>lop, peter=>lop]{-1}@modern_in    [-- <1> --]
+[#=>marko] * *modern * *modern_in                                                             [-- <2> --]
+[a=>b=>c]{-1}                                                                                 [-- <3> --]
+[b=>c]{-1} * [a=>b]{-1}                                                                       [-- <4> --]
+----
+<1> latexmath:[A^{\top}]: each vertex keyed by the vertices that reach it, `in()`.
+<2> `g.V(marko).out().in()`, a row of latexmath:[A A^{\top}]: josh and peter share lop with marko, and marko shares each of his own out-neighbors with himself.
+<3> the converse of a walk is its reversal ...
+<4> ... and the converse of a product is the product of the converses, reversed.
+
+[discrete]
+==== labels are a family of matrices
+
+A multi-relational graph is a family of matrices, one per label, that sum to the unlabeled graph, and a typed traversal multiplies the labels it walks:
+
+latexmath:[A = \sum_{\ell \in L} A_{\ell} \qquad x_{0}^{\top} A_{\mathrm{knows}} A_{\mathrm{created}}]
+
+[mtron]
+----
+[marko=>vadas, marko=>josh]@knows
+[marko=>lop, josh=>ripple, josh=>lop, peter=>lop]@created
+[marko=>lop, josh=>ripple, josh=>lop, peter=>lop]{-1}@created_in
+[#=>marko] * *knows * *created            [-- <1> --]
+[#=>marko] * *created * *created_in       [-- <2> --]
+[#=>lop] * *created_in                    [-- <3> --]
+*knows + *created                         [-- <4> --]
+----
+<1> `out('knows').out('created')`: what the people marko knows created.
+<2> `out('created').in('created')`: marko's co-creators, through lop.
+<3> `g.V(lop).in('created')`.
+<4> the labels sum to the unlabeled graph, latexmath:[A_{\mathrm{knows}} + A_{\mathrm{created}} = A].
+
+[discrete]
+==== the coefficient counts the walks
+
+The algebra keeps the walks, and the matrix their number.
+Forgetting each walk's interior lets the walks that end at one vertex bulk, so the coefficient becomes the matrix entry, Gremlin's `groupCount()`:
+
+latexmath:[(A^{2})_{ad} = \sum_{v} A_{av} A_{vd} = A_{ab} A_{bd} + A_{ac} A_{cd} = 2]
+
+[mtron]
+----
+[a=>b, a=>c, b=>d, c=>d]{2}                   [-- <1> --]
+[a=>b, a=>c, b=>d, c=>d]{2}>>a>>              [-- <2> --]
+[a=>b, a=>c, b=>d, c=>d]{2}>>a>>.count()      [-- <3> --]
+----
+<1> a diamond has two walks from a to d, and the product keeps both.
+<2> `+>>a+` reads row a and `+>>+` each walk's end, so the two ends bulk: `+{2}d+` is latexmath:[(A^{2})_{ad}].
+<3> the number of walks.
+
+[discrete]
+==== a graph distributed by its rows
+
+Sharding latexmath:[A] by row puts each vertex's out-edges at one place, and a step is then a `partition` by key: each frontier vertex goes to the place that holds its row, joins there, and the walks gather.
+
+latexmath:[x^{\top} A = \sum_{p \in P} x_{p}^{\top} A_{p}]
+
+Here latexmath:[A_{p}] is the rows held at place latexmath:[p], and latexmath:[x_{p}] the part of the frontier they key, so latexmath:[A^{n}] is latexmath:[n] supersteps, each a partition by key.
+The transpose wants the edges sharded by head instead, or a shuffle at every step.
+
+[discrete]
+==== three readings of one algebra
+
+[cols="3a,3a,3a",options="header",role="table-bordered small center"]
+|===
+| `rec` algebra | graph traversal | matrix algebra
+| `+[u=>v, …]+` | the graph latexmath:[G] | latexmath:[A]
+| `+R + S+` | both graphs | latexmath:[A + B]
+| `+R * S+` | a step | latexmath:[AB]
+| `+[#=>v] * R+` | `g.V(v).out()` | latexmath:[e_{v}^{\top} A]
+| `+R{n}+`, `+.{n}mult(*R)+` | `repeat(out()).times(n)` | latexmath:[A^{n}]
+| `+R{0}+`, `+[_=>_]+` | staying put | latexmath:[I]
+| `+R{1,n}+` | `repeat(out()).emit().times(n)` | latexmath:[\sum_{k=1}^{n} A^{k}]
+| `+R{+}+` | the transitive closure | latexmath:[A^{+}]
+| `+R{-1}+` | `in()` | latexmath:[A^{\top}]
+| `+R + R{-1}+` | `both()` | latexmath:[A + A^{\top}]
+| `+[=>]+` | no walk | latexmath:[0]
+| `+R{n}>>v>>+` | `groupCount()` | row latexmath:[v] of latexmath:[A^{n}]
+|===
+
+[discrete]
+==== open questions
+
+* A span follows a literal or a uri, so `+*modern{-1}+` reads the address `+modern{-1}+`. Should a span after a read act on the value read?
+* A coefficient is an integer, so latexmath:[A] counts. A real coefficient would make `*` multiply weights along a walk and `+` add them, and power iteration on a row-normalized latexmath:[A] would be PageRank.
+* A walk's interior is a bag: `+[marko=>{josh=>ripple,josh=>lop}]+` keeps josh twice. As a `rec` it would factor into the trie `+josh=>{ripple,lop}+`, one canonical shape for latexmath:[A^{n}] however it is associated.
+* `+>>v>>+` projects the walks of one length: across `+{1,2}+`, a walk of length one has no end to shift to.
