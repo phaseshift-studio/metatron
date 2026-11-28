@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.web.space.ws;
 
+import studio.phaseshift.metatron.isa.m.mach.type.network.WireTrace;
+
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;

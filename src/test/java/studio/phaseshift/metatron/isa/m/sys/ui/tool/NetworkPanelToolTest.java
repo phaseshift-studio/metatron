@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.AccordionWidget;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.web.space.ws.WireTrace;
+import studio.phaseshift.metatron.isa.m.mach.type.network.WireTrace;
 
 import java.util.List;
 import java.util.Set;

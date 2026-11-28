@@ -6,6 +6,7 @@ portal_page::[
       obj_card::[tid => </m/mach/machine>,            vid => </.>,                   label => 'machine',            view => panel, span => [col => 4]],
       obj_card::[tid => </m/mach/component/network>,  vid => <~/network>,            label => 'current network',    view => panel, span => [col => 2, row => 1]],
       obj_card::[tid => </m/mach/component/memory>,   vid => <~/memory>,             label => 'current memory',     view => panel, span => [col => 2, row => 1]],
+      obj_card::[tid => </m/mach/component/network/trace>, vid => <~/network/analyzer/analysis/trace>, label => 'wire', view => panel, span => [col => 2, row => 1]],
       obj_card::[tid => </m/mach/component/compiler>, vid => <~/compiler>,           label => 'compiler',           view => panel, span => [col => 4, row => 2]],
       obj_card::[tid => </m/inst/explain/explanation>, vid => <~>,                   label => 'explain',            view => panel, span => [col => 4, row => 2]]
     ]],

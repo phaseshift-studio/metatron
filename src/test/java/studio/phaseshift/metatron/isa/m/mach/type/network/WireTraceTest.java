@@ -16,16 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.web.space.ws;
+package studio.phaseshift.metatron.isa.m.mach.type.network;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.furi.fURI;
 
 import java.util.stream.IntStream;
+
+import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -33,7 +36,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.Tokens.EXCHANGES;
+import static studio.phaseshift.metatron.Tokens.PEER;
+import static studio.phaseshift.metatron.Tokens.REPLY;
+import static studio.phaseshift.metatron.Tokens.REQUEST;
+import static studio.phaseshift.metatron.Tokens.ROW;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * The wire's history: a bounded, ordered window of exchanges, one lane per peer, with a detail window inside it.
@@ -56,6 +66,32 @@ public class WireTraceTest extends AbstractMetatronTest {
     private static void ok(final String peer, final String request) {
         WireTrace.exchange(peer, TAG, str(request), str("reply:" + request), System.currentTimeMillis(), 3L,
                 WireTrace.Outcome.OK);
+    }
+
+
+    /**
+     * THE DOOR'S DATA ({@code analysis/trace}): the window as an obj — lanes keyed by peer, a lane's newest
+     * exchanges as rows, the request and reply as text, the elapsed a {@code time::T}.
+     */
+    @Test
+    void shouldServeTheWindowAsData() {
+        ok("ws://ginger:8555/mtron", "marco");
+        final String trace = WireTrace.trace(4).toString();
+        assertTrue(trace.contains("marco"), "the request is the row's: " + trace);
+        assertTrue(trace.contains("reply:marco"), "and so is the reply: " + trace);
+        assertTrue(trace.contains("millis::"), "the elapsed is a time::T, not a bare number: " + trace);
+    }
+
+    /**
+     * THE DOOR ITSELF: {@code /network/analyzer/analysis/trace} answers through the machine's read — a child of
+     * the analysis, not a store entry.
+     */
+    @Test
+    void shouldAnswerUnderTheAnalysisAddress() {
+        ok("ws://ginger:8555/mtron", "marco");
+        final Obj trace = Machine.read("/network/analyzer/analysis/trace");
+        assertFalse(trace.isNoObj(), "analysis/trace answers");
+        assertTrue(trace.toString().contains("peer"), "with the lane table under it: " + trace);
     }
 
     /**

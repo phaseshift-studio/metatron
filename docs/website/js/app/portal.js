@@ -1349,12 +1349,82 @@ const modalObjCard = emptyObjCard();
    an action on the object in front of you. */
 const modalTrail = [];
 let modalAt = -1;
+
+/* THE TRAIL OUTLIVES A REFRESH: the entries are addresses, not payloads (no raw is kept),
+   so the whole history is a few hundred bytes in the browser's local store — the same
+   place the console keeps its input history. */
+const MODAL_TRAIL_KEY = "metatron.modal.trail";
+const MODAL_TRAIL_MAX = 60;
+
+function loadTrail() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(MODAL_TRAIL_KEY) || "null");
+        if (!saved || !Array.isArray(saved.trail)) return;
+        saved.trail.forEach((entry) => {
+            if (entry && typeof entry === "object")
+                modalTrail.push({
+                    tid: entry.tid || null,
+                    vid: entry.vid || null,
+                    raw: "",
+                    shortTid: entry.shortTid || null,
+                    expr: entry.expr || null
+                });
+        });
+        modalAt = Number.isInteger(saved.at) && saved.at >= 0 && saved.at < modalTrail.length
+            ? saved.at
+            : modalTrail.length - 1;
+    } catch (ignored) {
+    }
+}
+
+function saveTrail() {
+    try {
+        localStorage.setItem(MODAL_TRAIL_KEY, JSON.stringify({
+            at: modalAt,
+            trail: modalTrail.slice(-MODAL_TRAIL_MAX).map((entry) => ({
+                tid: entry.tid || null,
+                vid: entry.vid || null,
+                shortTid: entry.shortTid || null,
+                expr: entry.expr || null
+            }))
+        }));
+    } catch (ignored) {
+    }
+}
 const modalNav = {prev: null, pick: null, next: null};
 const trailLabel = (env) => {
     const name = env.shortTid || env.label || (env.vid ? String(env.vid).split("/").filter(Boolean).pop() : "") || env.tid || "obj";
     const at = env.vid ? String(env.vid) : (env.tid ? String(env.tid) : "");
     return at && at !== name ? name + "  ·  " + at : String(name);
 };
+/* THE MODAL TRAIL, ALSO ON THE SIDEBAR: the same stack the dialog's < [pick] > walks,
+   laid out flat so a modal you left can be two clicks away while the page is on screen. */
+function paintHistory() {
+    const list = $("#history-list");
+    if (!list) return;
+    list.textContent = "";
+    modalTrail.forEach((entry, index) => {
+        const row = document.createElement("button");
+        row.type = "button";
+        row.className = "sidepanel-history-row" + (index === modalAt ? " on" : "");
+        row.title = entry.vid || entry.expr || entry.tid || "";
+        const label = document.createElement("span");
+        label.className = "sidepanel-history-label";
+        label.textContent = entry.shortTid || entry.vid || entry.tid || String(index);
+        row.appendChild(label);
+        const mark = document.createElement("span");
+        mark.className = "sidepanel-history-mark";
+        mark.textContent = index === modalAt ? "●" : "";
+        row.appendChild(mark);
+        row.addEventListener("click", () => goModal(index));
+        list.appendChild(row);
+    });
+    const count = $("#history-count");
+    if (count) count.textContent = modalTrail.length ? String(modalTrail.length) : "";
+    const section = $("#sidepanel-history");
+    if (section) section.hidden = modalTrail.length === 0;
+}
+
 function paintTrail() {
     if (!modalNav.pick) return;
     modalNav.pick.textContent = "";
@@ -1362,6 +1432,8 @@ function paintTrail() {
     modalNav.pick.value = String(Math.max(0, modalAt));
     modalNav.prev.disabled = modalAt <= 0;
     modalNav.next.disabled = modalAt < 0 || modalAt >= modalTrail.length - 1;
+    paintHistory();
+    saveTrail();
     modalNav.pick.disabled = modalTrail.length < 2;
 }
 function rememberModal(env) {
@@ -1370,6 +1442,7 @@ function rememberModal(env) {
     if (same) return;
     modalTrail.splice(modalAt + 1);
     modalTrail.push({tid: env.tid || null, vid: env.vid || null, raw: env.raw || "", shortTid: env.shortTid || null, expr: env.expr || null});
+    if (modalTrail.length > MODAL_TRAIL_MAX) modalTrail.splice(0, modalTrail.length - MODAL_TRAIL_MAX);
     modalAt = modalTrail.length - 1;
     paintTrail();
 }
@@ -1408,6 +1481,7 @@ function goModal(index) {
     prev.addEventListener("click", () => goModal(modalAt - 1));
     next.addEventListener("click", () => goModal(modalAt + 1));
     pick.addEventListener("change", () => goModal(Number(pick.value)));
+    loadTrail();
     paintTrail();
 })();
 

@@ -16,10 +16,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.web.space.ws;
+package studio.phaseshift.metatron.isa.m.mach.type.network;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+
+import static studio.phaseshift.metatron.Tokens.DROPPED;
+import static studio.phaseshift.metatron.Tokens.ELAPSED;
+import static studio.phaseshift.metatron.Tokens.EXCHANGES;
+import static studio.phaseshift.metatron.Tokens.OUTCOME;
+import static studio.phaseshift.metatron.Tokens.PAUSED;
+import static studio.phaseshift.metatron.Tokens.PEER;
+import static studio.phaseshift.metatron.Tokens.REPLY;
+import static studio.phaseshift.metatron.Tokens.REQUEST;
+import static studio.phaseshift.metatron.Tokens.ROW;
+import static studio.phaseshift.metatron.Tokens.SEQ;
+import static studio.phaseshift.metatron.Tokens.TAG;
+import static studio.phaseshift.metatron.Tokens.TIMEOUTS;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -68,6 +89,11 @@ public final class WireTrace {
      * lane per peer and keep it forever. The coldest lane is dropped when a new one would exceed this.
      */
     public static final int MAX_LANES = 32;
+    /**
+     * the rows the {@code analysis/trace} door answers per lane: a page polls it, so it is a window of the window
+     * (the ring keeps more than a viewer needs to see at once)
+     */
+    public static final int DOOR_ROWS = 40;
     /**
      * how many of the newest exchanges keep their request/reply as objs (see the class note)
      */
@@ -213,11 +239,11 @@ public final class WireTrace {
     }
 
     private static final Object LOCK = new Object();
-    private static final ArrayDeque<Exchange> EXCHANGES = new ArrayDeque<>();
+    private static final ArrayDeque<Exchange> EXCHANGE_RING = new ArrayDeque<>();
     private static final Map<String, LaneState> LANES = new LinkedHashMap<>();
     private static final ArrayDeque<Exchange> DETAILS = new ArrayDeque<>();
-    private static final AtomicLong SEQ = new AtomicLong();
-    private static final AtomicLong DROPPED = new AtomicLong();
+    private static final AtomicLong SEQUENCE = new AtomicLong();
+    private static final AtomicLong DROPPED_COUNT = new AtomicLong();
     private static volatile boolean paused = false;
 
     private WireTrace() {
@@ -279,7 +305,7 @@ public final class WireTrace {
         final String requestText = render(request);
         final String replyText = render(reply);
         final boolean detail = requestText.length() <= MAX_DETAIL_CHARS && replyText.length() <= MAX_DETAIL_CHARS;
-        record(new Exchange(SEQ.getAndIncrement(), peer, tag, requestText, replyText, startedMs, elapsedMs, outcome,
+        record(new Exchange(SEQUENCE.getAndIncrement(), peer, tag, requestText, replyText, startedMs, elapsedMs, outcome,
                 detail ? request : null, detail ? reply : null));
     }
 
@@ -293,7 +319,7 @@ public final class WireTrace {
         if (paused)
             return;
         final String text = render(frame);
-        record(new Exchange(SEQ.getAndIncrement(), peer, null == frame ? null : frame.vid(), "", text,
+        record(new Exchange(SEQUENCE.getAndIncrement(), peer, null == frame ? null : frame.vid(), "", text,
                 System.currentTimeMillis(), 0L, Outcome.PUSH,
                 text.length() <= MAX_DETAIL_CHARS ? frame : null, null));
     }
@@ -303,10 +329,10 @@ public final class WireTrace {
      */
     private static void record(final Exchange exchange) {
         synchronized (LOCK) {
-            EXCHANGES.addFirst(exchange);
-            if (EXCHANGES.size() > MAX_EXCHANGES) {
-                EXCHANGES.removeLast();
-                DROPPED.incrementAndGet();
+            EXCHANGE_RING.addFirst(exchange);
+            if (EXCHANGE_RING.size() > MAX_EXCHANGES) {
+                EXCHANGE_RING.removeLast();
+                DROPPED_COUNT.incrementAndGet();
             }
             final String key = laneKey(exchange.peer());
             final LaneState previous = LANES.get(key);
@@ -361,7 +387,7 @@ public final class WireTrace {
         }
         // the busiest peer leads the view: a lane is shown so a human can read what is happening NOW
         lanes.sort((a, b) -> Long.compare(b.lastActivityMs(), a.lastActivityMs()));
-        return new Snapshot(DROPPED.get(), SEQ.get(), lanes);
+        return new Snapshot(DROPPED_COUNT.get(), SEQUENCE.get(), lanes);
     }
 
     private static long lastLatency(final LaneState state) {
@@ -384,6 +410,39 @@ public final class WireTrace {
         return null == exchange.tag() ? "" : exchange.tag().toString();
     }
 
+
+    /**
+     * THE WINDOW AS DATA — the {@code analysis/trace} door. Lanes are keyed by peer; a lane's newest exchanges are
+     * its rows. Built ON READ, so the ring stays the store and a reader disturbs nothing; and NOT a meter: an
+     * analysis merges pointwise, a trace does not merge (its child is documented as such).
+     *
+     * @param rowsPerLane how many of each lane's newest exchanges to answer
+     */
+    public static Obj trace(final int rowsPerLane) {
+        final Snapshot snapshot = snapshot(rowsPerLane);
+        final Map<Obj, Obj> lanes = new LinkedHashMap<>();
+        for (final Lane lane : snapshot.lanes()) {
+            final List<Obj> rows = new ArrayList<>();
+            for (final Row row : lane.rows())
+                rows.add(rec(uri(SEQ), jnt(row.seq()),
+                        uri(TAG), str(row.tag()),
+                        uri(OUTCOME), str(row.kind()),
+                        /* A TIME, NOT A NUMBER: `millis::3.0` wears the unit every duration in the machine
+                           wears. built HERE, on the read — the exchange records the long it timed and pays
+                           nothing for the wrapper; the ring is the store, and a reader may dress it. */
+                        uri(ELAPSED), real(Double.valueOf(row.elapsedMs()), MATH_MILLIS_TID, null),
+                        uri(REQUEST), str(row.request()),
+                        uri(REPLY), str(row.reply())));
+            lanes.put(uri(lane.peer()), rec(
+                    uri(EXCHANGES), jnt(lane.exchanges()),
+                    uri(TIMEOUTS), jnt(lane.timeouts()),
+                    uri(ROW), lst(rows)));
+        }
+        return rec(uri(PAUSED), bool(paused()),
+                uri(DROPPED), jnt(snapshot.dropped()),
+                uri(PEER), rec(lanes));
+    }
+
     /**
      * STOP OR RESUME CAPTURE. A paused trace keeps what it has and records nothing new — the view must hold still
      * while a human inspects it, even though the wire keeps moving.
@@ -403,11 +462,11 @@ public final class WireTrace {
      */
     public static void clear() {
         synchronized (LOCK) {
-            EXCHANGES.clear();
+            EXCHANGE_RING.clear();
             LANES.clear();
             DETAILS.clear();
-            DROPPED.set(0);
-            SEQ.set(0);
+            DROPPED_COUNT.set(0);
+            SEQUENCE.set(0);
         }
     }
 
@@ -421,7 +480,7 @@ public final class WireTrace {
         final String key = laneKey(peer);
         synchronized (LOCK) {
             LANES.remove(key);
-            EXCHANGES.removeIf(exchange -> key.equals(laneKey(exchange.peer())));
+            EXCHANGE_RING.removeIf(exchange -> key.equals(laneKey(exchange.peer())));
             DETAILS.removeIf(exchange -> key.equals(laneKey(exchange.peer())));
         }
     }

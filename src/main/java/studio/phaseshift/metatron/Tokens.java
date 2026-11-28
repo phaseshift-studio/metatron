@@ -568,6 +568,21 @@ public final class Tokens {
     public static final String ERROR = "error";
     public static final String DEBUG = "debug";
     public static final String TRACE = "trace";
+
+    /**
+     * the wire's history under an analysis: {@code analysis/trace}. A lane per {@link #PEER}, a lane's newest
+     * exchanges as {@link #ROW}s — "what" beside the meters' "how much". NOT a meter: an analysis merges
+     * pointwise, a trace does not merge.
+     */
+    public static final String PAUSED = "paused";
+    public static final String DROPPED = "dropped";
+    public static final String EXCHANGES = "exchanges";
+    public static final String TIMEOUTS = "timeouts";
+    public static final String SEQ = "seq";
+    public static final String OUTCOME = "outcome";
+    public static final String ELAPSED = "elapsed";
+    public static final String REQUEST = "request";
+    public static final String REPLY = "reply";
     public static final String ARGS = "args";
     public static final String ENV = "env";
     public static final String MCP_SERVERS = "mcpServers";

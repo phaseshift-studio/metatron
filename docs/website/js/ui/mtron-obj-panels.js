@@ -1238,6 +1238,40 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 });
                 rowEl.appendChild(close);
             }
+            /* THE PEER'S ANALYSIS: the socket standing at its origin answers ?analq — a
+               read, never a dial — and the modal wears it with the analysis panel */
+            const chart = node("button", "network-chart", "📊");
+            chart.type = "button";
+            chart.title = "open this peer's analysis";
+            chart.setAttribute("aria-label", "open this peer's analysis");
+            chart.addEventListener("click", async (ev) => {
+                ev.stopPropagation();
+                /* THE SOCKET STANDING AT THE PEER'S ORIGIN answers ?analq (a read, never
+                   a dial). If nothing answers there — a peer whose socket is not a local
+                   server — the machine's own analysis is the honest fallback and the
+                   modal says which one it is showing. */
+                const origin = member.origin || member.host;
+                const own = "/network/analyzer/analysis";
+                const read = async (expr) => {
+                    try {
+                        const text = String((await api.mtron(expr)) || "").trim();
+                        return text && text !== "noobj" && !/^fail::/.test(text) ? text : "";
+                    } catch (ignored) {
+                        return "";
+                    }
+                };
+                let address = origin ? String(origin).replace(/\/+$/, "") + "/#?analq" : own;
+                let raw = origin ? await read("*<" + address + ">") : "";
+                if (!raw) {
+                    address = own;
+                    raw = await read("*<" + own + ">");
+                }
+                if (api && api.open)
+                    api.open({tid: "/m/isa/mach/analysis", vid: address, raw, shortTid: "analysis"});
+            });
+            /* the note column is the INTERACTIONS column: what this peer offers (its tools)
+               and what the page can ask of it (its analysis) live together */
+            noteEl.appendChild(chart);
             /* a ws peer with an mtron endpoint is an instance: the page can wear its data */
             const endpoint = !template ? (client.host || member.host) : null;
             if (!template && endpoint && /^wss?:\/\//.test(String(member.origin || "")) && api && typeof api.view === "function") {
@@ -1369,6 +1403,312 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
     }
 
     register("/m/mach/component/network", networkPanel);
+
+    /* wire — THE MESSAGES THEMSELVES. The network's meters answer "how much"
+       (~/network/analyzer/analysis/wire); this answers "what": every round trip and every
+       unsolicited frame the VM's sockets saw, one lane per peer. The door computes it from
+       the wire's ring (Java-side, bounded), so the page reads a snapshot and never a store. */
+    function wirePanel(env, api) {
+        const box = node("div", "mpanel wire-panel");
+        const evalJson = (api && api.evalJson) || (() => Promise.resolve(null));
+        let painted = "";
+        /* the card's folds survive a repaint, exactly as the analysis panel's do */
+        const openState = new Map();
+        const remember = (details, key) =>
+            details.addEventListener("toggle", () => openState.set(key, details.open));
+
+        const brief = (text, limit) => {
+            const full = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
+            return full.length > limit ? full.slice(0, limit - 1) + "…" : full;
+        };
+
+        const lane = (peer, data) => {
+            const details = document.createElement("details");
+            details.className = "wire-lane";
+            const laneKey = "lane:" + String(peer);
+            details.open = openState.has(laneKey) ? openState.get(laneKey) : true;
+            remember(details, laneKey);
+            const rows = Array.isArray(data && data.row) ? data.row : (data && data.row ? [data.row] : []);
+            const summary = document.createElement("summary");
+            summary.className = "wire-lane-head";
+            summary.appendChild(node("span", "wire-peer", peer));
+            summary.appendChild(node("span", "wire-counts",
+                (data && data.exchanges != null ? data.exchanges : rows.length) + " exchanges"));
+            if (data && data.timeouts)
+                summary.appendChild(node("span", "wire-timeouts", data.timeouts + " timeouts"));
+            details.appendChild(summary);
+
+            const body = node("div", "wire-lane-body");
+            rows.forEach((entry) => {
+                const row = node("div", "wire-row");
+                row.appendChild(node("span", "wire-outcome " + String(entry.outcome || ""),
+                    String(entry.outcome || "")));
+                /* the elapsed is a time::T (`millis::3.0`), not a bare number */
+                const elapsed = entry.elapsed;
+                const unit = elapsed && typeof elapsed === "object"
+                    ? String(elapsed.vid || elapsed.tid || "").split("/").pop() || "millis"
+                    : "ms";
+                const amount = elapsed && typeof elapsed === "object" ? elapsed.value : elapsed;
+                row.appendChild(node("span", "wire-ms", (amount != null ? amount : 0) + " " + unit));
+                if (entry.tag) row.appendChild(node("span", "wire-tag", brief(entry.tag, 30)));
+                const request = node("span", "wire-req", brief(entry.request, 70));
+                request.title = String(entry.request || "");
+                row.appendChild(request);
+                const reply = node("span", "wire-reply", brief(entry.reply, 70));
+                reply.title = String(entry.reply || "");
+                row.appendChild(reply);
+                body.appendChild(row);
+            });
+            details.appendChild(body);
+            return details;
+        };
+
+        const load = async () => {
+            try {
+                const value = await evalJson();
+                const text = JSON.stringify(value || {});
+                if (text === painted) return;
+                painted = text;
+                const lanes = (value && value.peer) || {};
+                const peers = Object.keys(lanes).sort();
+                box.textContent = "";
+                const head = node("div", "mpanel-head wire-head");
+                head.appendChild(node("span", "mpanel-k", "wire"));
+                head.appendChild(node("span", "wire-head-note",
+                    peers.length + (peers.length === 1 ? " peer" : " peers")));
+                if (value && value.paused) head.appendChild(node("span", "wire-paused", "paused"));
+                if (value && value.dropped)
+                    head.appendChild(node("span", "wire-dropped", value.dropped + " dropped"));
+                box.appendChild(head);
+                if (!peers.length) {
+                    box.appendChild(node("div", "mpanel-empty", "no exchanges seen"));
+                    return;
+                }
+                peers.forEach((peer) => box.appendChild(lane(peer, lanes[peer])));
+            } catch (problem) {
+                box.textContent = "";
+                box.appendChild(node("div", "mpanel-empty",
+                    "cannot read the wire: " + (problem && problem.message ? problem.message : problem)));
+            }
+        };
+
+        pollPanel(box, () => load(), 4000);
+        load();
+        return box;
+    }
+
+    register("/m/mach/component/network/trace", wirePanel);
+
+    /* analysis — a meter rec as a table. Groups nest (wire => [recv, sent]), a leaf wears
+       its kind and its reading: counter is a number, gauge a point-in-time, timer the
+       count/total/min/max it keeps. */
+    function analysisPanel(env, api) {
+        const box = node("div", "mpanel analysis-panel");
+        const vid = String((env && env.vid) || "/network/analyzer/analysis").trim();
+        /* A POLL REBUILDS THE PANEL; THE HUMAN'S FOLDS ARE NOT THE DATA'S TO RESET.
+           every toggle is remembered by key (a meter group's path, a lane's peer) and
+           re-applied when the next poll re-renders the same tree. */
+        const openState = new Map();
+        const openOf = (key, fallback) => (openState.has(key) ? openState.get(key) : fallback);
+        const remember = (details, key) =>
+            details.addEventListener("toggle", () => openState.set(key, details.open));
+
+        /* THE REC AND ITS TRACE IN ONE READ, as Marko's query gives them:
+             *<vid>.-<[_,>>trace]  ==>  [analysis::[…], trace::[…]]
+           the first element is the meters (peer gauge, wire counters), the second is the
+           wire's window. One read, two sections. */
+        const brief = (obj, limit) => {
+            if (obj == null || typeof obj !== "object") return String(obj == null ? "" : obj);
+            const text = write(obj).replace(/^str::/, "");
+            return text.length > limit ? text.slice(0, limit - 1) + "…" : text;
+        };
+        const fieldOf = (rec, name) => {
+            let found = null;
+            if (rec && rec.isRec && rec.isRec())
+                rec.js.forEach((value, key) => {
+                    /* a key may arrive as the bare spelling or as a uri; the last segment is
+                       the name either way */
+                    if (String(key) === name || String(key).split("/").pop() === name) found = value;
+                });
+            return found;
+        };
+        const KINDS = ["counter", "gauge", "timer"];
+        const kindOf = (value) => {
+            const tid = String((value && value.tid) || "");
+            const tidKind = tid.split("/").pop();
+            if (KINDS.includes(tidKind)) return tidKind;
+            const vidKind = String((value && value.vid) || "").split("/").pop();
+            return KINDS.includes(vidKind) ? vidKind : null;
+        };
+        const reading = (value, kind) => {
+            if (kind !== "timer") return write(value);
+            const count = fieldOf(value, "count");
+            const total = fieldOf(value, "total");
+            const min = fieldOf(value, "min");
+            const max = fieldOf(value, "max");
+            return (count ? write(count) : "?") + " obs · total " + (total ? write(total) : "?")
+                + " · min " + (min ? write(min) : "?") + " · max " + (max ? write(max) : "?");
+        };
+        const rowOf = (key, kind, text) => {
+            const row = node("div", "analysis-row");
+            row.appendChild(node("span", "analysis-key", String(key)));
+            row.appendChild(node("span", "analysis-kind" + (kind ? " analysis-" + kind : ""), kind || ""));
+            row.appendChild(node("span", "analysis-value", text));
+            return row;
+        };
+        /* the meters: every leaf of the analysis rec, groups folded open one level */
+        const meters = (root, rec, depth, path) => {
+            if (!rec || !rec.isRec || !rec.isRec()) return;
+            rec.js.forEach((value, key) => {
+                const name = String(key);
+                if (name === "trace") return;          // the window is drawn below
+                const kind = kindOf(value);
+                if (kind) {
+                    root.appendChild(rowOf(name, kind, reading(value, kind)));
+                    return;
+                }
+                if (value && value.isRec && value.isRec() && depth < 2) {
+                    const key = "meter:" + (path || "") + "/" + name;
+                    const details = document.createElement("details");
+                    details.className = "analysis-group";
+                    details.open = openOf(key, true);
+                    remember(details, key);
+                    const summary = document.createElement("summary");
+                    summary.className = "analysis-group-head";
+                    summary.textContent = name;
+                    details.appendChild(summary);
+                    const inner = node("div", "analysis-group-body");
+                    meters(inner, value, depth + 1, (path || "") + "/" + name);
+                    details.appendChild(inner);
+                    root.appendChild(details);
+                    return;
+                }
+                root.appendChild(rowOf(name, "", write(value)));
+            });
+        };
+        /* the window: a lane per peer, a row per exchange */
+        const trace = (root, rec) => {
+            if (!rec || !rec.isRec || !rec.isRec()) {
+                root.appendChild(node("div", "mpanel-empty", "no trace"));
+                return;
+            }
+            const paused = fieldOf(rec, "paused");
+            const dropped = fieldOf(rec, "dropped");
+            const head = node("div", "mpanel-head wire-head");
+            head.appendChild(node("span", "mpanel-k", "trace"));
+            if (paused && paused.js === true) head.appendChild(node("span", "wire-paused", "paused"));
+            if (dropped) head.appendChild(node("span", "wire-dropped", write(dropped) + " dropped"));
+            head.appendChild(node("span", "wire-legend", "↑ sent · ↓ recv"));
+            root.appendChild(head);
+            const lanes = fieldOf(rec, "peer");
+            let count = 0;
+            if (lanes && lanes.isRec && lanes.isRec()) lanes.js.forEach(() => { count += 1; });
+            if (!count) {
+                root.appendChild(node("div", "mpanel-empty", "no exchanges seen"));
+                return;
+            }
+            lanes.js.forEach((lane, peer) => {
+                const laneKey = "lane:" + String(peer);
+                const details = document.createElement("details");
+                details.className = "wire-lane";
+                details.open = openOf(laneKey, true);
+                remember(details, laneKey);
+                const summary = document.createElement("summary");
+                summary.className = "wire-lane-head";
+                summary.appendChild(node("span", "wire-peer", String(peer)));
+                const exchanges = fieldOf(lane, "exchanges");
+                const timeouts = fieldOf(lane, "timeouts");
+                if (exchanges) summary.appendChild(node("span", "wire-counts", write(exchanges)
+                    + (exchanges.js === 1 ? " exchange" : " exchanges")));
+                if (timeouts && timeouts.js > 0)
+                    summary.appendChild(node("span", "wire-timeouts", write(timeouts) + " timeouts"));
+                details.appendChild(summary);
+                const body = node("div", "wire-lane-body");
+                const rows = fieldOf(lane, "row");
+                /* a lane's rows are a lst: read its members, not `stream()` on the lst itself
+                   (that yields the list once, which is the one-row-per-peer symptom) */
+                const rowList = rows && rows.isLst && rows.isLst() ? rows.js : (rows ? [rows] : []);
+                rowList.forEach((row) => {
+                    /* ONE ROW, READ AS ITS OWN TEXT: `[seq=>2, tag=>'0x…', outcome=>'send_recv',
+                       elapsed=>millis::36.0, request=>'…', reply=>"…"]` — regexes over the
+                       written form are exact where walking the parsed rec surprised me. */
+                    const rowText = write(row);
+                    const pick = (name) => {
+                        const quoted = new RegExp(name + "=>'((?:[^'\\\\]|\\\\.)*)'").exec(rowText);
+                        if (quoted) return quoted[1];
+                        const doubled = new RegExp(name + '=>"((?:[^"\\\\]|\\\\.)*)"').exec(rowText);
+                        if (doubled) return doubled[1];
+                        const bare = new RegExp(name + "=>([^,\\]]+)").exec(rowText);
+                        return bare ? bare[1].trim() : "";
+                    };
+                    const line = node("div", "wire-row");
+                    line.appendChild(node("span", "wire-outcome " + pick("outcome"), pick("outcome")));
+                    line.appendChild(node("span", "wire-ms", pick("elapsed")));
+                    /* DIRECTION, marked per cell: ↑ what this machine SENT (the request),
+                       ↓ what it RECEIVED (the reply, or an unsolicited push's frame) */
+                    const requestText = pick("request");
+                    const request = node("span", "wire-req");
+                    if (requestText) request.appendChild(node("span", "wire-arrow wire-sent", "↑"));
+                    request.appendChild(document.createTextNode(requestText.slice(0, 70)));
+                    request.title = requestText;
+                    line.appendChild(request);
+                    const replyText = pick("reply");
+                    const reply = node("span", "wire-reply");
+                    if (replyText) reply.appendChild(node("span", "wire-arrow wire-recv", "↓"));
+                    reply.appendChild(document.createTextNode(replyText.slice(0, 70)));
+                    reply.title = replyText;
+                    line.appendChild(reply);
+                    body.appendChild(line);
+                });
+                details.appendChild(body);
+                root.appendChild(details);
+            });
+        };
+
+        const read = async (expr) => {
+            const text = String((await api.mtron(expr)) || "").trim();
+            if (!text || text === "noobj" || /^fail::/.test(text)) return null;
+            try {
+                return parse(text);
+            } catch (ignored) {
+                return null;
+            }
+        };
+        const load = async () => {
+            box.textContent = "";
+            let analysis = null;
+            let window = null;
+            try {
+                /* TWO READS, as the machine spells them:
+                     *<vid>        the analysis rec (peer gauge, wire counters)
+                     *<vid>/trace   the wire's window (lanes of exchanges) */
+                analysis = await read("*<" + vid + ">");
+                window = await read("*<" + vid + "/trace>");
+            } catch (problem) {
+                box.appendChild(node("div", "mpanel-empty",
+                    "cannot read the analysis: " + (problem && problem.message ? problem.message : problem)));
+                return;
+            }
+            if (!analysis && !window) {
+                box.appendChild(node("div", "mpanel-empty", "no analysis"));
+                return;
+            }
+            const head = node("div", "mpanel-head");
+            head.appendChild(node("span", "mpanel-k", "analysis"));
+            head.appendChild(node("span", "analysis-count", vid));
+            box.appendChild(head);
+            if (analysis && analysis.isRec && analysis.isRec()) meters(box, analysis, 0, "");
+            else box.appendChild(node("div", "mpanel-empty", "no meters"));
+            trace(box, window);
+        };
+
+        pollPanel(box, () => load(), 8000);
+        load();
+        return box;
+    }
+
+    register("/m/isa/mach/analysis", analysisPanel);
+    register("analysis", analysisPanel);
     register("network", networkPanel);
 
     /* memory — the machine's registered spaces: a gateway that lists every space

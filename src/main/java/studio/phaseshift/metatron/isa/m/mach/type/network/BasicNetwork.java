@@ -214,6 +214,7 @@ public class BasicNetwork extends AbstractSpace<memSpace> implements Network {
         // actually asks: the frame's OWN table may be empty while the root's names resolve there. Marked, because a
         // name is spoken `//ginger`; the stored spelling is one strip away (prefixes()), and the write below makes
         // read-then-write a no-op by dropping inherited rows.
+
         if (f(PREFIX).equals(at))
             return Network.Helper.markedTable(Component.Prefix.Helper.effectivePrefixes(this));
         // THE q-PROCS ARE THE REC'S, not the store's: they are a config field (addQ put them at `q`), so

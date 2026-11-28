@@ -3028,6 +3028,144 @@ button.machine-tile:focus-visible {
     overflow-wrap: normal;
 }
 
+/* a peer's analysis, opened from its row: an emoji mark, because the row is text */
+.network-chart {
+    background: none;
+    border: 0;
+    padding: 0 .1rem;
+    margin-left: .25rem;
+    font-size: 10px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: .65;
+    vertical-align: -1px;
+}
+
+.network-chart:hover { opacity: 1; }
+
+/* analysis — meters as a table: a leaf wears its kind and its reading, a group nests */
+.analysis-count { color: var(--dim); font-size: 10.5px; }
+
+.analysis-row {
+    display: grid;
+    grid-template-columns: minmax(6rem, 1fr) 5rem minmax(0, 2fr);
+    gap: .4rem;
+    align-items: baseline;
+    padding: .08rem 0;
+    font: 11px/1.5 var(--mono);
+    border-top: 1px dashed var(--line);
+}
+
+.analysis-key {
+    color: var(--fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.analysis-kind { font-size: 9.5px; color: var(--dim); }
+.analysis-gauge { color: var(--faint); }
+.analysis-timer { color: var(--faint); }
+
+.analysis-value {
+    color: var(--fg);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.analysis-group { border-top: 1px solid var(--line); }
+
+.analysis-group-head {
+    list-style: none;
+    cursor: pointer;
+    padding: .2rem 0;
+    font: 11px/1.5 var(--mono);
+    color: var(--dim);
+    user-select: none;
+}
+
+.analysis-group-head::-webkit-details-marker { display: none; }
+
+.analysis-group-head::before { content: "▸ "; color: var(--faint); }
+
+.analysis-group[open] > .analysis-group-head::before { content: "▾ "; }
+
+.analysis-group-body { padding-left: .8rem; }
+
+/* the wire — the messages themselves, one lane per peer, newest first */
+.wire-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+}
+
+.wire-head-note,
+.wire-dropped {
+    color: var(--dim);
+    font-size: 10.5px;
+}
+
+.wire-paused {
+    color: var(--mred);
+    font-size: 10.5px;
+}
+
+.wire-lane { border-top: 1px solid var(--line); }
+
+.wire-lane-head {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    gap: .5rem;
+    align-items: baseline;
+    padding: .25rem .2rem;
+    font: 11px/1.5 var(--mono);
+    user-select: none;
+}
+
+.wire-lane-head::-webkit-details-marker { display: none; }
+
+.wire-lane-head::before { content: "▸ "; color: var(--faint); }
+
+.wire-lane[open] > .wire-lane-head::before { content: "▾ "; }
+
+.wire-peer { color: var(--fg); }
+.wire-counts { color: var(--dim); }
+.wire-timeouts { color: var(--mred); }
+
+.wire-lane-body { padding-left: .9rem; }
+
+.wire-row {
+    display: grid;
+    grid-template-columns: 4.4rem 6rem auto minmax(0, 1fr) minmax(0, 1fr);
+    gap: .35rem;
+    align-items: baseline;
+    padding: .08rem 0;
+    font: 10.5px/1.5 var(--mono);
+    border-top: 1px dashed var(--line);
+}
+
+.wire-outcome { color: var(--dim); }
+.wire-outcome.timeout { color: var(--mred); }
+.wire-outcome.push { color: var(--faint); }
+.wire-ms { color: var(--faint); text-align: right; white-space: nowrap; }
+.wire-tag, .wire-req, .wire-reply {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.wire-tag { color: var(--dim); }
+.wire-req { color: var(--fg); }
+.wire-reply { color: var(--dim); }
+
+/* direction: the arrow leads the cell it belongs to */
+.wire-arrow { margin-right: .3rem; font-weight: 600; }
+.wire-sent { color: var(--ok); }
+.wire-recv { color: var(--mred); }
+.wire-legend { color: var(--dim); font-size: 10px; margin-left: .5rem; }
+
 /* hang up: retracts the peer at its key (the supervisor stops redialing it) */
 .network-close {
     background: none;
@@ -3765,6 +3903,68 @@ footer .license {
     overflow: auto;
     padding: .45rem .5rem .6rem;
 }
+
+/* the modal trail, docked under the layout tree: the same stack the dialog's
+   < [history] > walks, laid out so a closed modal is two clicks away */
+.sidepanel-history {
+    flex: 0 0 auto;
+    max-height: 46%;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--line-hi);
+    background: var(--panel-hi);
+}
+
+.sidepanel-history-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .45rem .8rem .3rem;
+}
+
+.sidepanel-history-head h2 {
+    margin: 0;
+    color: var(--dim);
+    font: 11px/1.4 var(--mono);
+    text-transform: lowercase;
+}
+
+.sidepanel-history-list {
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: 0 .35rem .45rem;
+}
+
+.sidepanel-history-row {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+    width: 100%;
+    background: none;
+    border: 0;
+    padding: .18rem .45rem;
+    border-radius: 6px;
+    color: var(--fg);
+    font: 11px/1.5 var(--mono);
+    text-align: left;
+    cursor: pointer;
+}
+
+.sidepanel-history-row:hover { background: var(--panel); }
+
+.sidepanel-history-row.on {
+    background: var(--panel);
+    color: var(--fg);
+}
+
+.sidepanel-history-label {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidepanel-history-mark { color: var(--red-hi); font-size: 9px; }
 
 .sidepanel-foot {
     display: flex;

@@ -33,7 +33,7 @@ import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget.LineUI;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget.SpanUI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.web.space.ws.WireTrace;
+import studio.phaseshift.metatron.isa.m.mach.type.network.WireTrace;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 
 import java.util.*;

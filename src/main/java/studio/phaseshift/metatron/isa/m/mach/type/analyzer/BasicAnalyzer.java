@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.m.mach.type.network.WireTrace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -279,6 +280,13 @@ public class BasicAnalyzer extends MRec implements Analyzer {
                 level = level.computeIfAbsent(uri(segment), _ -> rec()).asRec().jvm();
             level.put(uri(segments.getLast()), reading);
         });
+        // THE WIRE'S HISTORY hangs under the analysis it measures: `analysis/trace` is the network's, built on
+        // read from the bounded ring (so a reader disturbs nothing), and NOT a meter -- an analysis merges
+        // pointwise, a trace does not merge.
+        if (NETWORK.equals(this.component))
+            // LAZY, like the analysis itself: the trace is built only when someone reads analysis/trace, so a
+            // whole-analysis read (a status line, a poll) pays an inst and not the window's recs
+            analysis.put(uri(TRACE), auto_(instLambda(lhs -> WireTrace.trace(WireTrace.DOOR_ROWS))).tryToInst());
         return new BasicAnalysis(analysis);
     }
 

@@ -44,12 +44,12 @@ import studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmProcessor;
-import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.Tracer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.tracer.BasicTracer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
@@ -75,9 +75,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -131,9 +130,8 @@ public class machInstSet extends AbstractInstSet {
      * the reply can address.
      * <p>
      * The tag is an ordinary value argument (not the vid of anything), so what it addresses is the ANSWER: a value
-     * leaves with the tag on it, a bag with the tag on each member (a bag holds no vid on the wire), and nothing
-     * leaves as {@link #NOOBJ_SENTINEL} — the mark that says "the answer was empty, and this is the trip it belonged
-     * to".
+     * leaves with the tag on it, and nothing leaves as {@link #NOOBJ_SENTINEL} — the mark that says "the answer was
+     * empty, and this is the trip it belonged to".
      */
     public static final fURI REPLY_INST_TID = MACH_INST_TID.extend("reply");
 
@@ -602,15 +600,15 @@ public class machInstSet extends AbstractInstSet {
                                 // every slot is optional: a BasicTyper is checked against this type while its rec is
                                 // still empty (MObj's constructor), and an absent point reads the boot default
                                 .isaPredicate(rec(uri(Typer.CHECK).maybe().asUri(), rec(
-                                        uri(Typer.INST_DOM.name()).maybe().asUri(), BOOL_TYPE,
-                                        uri(Typer.INST_RNG.name()).maybe(), BOOL_TYPE,
-                                        uri(Typer.TYPE_PRED.name()).maybe(), BOOL_TYPE,
-                                        uri(Typer.CODE_RESOLVE.name()).maybe(), BOOL_TYPE,
-                                        uri(Typer.OBJ_WRITE.name()).maybe(), BOOL_TYPE),
+                                                uri(Typer.INST_DOM.name()).maybe().asUri(), BOOL_TYPE,
+                                                uri(Typer.INST_RNG.name()).maybe(), BOOL_TYPE,
+                                                uri(Typer.TYPE_PRED.name()).maybe(), BOOL_TYPE,
+                                                uri(Typer.CODE_RESOLVE.name()).maybe(), BOOL_TYPE,
+                                                uri(Typer.OBJ_WRITE.name()).maybe(), BOOL_TYPE),
                                         uri(Typer.UNFOLD).maybe(), rec(
-                                        uri(Typer.UNFOLD_URI.name()).maybe().asUri(), INT_TYPE,
-                                        uri(Typer.UNFOLD_LST.name()).maybe(), INT_TYPE,
-                                        uri(Typer.UNFOLD_REC.name()).maybe(), INT_TYPE)), mutableMap(
+                                                uri(Typer.UNFOLD_URI.name()).maybe().asUri(), INT_TYPE,
+                                                uri(Typer.UNFOLD_LST.name()).maybe(), INT_TYPE,
+                                                uri(Typer.UNFOLD_REC.name()).maybe(), INT_TYPE)), mutableMap(
                                         uri(Typer.CHECK), "the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)",
                                         uri(Typer.UNFOLD), "the most copies a span unfolds into, 100 each by default, and a span past its bound fails: uri (a uri's path: <a>{n}, pow(n), a span a uri takes from its lhs), lst (the copies laid along a lst axis: [5{n}], an argument list, a lst's power: [1,2]{n}, pow(n), {n}[a].prod(), and the copies of a lst's own letters it holds that the words a sum or as(uri::T) expands it into come to, a range's powers together), rec (the powers a rec's span joins, and the copies of its walks a power, or a range's sum, holds: [a=>b]{n}, a range's powers, {+}'s closure)"))
 
@@ -1355,21 +1353,14 @@ public class machInstSet extends AbstractInstSet {
                                     // NOOBJ_SENTINEL). clone().selfVID, never vid(): vid() clones AND WRITES the tagged
                                     // obj at the address (Obj.Helper.objClone -> objCheckAndSave -> Machine.write), so on
                                     // the far side every trip would leave a bookkeeping entry on its variableStack
+                                    final Obj answer = payload.isNoObj() ? uri(NOOBJ_SENTINEL) : payload.clone();
                                     // THE TAG IS THE VID'S LAST SEGMENT, never a replacement for the vid: an answer's own
                                     // vid is its identity (a graph element's g:V/1), and a tag that replaced it detached
                                     // every addressed answer a lane shipped home. One with no vid is addressed by the tag
                                     // a tag that is not a hex literal comes from a client built before the hex
                                     // segment: it replaces the vid, as that client's router expects
-                                    final java.util.function.UnaryOperator<Obj> tagged = answer -> answer.selfVID(null == answer.vid() || !studio.phaseshift.metatron.util.CommonUtil.isHex(tag.name())
+                                    return answer.selfVID(null == answer.vid() || !studio.phaseshift.metatron.util.CommonUtil.isHex(tag.name())
                                             ? tag : answer.vid().extend(tag.toString()));
-                                    // A BAG CANNOT HOLD AN ADDRESS EITHER: no spelling puts a vid on one ({…}@x reads as
-                                    // at(x)), so the wire writes its members and drops its own vid, and two bags answered
-                                    // on one socket came home with nothing to tell their trips apart. Each member carries
-                                    // the tag, a clone of it (a bag's clone shares its members), and the socket reads the
-                                    // trip off the first
-                                    return payload.isNoObj() ? tagged.apply(uri(NOOBJ_SENTINEL))
-                                            : payload.isObjs() ? objs(payload.stream().map(member -> tagged.apply(member.clone())).toList())
-                                            : tagged.apply(payload.clone());
                                 })
                                 .create()
                 ))),
