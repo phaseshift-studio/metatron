@@ -448,18 +448,32 @@ integer it is given, boots it from the file it is handed, and dials each one as 
 
 ## A graph partitioned by its rows
 
-Each place holds the rows of the vertices it owns, here $V_{0} = \{a\}$ and $V_{1} = \{b, c\}$:
-$\mathbf{A} = \Delta_{0}\mathbf{A} + \Delta_{1}\mathbf{A}$. An address whose terms name places is a sum, and reading it
-is the sum of the reads, $\mathrm{from}(p_{0} + p_{1}) = \mathrm{from}(p_{0}) + \mathrm{from}(p_{1})$
-[[2]](./ring-theoretic-distributed-computing.md). The stream of row blocks folds back into the graph under the rec's
-own sum:
+Each place holds the rows of the vertices it owns. In the modern graph, place 0 owns marko and place 1 owns josh and
+peter; lop, vadas and ripple have no out-edges, so no rows. $\mathbf{A} = \Delta_{0}\mathbf{A} + \Delta_{1}\mathbf{A}$.
+A write to an address on a place puts each block there. An address whose terms name places is a sum, and reading it is
+the sum of the reads, $\mathrm{from}(p_{0} + p_{1}) = \mathrm{from}(p_{0}) + \mathrm{from}(p_{1})$
+[[2]](./ring-theoretic-distributed-computing.md). The stream of row blocks folds back into the graph under the rec's own
+sum:
 
 ```mtron_pre
-[MAXOUTPUT 5]branch(<//0> => start([a=>{b,c,d}]).to(/n/g), <//1> => start([b=>{c,d},c=>{a,d}]).to(/n/g))
+//0/n/g -> [marko=>lop,marko=>josh,marko=>vadas]
+//1/n/g -> [josh=>lop,josh=>ripple,peter=>lop]
 *//{0,1}/n/g
 *//{0,1}/n/g.sum()
 *//{0,1}/n/g.sum().explain()>>format
 ```
+
+Home can multiply the blocks it reads. $\mathbf{A}^{(2)} = (\Delta_{0}\mathbf{A} + \Delta_{1}\mathbf{A})^{2}$ has four
+terms, and in the modern graph only one is not zero, $(\Delta_{0}\mathbf{A})(\Delta_{1}\mathbf{A})$: marko's walks
+through josh. In the other order the product is zero, as software points to no one:
+
+```mtron_pre
+*//0/n/g * *//1/n/g
+*//1/n/g * *//0/n/g
+*//0/n/g.mult(*//1/n/g).explain()>>format
+```
+
+Multiplying at home brings both blocks home. The placements below keep the blocks where they are.
 
 ## Rows stay where they are: $(\Delta_{p}\mathbf{A})\,\mathbf{A}$
 
@@ -476,18 +490,19 @@ nothing until it reads the result, and the rows of $\mathbf{A}^{(t)}$ are where 
 $t$:
 
 ```mtron_pre
-[MAXOUTPUT 5]*g.move(<//0>).to(/n/a)
-[MAXOUTPUT 5]*g.move(<//1>).to(/n/a)
-*g.move(<//1>).to(/n/a).explain()>>format
+[marko=>lop,marko=>josh,marko=>vadas,josh=>lop,josh=>ripple,peter=>lop]@modern
+[MAXOUTPUT 5]*modern.move(<//0>).to(/n/a)
+[MAXOUTPUT 5]*modern.move(<//1>).to(/n/a)
+*modern.move(<//1>).to(/n/a).explain()>>format
 [MAXOUTPUT 5]branch(<//0> => start(*/n/g).mult(*/n/a).to(/n/g2), <//1> => start(*/n/g).mult(*/n/a).to(/n/g2))
 branch(<//0> => start(*/n/g).mult(*/n/a).to(/n/g2), <//1> => start(*/n/g).mult(*/n/a).to(/n/g2)).explain()>>format
+*//0/n/g2
 *//{0,1}/n/g2.sum()
-*g * *g
-[MAXOUTPUT 5]branch(<//0> => start(*/n/g2).mult(*/n/a).to(/n/g3), <//1> => start(*/n/g2).mult(*/n/a).to(/n/g3))
-*//0/n/g3
-*//{0,1}/n/g3.sum()
-*g.{2}mult(*g)
+*modern * *modern
 ```
+
+marko's walks through josh land at place 0, which owns marko's row. Place 1's rows have no walks of length two, and the
+modern graph has no walk longer than two, so $\mathbf{A}^{(3)}$ is zero and a next step would answer nothing.
 
 The copy is a `move`: the computation goes to the place with the graph as its stream. A rec is one object, but a bag of
 rels is a stream, and a stream handed to a `branch` reaches each lane one object at a time. A lane that writes it with
@@ -507,10 +522,11 @@ branch(<//0> => start(*/n/a).mult(*/n/g).to(/n/m2), <//1> => start(*/n/a).mult(*
 *//{0,1}/n/m2.sum()
 ```
 
-The whole graph is needed on the left. A place that composes only the other place's rows with its own computes the
-cross terms of $(\Delta_{0}\mathbf{A} + \Delta_{1}\mathbf{A})^{2}$, $(\Delta_{1}\mathbf{A})(\Delta_{0}\mathbf{A})$ and
-$(\Delta_{0}\mathbf{A})(\Delta_{1}\mathbf{A})$, and misses the walks that stay on one place,
-$(\Delta_{0}\mathbf{A})(\Delta_{0}\mathbf{A})$ and $(\Delta_{1}\mathbf{A})(\Delta_{1}\mathbf{A})$.
+The same walks now land at place 1, which owns josh, the vertex they pass through; no walk passes through marko, so
+place 0 has none. The whole graph is needed on the left. A place that composes only the other place's rows with its own
+computes the cross terms, $(\Delta_{1}\mathbf{A})(\Delta_{0}\mathbf{A})$ and $(\Delta_{0}\mathbf{A})(\Delta_{1}\mathbf{A})$,
+and misses the walks that stay on one place, $(\Delta_{0}\mathbf{A})(\Delta_{0}\mathbf{A})$ and
+$(\Delta_{1}\mathbf{A})(\Delta_{1}\mathbf{A})$, which are zero in the modern graph and not in general.
 
 The walks land by their middle vertex, not their first, so they are not where a next step needs them:
 $\mathbf{A}^{(3)} = \mathbf{A}^{(2)}\mathbf{A}$ wants each walk at the place that owns its last vertex, and

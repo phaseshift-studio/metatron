@@ -1031,19 +1031,23 @@ mtron&gt; {0,1}.harvest(&lt;boot/space/grph/peer.boot.mtron&gt;)
     1=&gt;ws://localhost:1112/mtron]
 </code></pre>
 <h3>A graph partitioned by its rows</h3>
-<p>Each place holds the rows of the vertices it owns, here \(V_{0} = \{a\}\) and \(V_{1} = \{b, c\}\):
-\(\mathbf{A} = \Delta_{0}\mathbf{A} + \Delta_{1}\mathbf{A}\). An address whose terms name places is a sum, and reading it
-is the sum of the reads, \(\mathrm{from}(p_{0} + p_{1}) = \mathrm{from}(p_{0}) + \mathrm{from}(p_{1})\)
-<a href="./ring-theoretic-distributed-computing.html">[2]</a>. The stream of row blocks folds back into the graph under the rec's
-own sum:</p>
-<pre><code class="language-mtron">mtron&gt; branch(&lt;//0&gt; =&gt; start([a=&gt;{b,c,d}]).to(/n/g), &lt;//1&gt; =&gt; start([b=&gt;{c,d},c=&gt;{a,d}]).to(/n/g))
-==&gt;[a=&gt;{b,c,d}]
-==&gt;[b=&gt;{c,d},c=&gt;{a,d}]
+<p>Each place holds the rows of the vertices it owns. In the modern graph, place 0 owns marko and place 1 owns josh and
+peter; lop, vadas and ripple have no out-edges, so no rows. \(\mathbf{A} = \Delta_{0}\mathbf{A} + \Delta_{1}\mathbf{A}\).
+A write to an address on a place puts each block there. An address whose terms name places is a sum, and reading it is
+the sum of the reads, \(\mathrm{from}(p_{0} + p_{1}) = \mathrm{from}(p_{0}) + \mathrm{from}(p_{1})\)
+<a href="./ring-theoretic-distributed-computing.html">[2]</a>. The stream of row blocks folds back into the graph under the rec's own
+sum:</p>
+<pre><code class="language-mtron">mtron&gt; //0/n/g -&gt; [marko=&gt;lop,marko=&gt;josh,marko=&gt;vadas]
+==&gt;[marko=&gt;{lop,josh,vadas}]
+mtron&gt; //1/n/g -&gt; [josh=&gt;lop,josh=&gt;ripple,peter=&gt;lop]
+==&gt;[josh=&gt;{lop,ripple},peter=&gt;lop]
 mtron&gt; *//{0,1}/n/g
-==&gt;[a=&gt;{b,c,d}]
-==&gt;[b=&gt;{c,d},c=&gt;{a,d}]
+==&gt;[marko=&gt;{lop,josh,vadas}]
+==&gt;[josh=&gt;{lop,ripple},peter=&gt;lop]
 mtron&gt; *//{0,1}/n/g.sum()
-==&gt;[a=&gt;{b,c,d},b=&gt;{c,d},c=&gt;{a,d}]
+==&gt;[marko=&gt;{lop,josh,vadas},
+    josh=&gt;{lop,ripple},
+    peter=&gt;lop]
 mtron&gt; *//{0,1}/n/g.sum().explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
     op    dom      rng      args             f    desc      c_dom  c_rng  c_out 
@@ -1051,6 +1055,21 @@ mtron&gt; *//{0,1}/n/g.sum().explain()&gt;&gt;format
     sum   #{*}::T  #::T                      &lt;?&gt;  reducer   {*}    {1}    {1}   
    &quot;&quot;&quot;
 </code></pre>
+<p>Home can multiply the blocks it reads. \(\mathbf{A}^{(2)} = (\Delta_{0}\mathbf{A} + \Delta_{1}\mathbf{A})^{2}\) has four
+terms, and in the modern graph only one is not zero, \((\Delta_{0}\mathbf{A})(\Delta_{1}\mathbf{A})\): marko's walks
+through josh. In the other order the product is zero, as software points to no one:</p>
+<pre><code class="language-mtron">mtron&gt; *//0/n/g * *//1/n/g
+==&gt;[marko=&gt;{josh=&gt;lop,josh=&gt;ripple}]
+mtron&gt; *//1/n/g * *//0/n/g
+==&gt;[=&gt;]
+mtron&gt; *//0/n/g.mult(*//1/n/g).explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op    dom      rng      args        f    desc      c_dom  c_rng  c_out 
+    from  #{?}::T  #{*}::T  [//0/n/g]   &lt;j&gt;  standard  {?}    {*}    {*}   
+    mult  #::T     #::T     [*//1/n/g]  &lt;?&gt;  mapper    {1}    {1}    {*}   
+   &quot;&quot;&quot;
+</code></pre>
+<p>Multiplying at home brings both blocks home. The placements below keep the blocks where they are.</p>
 <h3>Rows stay where they are: \((\Delta_{p}\mathbf{A})\,\mathbf{A}\)</h3>
 <p>The product is associative, so a place's rows of the next power are its rows of this one times the whole graph:</p>
 <p>\[
@@ -1061,19 +1080,27 @@ mtron&gt; *//{0,1}/n/g.sum().explain()&gt;&gt;format
 <p>Copy \(\mathbf{A}\) to every place once, and every step after is local. Home sends each place a program and receives
 nothing until it reads the result, and the rows of \(\mathbf{A}^{(t)}\) are where the rows of \(\mathbf{A}\) are, at every
 \(t\):</p>
-<pre><code class="language-mtron">mtron&gt; *g.move(&lt;//0&gt;).to(/n/a)
-==&gt;[a=&gt;{b,c,d},b=&gt;{c,d},c=&gt;{a,d}]
-mtron&gt; *g.move(&lt;//1&gt;).to(/n/a)
-==&gt;[a=&gt;{b,c,d},b=&gt;{c,d},c=&gt;{a,d}]
-mtron&gt; *g.move(&lt;//1&gt;).to(/n/a).explain()&gt;&gt;format
+<pre><code class="language-mtron">mtron&gt; [marko=&gt;lop,marko=&gt;josh,marko=&gt;vadas,josh=&gt;lop,josh=&gt;ripple,peter=&gt;lop]@modern
+==&gt;[marko=&gt;{lop,josh,vadas},
+    josh=&gt;{lop,ripple},
+    peter=&gt;lop]@modern
+mtron&gt; *modern.move(&lt;//0&gt;).to(/n/a)
+==&gt;[marko=&gt;{lop,josh,vadas},
+    josh=&gt;{lop,ripple},
+    peter=&gt;lop]
+mtron&gt; *modern.move(&lt;//1&gt;).to(/n/a)
+==&gt;[marko=&gt;{lop,josh,vadas},
+    josh=&gt;{lop,ripple},
+    peter=&gt;lop]
+mtron&gt; *modern.move(&lt;//1&gt;).to(/n/a).explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
     op    dom        rng        args                            f    desc      c_dom  c_rng  c_out 
-    from  #{?}::T    rec{*}::T  [g]                             &lt;j&gt;  standard  {?}    {*}    {*}   
+    from  #{?}::T    rec{*}::T  [modern]                        &lt;j&gt;  standard  {?}    {*}    {*}   
     cut   rec{*}::T  #{*}::T    [ws://localhost:1112,to(/n/a)]  &lt;j&gt;  gather    {*}    {*}    {*}   
    &quot;&quot;&quot;
 mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/g).mult(*/n/a).to(/n/g2), &lt;//1&gt; =&gt; start(*/n/g).mult(*/n/a).to(/n/g2))
-==&gt;[a=&gt;{b=&gt;c,b=&gt;d,c=&gt;a,c=&gt;d}]
-==&gt;[b=&gt;{c=&gt;a,c=&gt;d},c=&gt;{a=&gt;b,a=&gt;c,a=&gt;d}]
+==&gt;[marko=&gt;{josh=&gt;lop,josh=&gt;ripple}]
+==&gt;[=&gt;]
 mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/g).mult(*/n/a).to(/n/g2), &lt;//1&gt; =&gt; start(*/n/g).mult(*/n/a).to(/n/g2)).explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
     op      dom      rng      args                                                           f    desc      c_dom  c_rng  c_out 
@@ -1084,29 +1111,15 @@ mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/g).mult(*/n/a).to(/n/g2), &lt;//1&g
    {*}──┤                  ├─►//local─{*}
         └─►//1─{*}─{*}─{*}─┘
    &quot;&quot;&quot;
+mtron&gt; *//0/n/g2
+==&gt;[marko=&gt;{josh=&gt;lop,josh=&gt;ripple}]
 mtron&gt; *//{0,1}/n/g2.sum()
-==&gt;[a=&gt;{b=&gt;c,b=&gt;d,c=&gt;a,c=&gt;d},
-    b=&gt;{c=&gt;a,c=&gt;d},
-    c=&gt;{a=&gt;b,a=&gt;c,a=&gt;d}]
-mtron&gt; *g * *g
-==&gt;[a=&gt;{b=&gt;c,b=&gt;d,c=&gt;a,c=&gt;d},
-    b=&gt;{c=&gt;a,c=&gt;d},
-    c=&gt;{a=&gt;b,a=&gt;c,a=&gt;d}]
-mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/g2).mult(*/n/a).to(/n/g3), &lt;//1&gt; =&gt; start(*/n/g2).mult(*/n/a).to(/n/g3))
-==&gt;[a=&gt;{b=&gt;c=&gt;a,b=&gt;c=&gt;d,c=&gt;a=&gt;b,c=&gt;a=&gt;c,c=&gt;a=&gt;d}]
-==&gt;[b=&gt;{c=&gt;a=&gt;b,c=&gt;a=&gt;c,c=&gt;a=&gt;d},
-    c=&gt;{a=&gt;b=&gt;c,a=&gt;b=&gt;d,a=&gt;c=&gt;a,a=&gt;c=&gt;d}]
-mtron&gt; *//0/n/g3
-==&gt;[a=&gt;{b=&gt;c=&gt;a,b=&gt;c=&gt;d,c=&gt;a=&gt;b,c=&gt;a=&gt;c,c=&gt;a=&gt;d}]
-mtron&gt; *//{0,1}/n/g3.sum()
-==&gt;[a=&gt;{b=&gt;c=&gt;a,b=&gt;c=&gt;d,c=&gt;a=&gt;b,c=&gt;a=&gt;c,c=&gt;a=&gt;d},
-    b=&gt;{c=&gt;a=&gt;b,c=&gt;a=&gt;c,c=&gt;a=&gt;d},
-    c=&gt;{a=&gt;b=&gt;c,a=&gt;b=&gt;d,a=&gt;c=&gt;a,a=&gt;c=&gt;d}]
-mtron&gt; *g.{2}mult(*g)
-==&gt;[a=&gt;{b=&gt;c=&gt;a,b=&gt;c=&gt;d,c=&gt;a=&gt;b,c=&gt;a=&gt;c,c=&gt;a=&gt;d},
-    b=&gt;{c=&gt;a=&gt;b,c=&gt;a=&gt;c,c=&gt;a=&gt;d},
-    c=&gt;{a=&gt;b=&gt;c,a=&gt;b=&gt;d,a=&gt;c=&gt;a,a=&gt;c=&gt;d}]
+==&gt;[marko=&gt;{josh=&gt;lop,josh=&gt;ripple}]
+mtron&gt; *modern * *modern
+==&gt;[marko=&gt;{josh=&gt;lop,josh=&gt;ripple}]
 </code></pre>
+<p>marko's walks through josh land at place 0, which owns marko's row. Place 1's rows have no walks of length two, and the
+modern graph has no walk longer than two, so \(\mathbf{A}^{(3)}\) is zero and a next step would answer nothing.</p>
 <p>The copy is a <code>move</code>: the computation goes to the place with the graph as its stream. A rec is one object, but a bag of
 rels is a stream, and a stream handed to a <code>branch</code> reaches each lane one object at a time. A lane that writes it with
 <code>to</code> keeps only the last, while <code>move</code> carries the stream whole to a barrier, <code>to?rel{*}&lt;=rel{*}</code>. The copy costs
@@ -1115,9 +1128,8 @@ rels is a stream, and a stream handed to a <code>branch</code> reaches each lane
 <p>Left distributivity splits the other factor. Each place composes the whole graph with its own rows, which gives the
 walks whose middle vertex it owns:</p>
 <pre><code class="language-mtron">mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/a).mult(*/n/g).to(/n/m2), &lt;//1&gt; =&gt; start(*/n/a).mult(*/n/g).to(/n/m2))
-==&gt;[c=&gt;{a=&gt;b,a=&gt;c,a=&gt;d}]
-==&gt;[a=&gt;{b=&gt;c,b=&gt;d,c=&gt;a,c=&gt;d},
-    b=&gt;{c=&gt;a,c=&gt;d}]
+==&gt;[=&gt;]
+==&gt;[marko=&gt;{josh=&gt;lop,josh=&gt;ripple}]
 mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/a).mult(*/n/g).to(/n/m2), &lt;//1&gt; =&gt; start(*/n/a).mult(*/n/g).to(/n/m2)).explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
     op      dom      rng      args                                                           f    desc      c_dom  c_rng  c_out 
@@ -1129,19 +1141,17 @@ mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/a).mult(*/n/g).to(/n/m2), &lt;//1&g
         └─►//1─{*}─{*}─{*}─┘
    &quot;&quot;&quot;
 mtron&gt; *//0/n/m2
-==&gt;[c=&gt;{a=&gt;b,a=&gt;c,a=&gt;d}]
+==&gt;[=&gt;]
 mtron&gt; *//1/n/m2
-==&gt;[a=&gt;{b=&gt;c,b=&gt;d,c=&gt;a,c=&gt;d},
-    b=&gt;{c=&gt;a,c=&gt;d}]
+==&gt;[marko=&gt;{josh=&gt;lop,josh=&gt;ripple}]
 mtron&gt; *//{0,1}/n/m2.sum()
-==&gt;[c=&gt;{a=&gt;b,a=&gt;c,a=&gt;d},
-    a=&gt;{b=&gt;c,b=&gt;d,c=&gt;a,c=&gt;d},
-    b=&gt;{c=&gt;a,c=&gt;d}]
+==&gt;[marko=&gt;{josh=&gt;lop,josh=&gt;ripple}]
 </code></pre>
-<p>The whole graph is needed on the left. A place that composes only the other place's rows with its own computes the
-cross terms of \((\Delta_{0}\mathbf{A} + \Delta_{1}\mathbf{A})^{2}\), \((\Delta_{1}\mathbf{A})(\Delta_{0}\mathbf{A})\) and
-\((\Delta_{0}\mathbf{A})(\Delta_{1}\mathbf{A})\), and misses the walks that stay on one place,
-\((\Delta_{0}\mathbf{A})(\Delta_{0}\mathbf{A})\) and \((\Delta_{1}\mathbf{A})(\Delta_{1}\mathbf{A})\).</p>
+<p>The same walks now land at place 1, which owns josh, the vertex they pass through; no walk passes through marko, so
+place 0 has none. The whole graph is needed on the left. A place that composes only the other place's rows with its own
+computes the cross terms, \((\Delta_{1}\mathbf{A})(\Delta_{0}\mathbf{A})\) and \((\Delta_{0}\mathbf{A})(\Delta_{1}\mathbf{A})\),
+and misses the walks that stay on one place, \((\Delta_{0}\mathbf{A})(\Delta_{0}\mathbf{A})\) and
+\((\Delta_{1}\mathbf{A})(\Delta_{1}\mathbf{A})\), which are zero in the modern graph and not in general.</p>
 <p>The walks land by their middle vertex, not their first, so they are not where a next step needs them:
 \(\mathbf{A}^{(3)} = \mathbf{A}^{(2)}\mathbf{A}\) wants each walk at the place that owns its last vertex, and
 \(\mathbf{A}\,\mathbf{A}^{(2)}\) at the place that owns its first. The row split never moves its results; this split moves
