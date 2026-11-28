@@ -16,12 +16,12 @@
 \node[vertex] (marko)  at (0, 0)      {marko};
 \node[vertex] (vadas)  at (2.1, 1.3)  {vadas};
 \node[vertex] (josh)   at (2.1, -0.6) {josh};
-\node[vertex] (peter)  at (2.1, -2.1) {peter};
+\node[vertex] (peter)  at (4.3, 1.75) {peter};
 \node[vertex] (lop)    at (4.3, 0.4)  {lop};
 \node[vertex] (ripple) at (4.3, -1.4) {ripple};
 \draw[edge] (marko) -- node[elabel, above left=-2pt] {knows} (vadas);
 \draw[edge] (marko) -- node[elabel, above=-1pt, pos=0.62] {created} (lop);
-\draw[edge] (peter) -- node[elabel, left=1pt, pos=0.32] {created} (lop);
+\draw[edge] (peter) -- node[elabel, right=1pt] {created} (lop);
 \draw[lane] (marko) -- node[elabel, below left=-2pt] {knows} (josh);
 \draw[lane] (josh) -- node[elabel, above=-1pt, pos=0.4, sloped] {created} (lop);
 \draw[lane] (josh) -- node[elabel, below=-1pt, pos=0.4, sloped] {created} (ripple);
@@ -60,11 +60,11 @@
 \node[elabel] at (8.1, -0.7) {join: josh};
 \node[note] at (9.6, -1.35) {$\mathbf{Z}_{i,j} = \sum_{l} \mathcal{A}^{\texttt{knows}}_{i,l}\,\mathcal{A}^{\texttt{created}}_{l,j}$};
 % ---- the two realizations in mtron ----
-\node[font=\small\ttfamily] at (2.1, -3.0) {g:V/1.out(knows).out(created)};
-\node[elabel] at (2.1, -3.45) {*knows * *created over recs keeps the walks:};
-\node[elabel] at (2.1, -3.85) {[marko=>\{josh=>ripple,josh=>lop\}]};
-\node[font=\small\ttfamily] at (9.6, -3.0) {*knows * *created};
-\node[elabel] at (9.6, -3.45) {over rels, the counts:};
-\node[elabel] at (9.6, -3.85) {\{marko=>ripple,marko=>lop\}};
+\node[font=\small\ttfamily] at (2.1, -2.45) {g:V/1.out(knows).out(created)};
+\node[elabel] at (2.1, -2.9) {*knows * *created over recs keeps the walks:};
+\node[elabel] at (2.1, -3.3) {[marko=>\{josh=>ripple,josh=>lop\}]};
+\node[font=\small\ttfamily] at (9.6, -2.45) {*knows * *created};
+\node[elabel] at (9.6, -2.9) {over rels, the counts:};
+\node[elabel] at (9.6, -3.3) {\{marko=>ripple,marko=>lop\}};
 \end{tikzpicture}
 \end{equation*}
