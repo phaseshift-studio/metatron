@@ -101,7 +101,7 @@ public class ObjByteBufferSerializerTest extends AbstractSerializerTest<ByteBuff
             "start(a=>b)",
             "start(a=>1,b=>'x')",
             "start(5).branch(<ws://127.0.0.1:8555>=>plus(1))",
-            //"start((a=>b))",
+            "start((a=>b))",
             // instructions and codes as arguments: nested, branched, keyed, in a lst and a rec, a cut's tail, a reply
             "start(1).is(gt(0))",
             "start(5).branch(plus{2}(34),mult{3}(2))",
@@ -113,7 +113,7 @@ public class ObjByteBufferSerializerTest extends AbstractSerializerTest<ByteBuff
             // a code in every other slot: a positional argument, a lst entry and a rel's right side
             "start(5).branch(plus(1).mult{2}(2),id())",
             "start([plus(1).mult(2),3])",
-            //"start((a=>plus(1).mult(2)))",
+            "start((a=>plus(1).mult(2)))",
             "start(5).cut(<//worker>,plus(1))",
             "/m/mach/inst/reply(id(),<0x91cc5da9>)",
             // a body, a sugar bare and spanned, and an addressed instruction, alone and pointed in a chain
