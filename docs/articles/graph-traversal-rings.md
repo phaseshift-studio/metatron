@@ -311,6 +311,65 @@ the rec keeps, so a path matrix $\mathbf{Z}$ is $\varphi$ of a rec program. The 
 segment, slices at `/g/knows` and `/g/created`, so a merge of labels is an address sum read once, `*/g/{knows,created}`.
 And the weights of [[8]](#references) are real, $\mathbb{R}_{+}$, where a rel's coefficient is a natural number.]
 
+## Graph motifs, two ways
+
+The steps of a graph traversal language [[5]](#references) are products in the matrix algebra [[8]](#references). A
+traverser at $v$ is a one-row matrix, the arrow $s \Rightarrow v$ from wherever it started, and a step multiplies it.
+`out` multiplies by a slice, `in` by the slice's transpose, and `both` by their sum. The `E` steps keep the arrows
+instead of their ends: the edges out of $v$ are $v$'s row, the diagonal at $v$ times the slice,
+$\mathbf{E}_{v,v}\,\mathcal{A}^{\ell}$, and the edges into $v$ are its column, $\mathcal{A}^{\ell}\,\mathbf{E}_{v,v}$.
+`path` is the walk itself, which the rec algebra keeps and $\varphi$ forgets.
+
+| motif      | network, over the graph at `g:`         | matrix                                                                   | algebra, over recs and rels                              |
+|------------|-----------------------------------------|--------------------------------------------------------------------------|----------------------------------------------------------|
+| `out(ℓ)`   | `*g:V/1.out(knows)`                     | $\pi\,\mathcal{A}^{\ell}$                                                | `(s=>marko) * *knowsR`                                   |
+| `in(ℓ)`    | `*g:V/4.in(knows)`                      | $\pi\,{\mathcal{A}^{\ell}}^{\top}$                                        | `(s=>josh).mult(*knowsR.converse())`                     |
+| `both(ℓ)`  | `*g:V/4.both(knows)`                    | $\pi\,(\mathcal{A}^{\ell} + {\mathcal{A}^{\ell}}^{\top})$                  | `[s=>josh].mult(*knows.plus(*knows.converse()))`         |
+| `outE(ℓ)`  | `*g:V/1.outE(knows)`                    | $\mathbf{E}_{v,v}\,\mathcal{A}^{\ell}$                                     | `(marko=>marko) * *knowsR`                               |
+| `inE(ℓ)`   | `*g:V/4.inE(knows)`                     | $\mathcal{A}^{\ell}\,\mathbf{E}_{v,v}$                                     | `*knowsR * (josh=>josh)`                                 |
+| `bothE(ℓ)` | `*g:V/4.bothE(knows)`                   | $\mathbf{E}_{v,v}\,\mathcal{A}^{\ell} + \mathcal{A}^{\ell}\,\mathbf{E}_{v,v}$ | `start((josh=>josh) * *knowsR, *knowsR * (josh=>josh))`  |
+| `path()`   | `*g:V/1.out(knows).out(created).path()` | the walk, which $\varphi$ forgets                                        | `[s=>marko] * *knows * *created`                         |
+
+The graph at `g:` is TinkerPop's modern graph, where vertex 1 is marko and vertex 4 is josh. Each motif in both forms:
+
+```mtron_pre
+[HIDDEN]import(/m/db/grph)
+[HIDDEN]grphspace::[pattern => g:#, q => [incrq::[=>],subq::[=>]], schema => !*/m/db/grph/schema/modern, /
+  config => [dataset => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>, /
+             <gremlin.graph> => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>], /
+  route => [g: => <>]]@<~/memory/space/grph/g>
+[NO_OUTPUT]{marko=>vadas,marko=>josh}.to?rel{*}<=rel{*}(knowsR)
+[NO_OUTPUT]{marko=>lop,josh=>ripple,josh=>lop,peter=>lop}.to?rel{*}<=rel{*}(createdR)
+*g:V/1.out(knows)>>name
+(s=>marko) * *knowsR
+*g:V/4.in(knows)>>name
+(s=>josh).mult(*knowsR.converse())
+*g:V/4.both(knows)>>name
+[s=>josh].mult(*knows.plus(*knows.converse()))
+*g:V/1.outE(knows)
+(marko=>marko) * *knowsR
+*g:V/4.inE(knows)
+*knowsR * (josh=>josh)
+*g:V/4.bothE(knows)
+start((josh=>josh) * *knowsR, *knowsR * (josh=>josh))
+*g:V/1.out(knows).out(created).path()
+[s=>marko] * *knows * *created
+```
+
+The order of the steps is the order of the factors, and the product does not commute. The software marko created knows
+no one, so $\mathcal{A}^{\texttt{created}}\,\mathcal{A}^{\texttt{knows}} \neq
+\mathcal{A}^{\texttt{knows}}\,\mathcal{A}^{\texttt{created}}$:
+
+```mtron_pre
+*g:V/1.out(knows).out(created)>>name
+*g:V/1.out(created).out(knows)>>name
+(s=>marko) * *createdR * *knowsR
+```
+
+[To be written: `path()` over `g:` answers the walk's last vertices, not the walk, while path tracking's design is
+open; the rec algebra keeps the walk already. An edge over `g:` is a record with its properties (its weight) and its
+own address, `g:E/8`, where an arrow is its two ends.]
+
 ## Walks or counts: Pascal's triangle
 
 Two walks from $a$ reach $d$, one through $b$ and one through $c$, so $\mathbf{A}^{(2)}_{a,d} = 2$. The bag says $2$;

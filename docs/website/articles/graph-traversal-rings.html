@@ -881,6 +881,80 @@ mtron&gt; *created.mult(*created.converse())
 the rec keeps, so a path matrix \(\mathbf{Z}\) is \(\varphi\) of a rec program. The tensor's third index can be a path
 segment, slices at <code>/g/knows</code> and <code>/g/created</code>, so a merge of labels is an address sum read once, <code>*/g/{knows,created}</code>.
 And the weights of <a href="#references">[8]</a> are real, \(\mathbb{R}_{+}\), where a rel's coefficient is a natural number.]</p>
+<h3>Graph motifs, two ways</h3>
+<p>The steps of a graph traversal language <a href="#references">[5]</a> are products in the matrix algebra <a href="#references">[8]</a>. A
+traverser at \(v\) is a one-row matrix, the arrow \(s \Rightarrow v\) from wherever it started, and a step multiplies it.
+<code>out</code> multiplies by a slice, <code>in</code> by the slice's transpose, and <code>both</code> by their sum. The <code>E</code> steps keep the arrows
+instead of their ends: the edges out of \(v\) are \(v\)'s row, the diagonal at \(v\) times the slice,
+\(\mathbf{E}_{v,v}\,\mathcal{A}^{\ell}\), and the edges into \(v\) are its column, \(\mathcal{A}^{\ell}\,\mathbf{E}_{v,v}\).
+<code>path</code> is the walk itself, which the rec algebra keeps and \(\varphi\) forgets.</p>
+<table>
+<thead>
+<tr><th>motif</th><th>network, over the graph at <code>g:</code></th><th>matrix</th><th>algebra, over recs and rels</th></tr>
+</thead>
+<tbody>
+<tr><td><code>out(ℓ)</code></td><td><code>*g:V/1.out(knows)</code></td><td>\(\pi\,\mathcal{A}^{\ell}\)</td><td><code>(s=&gt;marko) * *knowsR</code></td></tr>
+<tr><td><code>in(ℓ)</code></td><td><code>*g:V/4.in(knows)</code></td><td>\(\pi\,{\mathcal{A}^{\ell}}^{\top}\)</td><td><code>(s=&gt;josh).mult(*knowsR.converse())</code></td></tr>
+<tr><td><code>both(ℓ)</code></td><td><code>*g:V/4.both(knows)</code></td><td>\(\pi\,(\mathcal{A}^{\ell} + {\mathcal{A}^{\ell}}^{\top})\)</td><td><code>[s=&gt;josh].mult(*knows.plus(*knows.converse()))</code></td></tr>
+<tr><td><code>outE(ℓ)</code></td><td><code>*g:V/1.outE(knows)</code></td><td>\(\mathbf{E}_{v,v}\,\mathcal{A}^{\ell}\)</td><td><code>(marko=&gt;marko) * *knowsR</code></td></tr>
+<tr><td><code>inE(ℓ)</code></td><td><code>*g:V/4.inE(knows)</code></td><td>\(\mathcal{A}^{\ell}\,\mathbf{E}_{v,v}\)</td><td><code>*knowsR * (josh=&gt;josh)</code></td></tr>
+<tr><td><code>bothE(ℓ)</code></td><td><code>*g:V/4.bothE(knows)</code></td><td>\(\mathbf{E}_{v,v}\,\mathcal{A}^{\ell} + \mathcal{A}^{\ell}\,\mathbf{E}_{v,v}\)</td><td><code>start((josh=&gt;josh) * *knowsR, *knowsR * (josh=&gt;josh))</code></td></tr>
+<tr><td><code>path()</code></td><td><code>*g:V/1.out(knows).out(created).path()</code></td><td>the walk, which \(\varphi\) forgets</td><td><code>[s=&gt;marko] * *knows * *created</code></td></tr>
+</tbody>
+</table>
+<p>The graph at <code>g:</code> is TinkerPop's modern graph, where vertex 1 is marko and vertex 4 is josh. Each motif in both forms:</p>
+<pre><code class="language-mtron">mtron&gt; {marko=&gt;vadas,marko=&gt;josh}.to?rel{*}&lt;=rel{*}(knowsR)
+...
+mtron&gt; {marko=&gt;lop,josh=&gt;ripple,josh=&gt;lop,peter=&gt;lop}.to?rel{*}&lt;=rel{*}(createdR)
+...
+mtron&gt; *g:V/1.out(knows)&gt;&gt;name
+==&gt;'vadas'
+==&gt;'josh'
+mtron&gt; (s=&gt;marko) * *knowsR
+==&gt;s=&gt;vadas
+==&gt;s=&gt;josh
+mtron&gt; *g:V/4.in(knows)&gt;&gt;name
+==&gt;'marko'
+mtron&gt; (s=&gt;josh).mult(*knowsR.converse())
+==&gt;s=&gt;marko
+mtron&gt; *g:V/4.both(knows)&gt;&gt;name
+==&gt;'marko'
+mtron&gt; [s=&gt;josh].mult(*knows.plus(*knows.converse()))
+==&gt;[s=&gt;josh=&gt;marko]
+mtron&gt; *g:V/1.outE(knows)
+==&gt;knows::[weight=&gt;0.5]@g:E/7
+==&gt;knows::[weight=&gt;1.0]@g:E/8
+mtron&gt; (marko=&gt;marko) * *knowsR
+==&gt;marko=&gt;vadas
+==&gt;marko=&gt;josh
+mtron&gt; *g:V/4.inE(knows)
+==&gt;knows::[weight=&gt;1.0]@g:E/8
+mtron&gt; *knowsR * (josh=&gt;josh)
+==&gt;marko=&gt;josh
+mtron&gt; *g:V/4.bothE(knows)
+==&gt;knows::[weight=&gt;1.0]@g:E/8
+mtron&gt; start((josh=&gt;josh) * *knowsR, *knowsR * (josh=&gt;josh))
+==&gt;marko=&gt;josh
+mtron&gt; *g:V/1.out(knows).out(created).path()
+==&gt;software::[lang=&gt;'java',
+              name=&gt;'ripple']@g:V/5
+==&gt;software::[lang=&gt;'java',
+              name=&gt;'lop']@g:V/3
+mtron&gt; [s=&gt;marko] * *knows * *created
+==&gt;[s=&gt;{marko=&gt;josh=&gt;ripple,marko=&gt;josh=&gt;lop}]
+</code></pre>
+<p>The order of the steps is the order of the factors, and the product does not commute. The software marko created knows
+no one, so $\mathcal{A}^{\texttt{created}},\mathcal{A}^{\texttt{knows}} \neq
+\mathcal{A}^{\texttt{knows}},\mathcal{A}^{\texttt{created}}$:</p>
+<pre><code class="language-mtron">mtron&gt; *g:V/1.out(knows).out(created)&gt;&gt;name
+==&gt;'ripple'
+==&gt;'lop'
+mtron&gt; *g:V/1.out(created).out(knows)&gt;&gt;name
+mtron&gt; (s=&gt;marko) * *createdR * *knowsR
+</code></pre>
+<p>[To be written: <code>path()</code> over <code>g:</code> answers the walk's last vertices, not the walk, while path tracking's design is
+open; the rec algebra keeps the walk already. An edge over <code>g:</code> is a record with its properties (its weight) and its
+own address, <code>g:E/8</code>, where an arrow is its two ends.]</p>
 <h3>Walks or counts: Pascal's triangle</h3>
 <p>Two walks from \(a\) reach \(d\), one through \(b\) and one through \(c\), so \(\mathbf{A}^{(2)}_{a,d} = 2\). The bag says \(2\);
 the rec says which:</p>
