@@ -57,6 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.REPLY_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -391,6 +392,14 @@ public interface WebSocketObj extends Rec, Closeable {
      * has no hex segment carries only the trip, and leaves with no vid.
      */
     static Obj untagged(final Obj reply) {
+        // A REL'S TAG LANDS ON ITS LAST ELEMENT: the peer writes the tagged answer a=>b@<0x…>, which reads back with the vid
+        // on b, as no spelling puts one on a rel, so the trip's tag is taken off the end it landed on (Marko, 2026-11-27:
+        // "you are getting back the send/recv tag vid ... its leaking")
+        if (reply.isRel() && null == reply.vid()) {
+            final Obj last = reply.asRel().second();
+            return last.isRel() || (null != last.vid() && CommonUtil.isHex(last.vid().name()))
+                    ? rel(reply.asRel().first(), untagged(last)).c(reply.c()) : reply;
+        }
         final fURI vid = reply.vid();
         if (null == vid || !CommonUtil.isHex(vid.name()))
             return reply.clone().selfVID(null);

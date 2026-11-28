@@ -920,6 +920,10 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
             // a place no name reaches fails the call (3 keys //3), as the same call keyed by a reached one answers
             "{1,3}.partition(<//${_}> => {//1 => count(), //3 => count()})                                                             % <ERROR>",
             "{1,2}.partition(<//${_}> => {//1 => count(), //2 => count()})                                                             % {1,1}",
+            // A REL SHIPS AS ITSELF: a cut writes its lhs start((a=>b)), wrapped, so the peer reads a rel, not a keyed
+            // call, and an edge composes there (the shuffle step of a distributed matrix product)
+            "{a=>b}.partition(_ => //1 => id())                                                                                         % a=>b",
+            "{a=>b}.partition(_ => //1 => mult({b=>c, b=>d}))                                                                           % {a=>c,a=>d}",
             // THE TOPOLOGY: each place is dealt a share of the four, at most all of them, and the partials merge at home
             "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => sum(), //2 => sum()}).explain()>>ext/topology/format.has('[{]4[}]──┤').count()                % 1",
             "{1,2,3,4}.partition?<=int{*}(<//${mod(2).plus(1)}> => {//1 => sum(), //2 => sum()}).explain()>>ext/topology/format.has('─►//1─[{]0,4[}]─[{]1[}]─┐').count() % 1",

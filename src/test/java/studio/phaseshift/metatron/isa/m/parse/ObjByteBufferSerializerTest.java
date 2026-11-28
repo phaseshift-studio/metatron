@@ -122,6 +122,12 @@ public class ObjByteBufferSerializerTest extends AbstractSerializerTest<ByteBuff
             "start(1).{2}*a",
             "start(1)@/a/b",
             "start(1).plus{3}(2)@/a/b",
+            // A POSITIONAL REL IS WRAPPED, and a keyed argument's key may be any obj (Marko, 2026-11-27): bare, start(a=>b)
+            // read back as a keyed call, and a code key (mod(2)) could not be written as a uri
+            "start((a=>b))",
+            "start((a=>b)).mult((b=>c))",
+            "start(4).partition(mod(2) => {?0 => plus(1), ?1 => plus(2)})",
+            "start(5).partition(int::T => map(<int>), str::T => map(<str>))",
     })
     void testAProgramReadsBackAsItself(final String source) {
         final Obj program = ObjmtronSerializer.parse(source);

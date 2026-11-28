@@ -529,7 +529,11 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                     .map(o -> {
                         final StringBuilder temp = new StringBuilder();
                         this.renderInstArg(temp, depth + 1, o);
-                        return this.cleanEnding(temp).toString();
+                        final String written = this.cleanEnding(temp).toString();
+                        // A POSITIONAL REL IS WRITTEN WRAPPED (Marko, 2026-11-27: "if they are a rel::T, the rel::T has
+                        // to be ( )-wrapped so as not to confuse it as a key => value rec element"). Written bare, the
+                        // start(a=>b) a cut ships its lhs in read back as a keyed call, so the peer ran on a uri
+                        return inst.args().isLst() && o.isRel() ? "(" + written + ")" : written;
                     })
                     .reduce(",", (a, b) -> a + b + ",");
             sb.append(this.handleIds(inst, "(" +

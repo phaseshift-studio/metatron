@@ -262,6 +262,28 @@ public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
     }
 
     /**
+     * A REL ARGUMENT IS WRITTEN WRAPPED (Marko, 2026-11-27): the parser reads a bare a=>b in an argument as a keyed one,
+     * so a positional rel is written (a=>b), and the program reads back as written. A cut ships its lhs as start(lhs),
+     * so a rel lhs written bare reached a peer as a keyed call, and the lane ran on a uri. A keyed call stays bare.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start((a=>b))                                % start((a=>b))",
+            "start((a=>b=>c))                             % start((a=>(b=>c)))",
+            "start((a=>b)).mult((b=>c))                   % mult((b=>c))",
+            "start(1).plus(2).start((a=>b))               % start((a=>b))",
+            "start(4).partition(mod(2) => {?0 => plus(1)}) % partition(/m/inst/mod(2)=>",
+    }, delimiter = '%')
+    void testARelArgumentIsWrittenWrapped(final String source, final String written) {
+        final Obj parsed = ObjmtronSerializer.parse(source);
+        assertTrue(parsed.isCall() && !parsed.isNoObj(), () -> "the row parsed as " + parsed + ", not a program: " + source);
+        final Code code = parsed.asCode();
+        final String wire = ObjmtronSerializer.single().write(code);
+        assertTrue(wire.contains(written.trim()), () -> "written as " + written.trim() + ": " + wire);
+        idem(code);
+    }
+
+    /**
      * A VALUE KEEPS EVERY COEFFICIENT ACROSS THE WIRE, through the wire's own writer and reader: a point positive,
      * negative and ranged, a span curled on the value, both at once, on a str and on a uri; a point at a lst slot and a
      * span laid along one, a point in a rec value and on a whole lst; and a type's point, and the slot mass and slot run

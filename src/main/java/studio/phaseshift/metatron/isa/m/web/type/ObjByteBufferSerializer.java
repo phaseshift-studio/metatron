@@ -161,10 +161,23 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
         // A KEYED ARGUMENT IS WRITTEN <name>=>value, as the parser reads it: its key is a name, a bare fURI
         // (mParser.m_inst_arg_key), so a typed key, </m/uri>::<a>=>v, typed the whole pair as a uri (a rel, not a uri::T)
         // and failed, and a rel value, </m/rel>::k=>v, read back as a positional rel, a lst of rels for the rec
+        // A KEY MAY BE ANY OBJ, AND A POSITIONAL REL IS WRAPPED (Marko, 2026-11-27). A uri key is still written a name, and
+        // any other key as the mtron serializer writes one, untyped (a byte-typed </m/int>::1=>v types the whole pair) and
+        // bare, as the parser reads (code)=>v as no key, with a rel key wrapped. A bare positional a=>b reads back as a
+        // keyed argument, so it is written (a=>b)
         final String internal = inst.args().elements()
-                .map(o -> inst.args().isRec()
-                        ? "<" + o.asRel().first().uriValue() + ">=>" + new String(this.write(o.asRel().second()).array())
-                        : new String(this.write(o).array()))
+                .map(o -> {
+                    if (!inst.args().isRec()) {
+                        final String arg = new String(this.write(o).array());
+                        return o.isRel() ? "(" + arg + ")" : arg;
+                    }
+                    final Obj key = o.asRel().first();
+                    final String value = new String(this.write(o.asRel().second()).array());
+                    if (key.isUri())
+                        return "<" + key.uriValue() + ">=>" + value;
+                    final String written = ObjmtronSerializer.single().write(key);
+                    return (key.isRel() ? "(" + written + ")" : written) + "=>" + value;
+                })
                 .reduce(",", (a, b) -> a + b + ",");
         return ByteBuffer.wrap(handleIds(inst, "(" +
                 (inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}")).getBytes());
