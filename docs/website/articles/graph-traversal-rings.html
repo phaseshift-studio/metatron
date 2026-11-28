@@ -1118,8 +1118,22 @@ mtron&gt; *//{0,1}/n/g2.sum()
 mtron&gt; *modern * *modern
 ==&gt;[marko=&gt;{josh=&gt;lop,josh=&gt;ripple}]
 </code></pre>
-<p>marko's walks through josh land at place 0, which owns marko's row. Place 1's rows have no walks of length two, and the
-modern graph has no walk longer than two, so \(\mathbf{A}^{(3)}\) is zero and a next step would answer nothing.</p>
+<p>marko's walks through josh land at place 0, which owns marko's row; place 1's rows have no walks of length two. The
+modern graph has no walk of length three, \(\mathbf{A}^{(3)} = \mathbf{0}\), but a third step can multiply by any slice,
+and through the transpose it walks back along an edge. \(\mathbf{A}\,\mathbf{A}\,\mathbf{A}^{\top}\) asks who else made
+what marko's friend made, and $\Delta_{p}(\mathbf{A},\mathbf{A},\mathbf{A}^{\top}) =
+(\Delta_{p}\mathbf{A}^{(2)}),\mathbf{A}^{\top}$. Each place takes the converse of its own copy of \(\mathbf{A}\), so the
+step stays local:</p>
+<pre><code class="language-mtron">mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/g2).mult(*/n/a.converse()).to(/n/g3), &lt;//1&gt; =&gt; start(*/n/g2).mult(*/n/a.converse()).to(/n/g3))
+==&gt;[marko=&gt;{josh=&gt;lop=&gt;marko,josh=&gt;lop=&gt;josh,josh=&gt;lop=&gt;peter,josh=&gt;ripple=&gt;josh}]
+==&gt;[=&gt;]
+mtron&gt; *//0/n/g3
+==&gt;[marko=&gt;{josh=&gt;lop=&gt;marko,josh=&gt;lop=&gt;josh,josh=&gt;lop=&gt;peter,josh=&gt;ripple=&gt;josh}]
+mtron&gt; *//{0,1}/n/g3.sum()
+==&gt;[marko=&gt;{josh=&gt;lop=&gt;marko,josh=&gt;lop=&gt;josh,josh=&gt;lop=&gt;peter,josh=&gt;ripple=&gt;josh}]
+mtron&gt; *modern.mult(*modern).mult(*modern.converse())
+==&gt;[marko=&gt;{josh=&gt;lop=&gt;marko,josh=&gt;lop=&gt;josh,josh=&gt;lop=&gt;peter,josh=&gt;ripple=&gt;josh}]
+</code></pre>
 <p>The copy is a <code>move</code>: the computation goes to the place with the graph as its stream. A rec is one object, but a bag of
 rels is a stream, and a stream handed to a <code>branch</code> reaches each lane one object at a time. A lane that writes it with
 <code>to</code> keeps only the last, while <code>move</code> carries the stream whole to a barrier, <code>to?rel{*}&lt;=rel{*}</code>. The copy costs

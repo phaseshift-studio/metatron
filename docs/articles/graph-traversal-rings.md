@@ -501,8 +501,19 @@ branch(<//0> => start(*/n/g).mult(*/n/a).to(/n/g2), <//1> => start(*/n/g).mult(*
 *modern * *modern
 ```
 
-marko's walks through josh land at place 0, which owns marko's row. Place 1's rows have no walks of length two, and the
-modern graph has no walk longer than two, so $\mathbf{A}^{(3)}$ is zero and a next step would answer nothing.
+marko's walks through josh land at place 0, which owns marko's row; place 1's rows have no walks of length two. The
+modern graph has no walk of length three, $\mathbf{A}^{(3)} = \mathbf{0}$, but a third step can multiply by any slice,
+and through the transpose it walks back along an edge. $\mathbf{A}\,\mathbf{A}\,\mathbf{A}^{\top}$ asks who else made
+what marko's friend made, and $\Delta_{p}(\mathbf{A}\,\mathbf{A}\,\mathbf{A}^{\top}) =
+(\Delta_{p}\mathbf{A}^{(2)})\,\mathbf{A}^{\top}$. Each place takes the converse of its own copy of $\mathbf{A}$, so the
+step stays local:
+
+```mtron_pre
+[MAXOUTPUT 5]branch(<//0> => start(*/n/g2).mult(*/n/a.converse()).to(/n/g3), <//1> => start(*/n/g2).mult(*/n/a.converse()).to(/n/g3))
+*//0/n/g3
+*//{0,1}/n/g3.sum()
+*modern.mult(*modern).mult(*modern.converse())
+```
 
 The copy is a `move`: the computation goes to the place with the graph as its stream. A rec is one object, but a bag of
 rels is a stream, and a stream handed to a `branch` reaches each lane one object at a time. A lane that writes it with
