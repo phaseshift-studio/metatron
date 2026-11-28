@@ -538,8 +538,36 @@ row.
 
 # Distributed Traversals
 
-[To be written: from a graph split by rows, to traversals that keep their frontier where it was made, to shuffles
-between places.]
+A graph split across places multiplies in three ways, one for each way to put the unity between its factors. Let each
+place $p$ own the vertices $V_{p}$ and write $\Delta_{p} = \sum_{i \in V_{p}} \mathbf{E}_{i,i}$ for its part of the
+diagonal. The parts sum to the unity and multiply as projections:
+
+$$
+\sum_{p} \Delta_{p} = \mathbf{I} \qquad \Delta_{p}\,\Delta_{p} = \Delta_{p} \qquad \Delta_{p}\,\Delta_{q} = \mathbf{0}
+\;\; (p \neq q).
+$$
+
+$\Delta_{p}\mathbf{A}$ is $p$'s rows of $\mathbf{A}$, the row filter $\mathbf{R}_{V_{p}} \circ \mathbf{A}$ of
+[[8]](#references), and $\mathbf{A}\Delta_{p}$ is its columns. Putting the unity between the factors of
+$\mathbf{A}\,\mathbf{A}$ splits the product three ways:
+
+$$
+\mathbf{A}\,\mathbf{A}
+= \sum_{p} (\Delta_{p}\mathbf{A})\,\mathbf{A}
+= \sum_{p} \mathbf{A}\,(\Delta_{p}\mathbf{A})
+= \sum_{p} (\mathbf{A}\Delta_{p})\,(\Delta_{p}\mathbf{A}).
+$$
+
+The first is right distributivity, the second left, and the third is both with $\Delta_{p}\Delta_{p} = \Delta_{p}$. Each
+is a placement: what a place needs, what it computes, and where its result lands.
+
+| split                                              | place $p$ needs                          | place $p$ computes                     | its result lands       | what moves                  |
+|----------------------------------------------------|------------------------------------------|----------------------------------------|------------------------|-----------------------------|
+| $(\Delta_{p}\mathbf{A})\,\mathbf{A}$               | its rows, and all of $\mathbf{A}$         | its rows of $\mathbf{A}^{(2)}$          | where its rows are     | $\mathbf{A}$, once          |
+| $\mathbf{A}\,(\Delta_{p}\mathbf{A})$               | all of $\mathbf{A}$, and its rows         | the walks through its vertices         | by the middle vertex   | $\mathbf{A}$, and each result |
+| $(\mathbf{A}\Delta_{p})\,(\Delta_{p}\mathbf{A})$   | the edges into its vertices, and its rows | the walks through its vertices         | by the middle vertex   | every edge, every step      |
+
+The sections below run each one on two places.
 
 ## Two places
 
@@ -559,10 +587,10 @@ mtron> {0,1}.harvest(<boot/space/grph/peer.boot.mtron>)
 ## A graph partitioned by its rows
 
 Each place holds the rows of the vertices it owns, here $V_{0} = \{a\}$ and $V_{1} = \{b, c\}$:
-$\mathbf{A} = \mathbf{R}_{V_{0}} \circ \mathbf{A} + \mathbf{R}_{V_{1}} \circ \mathbf{A}$. An address whose terms name
-places is a sum, and reading it is the sum of the reads, $\mathrm{from}(p_{0} + p_{1}) = \mathrm{from}(p_{0}) +
-\mathrm{from}(p_{1})$ [[2]](./ring-theoretic-distributed-computing.md). The stream of row blocks folds back into the graph
-under the rec's own sum:
+$\mathbf{A} = \Delta_{0}\mathbf{A} + \Delta_{1}\mathbf{A}$. An address whose terms name places is a sum, and reading it
+is the sum of the reads, $\mathrm{from}(p_{0} + p_{1}) = \mathrm{from}(p_{0}) + \mathrm{from}(p_{1})$
+[[2]](./ring-theoretic-distributed-computing.md). The stream of row blocks folds back into the graph under the rec's
+own sum:
 
 ```mtron
 mtron> branch(<//0> => start([a=>{b,c,d}]).to(/n/g), <//1> => start([b=>{c,d},c=>{a,d}]).to(/n/g))
@@ -573,20 +601,19 @@ mtron> *//{0,1}/n/g
 mtron> *//{0,1}/n/g.sum()
 ==>[a=>{b,c,d},b=>{c,d},c=>{a,d}]
 ```
-## Powers where the rows live
+## Rows stay where they are: $(\Delta_{p}\mathbf{A})\,\mathbf{A}$
 
-A row filter passes into the left factor of a product, $\mathbf{R}_{V_{p}} \circ (\mathbf{X}\,\mathbf{Y}) =
-(\mathbf{R}_{V_{p}} \circ \mathbf{X})\,\mathbf{Y}$, so a place's rows of the next power need only its own rows of this
-one and the whole graph:
+The product is associative, so a place's rows of the next power are its rows of this one times the whole graph:
 
 $$
-\mathbf{R}_{V_{p}} \circ \mathbf{A}^{(t+1)} = (\mathbf{R}_{V_{p}} \circ \mathbf{A}^{(t)})\,\mathbf{A}
+\Delta_{p}\,\mathbf{A}^{(t+1)} = (\Delta_{p}\,\mathbf{A}^{(t)})\,\mathbf{A}
 \qquad\qquad
-\mathbf{A}^{(t+1)} = \sum_{p} (\mathbf{R}_{V_{p}} \circ \mathbf{A}^{(t)})\,\mathbf{A}.
+\mathbf{A}^{(t+1)} = \sum_{p} (\Delta_{p}\,\mathbf{A}^{(t)})\,\mathbf{A}.
 $$
 
-With $\mathbf{A}$ copied once to every place, each step is local: home sends a program and receives nothing but the
-result it asks for at the end.
+Copy $\mathbf{A}$ to every place once, and every step after is local. Home sends each place a program and receives
+nothing until it reads the result, and the rows of $\mathbf{A}^{(t)}$ are where the rows of $\mathbf{A}$ are, at every
+$t$:
 
 ```mtron
 mtron> *g.move(<//0>).to(/n/a)
@@ -603,15 +630,57 @@ mtron> *g * *g
 ==>[a=>{b=>c,b=>d,c=>a,c=>d},
     b=>{c=>a,c=>d},
     c=>{a=>b,a=>c,a=>d}]
+mtron> branch(<//0> => start(*/n/g2).mult(*/n/a).to(/n/g3), <//1> => start(*/n/g2).mult(*/n/a).to(/n/g3))
+...
+mtron> *//0/n/g3
+==>[a=>{b=>c=>a,b=>c=>d,c=>a=>b,c=>a=>c,c=>a=>d}]
+mtron> *//{0,1}/n/g3.sum()
+==>[a=>{b=>c=>a,b=>c=>d,c=>a=>b,c=>a=>c,c=>a=>d},
+    b=>{c=>a=>b,c=>a=>c,c=>a=>d},
+    c=>{a=>b=>c,a=>b=>d,a=>c=>a,a=>c=>d}]
+mtron> *g.{2}mult(*g)
+==>[a=>{b=>c=>a,b=>c=>d,c=>a=>b,c=>a=>c,c=>a=>d},
+    b=>{c=>a=>b,c=>a=>c,c=>a=>d},
+    c=>{a=>b=>c,a=>b=>d,a=>c=>a,a=>c=>d}]
 ```
-[To be written: the other split, $\mathbf{A}\,\mathbf{A} = \sum_{p} \mathbf{A}\,(\mathbf{R}_{V_{p}} \circ \mathbf{A})$ by
-left distributivity, where each place computes the walks whose middle vertex it owns, and why its results must move
-again at the next step.]
+The copy is a `move`: the computation goes to the place with the graph as its stream. A rec is one object, but a bag of
+rels is a stream, and a stream handed to a `branch` reaches each lane one object at a time. A lane that writes it with
+`to` keeps only the last, while `move` carries the stream whole to a barrier, `to?rel{*}<=rel{*}`. The copy costs
+$|E|$ at every place, once.
 
-## Home as the shuffle
+## Walks through a place: $\mathbf{A}\,(\Delta_{p}\mathbf{A})$
 
-A partition routes each edge $i \Rightarrow l$ to the place $p$ with $l \in V_{p}$, which composes it with its rows. The
-modern graph's edges, marko's rows at one place and josh's and peter's at the other:
+Left distributivity splits the other factor. Each place composes the whole graph with its own rows, which gives the
+walks whose middle vertex it owns:
+
+```mtron
+mtron> branch(<//0> => start(*/n/a).mult(*/n/g).to(/n/m2), <//1> => start(*/n/a).mult(*/n/g).to(/n/m2))
+...
+mtron> *//0/n/m2
+==>[c=>{a=>b,a=>c,a=>d}]
+mtron> *//1/n/m2
+==>[a=>{b=>c,b=>d,c=>a,c=>d},
+    b=>{c=>a,c=>d}]
+mtron> *//{0,1}/n/m2.sum()
+==>[c=>{a=>b,a=>c,a=>d},
+    a=>{b=>c,b=>d,c=>a,c=>d},
+    b=>{c=>a,c=>d}]
+```
+The whole graph is needed on the left. A place that composes only the other place's rows with its own computes the
+cross terms of $(\Delta_{0}\mathbf{A} + \Delta_{1}\mathbf{A})^{2}$, $(\Delta_{1}\mathbf{A})(\Delta_{0}\mathbf{A})$ and
+$(\Delta_{0}\mathbf{A})(\Delta_{1}\mathbf{A})$, and misses the walks that stay on one place,
+$(\Delta_{0}\mathbf{A})(\Delta_{0}\mathbf{A})$ and $(\Delta_{1}\mathbf{A})(\Delta_{1}\mathbf{A})$.
+
+The walks land by their middle vertex, not their first, so they are not where a next step needs them:
+$\mathbf{A}^{(3)} = \mathbf{A}^{(2)}\mathbf{A}$ wants each walk at the place that owns its last vertex, and
+$\mathbf{A}\,\mathbf{A}^{(2)}$ at the place that owns its first. The row split never moves its results; this split moves
+them at every step.
+
+## Home as the shuffle: $(\mathbf{A}\Delta_{p})\,(\Delta_{p}\mathbf{A})$
+
+The third split sends each edge $i \Rightarrow l$ to the place that owns $l$, which composes it with its own rows. That is
+a partition keyed by an edge's tail, `rshift()`, routing each key to its owner. The modern graph's edges, marko's rows at
+one place and josh's and peter's at the other:
 
 ```mtron
 mtron> {marko=>lop,marko=>vadas,marko=>josh,josh=>ripple,josh=>lop,peter=>lop}.to?rel{*}<=rel{*}(m)
@@ -626,18 +695,37 @@ mtron> *m * *m
 ==>marko=>ripple
 ==>marko=>lop
 ```
-Home keys every edge and receives every lane's answer, so home is the shuffle at every step.
+An edge whose tail has no rows, here every edge into software, is dropped by `is(false)` wherever it lands. Home keys
+every edge and receives every lane's answer, so home is the shuffle at every step, and every edge crosses the wire twice:
+out to the place that owns its tail, and back as walks.
 
-[To be written: the shuffle between the places themselves, each place partitioning its own frontier; counting walks
-across places, where an answer's coefficients cross the wire.]
+## The shuffle between places
 
-[To be written: the operations of [[8]](#references) under a row partition,
-$\mathbf{A} = \sum_{p} \mathbf{R}_{V_{p}} \circ \mathbf{A}$. Merge, weight and the Hadamard filters are elementwise and
-stay where the rows are. A traverse $(\mathbf{R}_{V_{p}} \circ \mathbf{A})\,\mathbf{B}$ needs $\mathbf{B}$'s rows for
-every column of $\mathbf{R}_{V_{p}} \circ \mathbf{A}$: a copy of $\mathbf{B}$ or a shuffle. The transpose turns a row
-partition into a column partition, $(\mathbf{R}_{V_{p}} \circ \mathbf{A})^{\top} = \mathbf{C}_{V_{p}} \circ
-\mathbf{A}^{\top}$, so it moves every edge. An energy vector, $(\pi\mathbf{A})_{j} = \sum_{i} \pi_{i}\,\mathbf{A}_{i,j}$,
-sums its partials by column: PageRank's messages [[7]](#references).]
+[To be written: each place partitions its own share of the frontier by tail and sends each edge to its owner directly,
+so home only starts a step and reads the end. The places must dial one another, a prefix row for each peer at each
+place; in these examples only home dials them. Place $p$'s part of a step is the partition above, run over its own
+share, `*/n/m.partition(rshift() => {…})`.]
+
+## The path algebra under a row partition
+
+Each operation of [[8]](#references) either stays where the rows are or says what must move:
+
+| operation [[8]](#references)                         | under $\mathbf{A} = \sum_{p} \Delta_{p}\mathbf{A}$ | why                                                                                                   |
+|------------------------------------------------------|----------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| merge, $\mathbf{A} + \mathbf{B}$                     | stays                                              | $\Delta_{p}(\mathbf{A} + \mathbf{B}) = \Delta_{p}\mathbf{A} + \Delta_{p}\mathbf{B}$                   |
+| weight, $\lambda \mathbf{A}$                         | stays                                              | $\Delta_{p}(\lambda \mathbf{A}) = \lambda\, \Delta_{p}\mathbf{A}$                                      |
+| filter, not, clip                                    | stays                                              | entrywise: $\Delta_{p}(\mathbf{A} \circ \mathbf{F}) = (\Delta_{p}\mathbf{A}) \circ \mathbf{F}$         |
+| vertex, $v^{+}$                                      | stays                                              | a row's vertex is its own                                                                             |
+| vertex, $v^{-}$                                      | gathers                                            | a column's vertices are at every place                                                               |
+| traverse, $\mathbf{A}\,\mathbf{B}$                   | needs $\mathbf{B}$                                 | $\Delta_{p}(\mathbf{A}\mathbf{B}) = (\Delta_{p}\mathbf{A})\,\mathbf{B}$: a copy of $\mathbf{B}$, or a shuffle |
+| transpose, $\mathbf{A}^{\top}$                       | moves every edge                                   | $(\Delta_{p}\mathbf{A})^{\top} = \mathbf{A}^{\top}\Delta_{p}$: rows become columns                     |
+| energy, $\pi\,\mathbf{A}$                            | sums by column                                     | $\pi\mathbf{A} = \sum_{p} (\pi\Delta_{p})(\Delta_{p}\mathbf{A})$: each place's partial, then a sum, PageRank's messages [[7]](#references) |
+
+## Counting walks across places
+
+[To be written: the rel split carries counts. A place whose walks meet twice answers a counted arrow, such as
+$\{2\}(a \Rightarrow d)$, and the counted arrow must cross the wire with the tag of the trip that asked for it; its
+spelling on the wire is open in metatron today.]
 
 # Conclusion
 
@@ -645,10 +733,14 @@ sums its partials by column: PageRank's messages [[7]](#references).]
 
 - A graph is a sum of its edges and a traversal is a product. uri::T layers paths into one, rec::T keeps walks, and a bag
   of rel::T counts them; $\varphi$ maps the walks onto the counts, the path matrices of [[8]](#references).
-- A row partition is a sum of row filters, $\mathbf{A} = \sum_{p} \mathbf{R}_{V_{p}} \circ \mathbf{A}$, and right
-  distributivity is the license to traverse it in place:
-  $\mathbf{A}^{(t+1)} = \sum_{p} (\mathbf{R}_{V_{p}} \circ \mathbf{A}^{(t)})\,\mathbf{A}$.
-- [To be written: what each split costs (the copy of $\mathbf{A}$, the shuffle), and what is open.]
+- The unity splits into one diagonal per place, $\mathbf{I} = \sum_{p} \Delta_{p}$, and putting it between the factors
+  of a product places the product. $(\Delta_{p}\mathbf{A})\,\mathbf{A}$ keeps every power's rows where the rows of
+  $\mathbf{A}$ are, after one copy of $\mathbf{A}$. $\mathbf{A}\,(\Delta_{p}\mathbf{A})$ and
+  $(\mathbf{A}\Delta_{p})(\Delta_{p}\mathbf{A})$ compute the walks through each place, which must move again at the next
+  step, and the last moves every edge at every step.
+- Under a row partition, the entrywise operations of [[8]](#references) stay where the rows are, a traverse needs its
+  right factor, and the transpose moves every edge.
+- [To be written: what is open: the shuffle between places, and counted arrows on the wire.]
 
 # References
 
