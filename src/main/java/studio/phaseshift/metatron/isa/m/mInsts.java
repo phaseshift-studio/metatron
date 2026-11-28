@@ -785,6 +785,129 @@ public final class mInsts {
     }
 
     /**
+     * {@code rel::T}'s operations: the conversions, the selectors, and the relation ring (Parametric Identities in Ring
+     * Theory): the sum of arrows, composition, and the parametric identities. Every one is pure, so a chain of them
+     * floats and distributes.
+     */
+    public static Set<Inst> rels_insts() {
+        return new LinkedHashSet<>(List.of(
+                InstBuilder.build().tid(AS_INST_TID, "the lhs rel as the lst of its two ends")
+                        .dom(REL_TID, "the rel to convert").rng(LST_TID, "the lst [dom,rng]")
+                        .argLst(LST_TYPE, "the lst type that receives the ends")
+                        .body((lhs, inst) -> lst(List.of(lhs.asRel().jvm().get0(), lhs.asRel().jvm().get1()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(AS_INST_TID, "the lhs rel as the rec of one entry, its domain keying its range")
+                        .dom(REL_TID, "the rel to convert").rng(REC_TID, "the rec [dom=>rng]")
+                        .argLst(T(REC_TID), "the rec type that receives the entry")
+                        .body((lhs, _) -> rec(lhs.asRel().jvm().get0(), lhs.asRel().jvm().get1()))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(MERGE_INST_TID, "merge the lhs rels into the argument rec, each rel an entry, the values of a shared key appended")
+                        .dom(REL_TID.maybeSome(), "the rels to merge").rng(REC_TID, "the rec of their entries")
+                        .argLst(T(REC_TID), "the rec the entries merge into")
+                        .body((lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new))))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(SPLIT_INST_TID, "split the lhs into a rel: the argument rel's two ends, each applied to the lhs")
+                        .dom(A, "the obj to split").rng(REL_TID, "the rel of the two results")
+                        .argLst(T(REL_TID), "the rel of the two instructions applied to the lhs")
+                        .body((lhs, inst) -> rel(Tuple.Pair.with(inst.arg(0).asRel().first().apply(lhs), inst.arg(0).asRel().second().apply(lhs)), inst.arg(0).tid(), null))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(DOM_INST_TID, "the domain of the lhs rel, the end it relates from")
+                        .dom(REL_TID, "a rel").rng(ALL.maybeSome(), "its domain")
+                        .argLst()
+                        .body((lhs, _) -> lhs.relValue().get0())
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(RNG_INST_TID, "the range of the lhs rel, the end it relates to")
+                        .dom(REL_TID, "a rel").rng(ALL.maybeSome(), "its range")
+                        .argLst()
+                        .body((lhs, _) -> lhs.relValue().get1())
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(GET_INST_TID, "the end of the lhs rel at the argument key")
+                        .dom(REL_TID, "a rel").rng(A.maybe(), "the end at the key, or noobj")
+                        .argLst(T(ALL), "the key")
+                        .body((lhs, inst) -> lhs.<Rel>as().at(inst.arg(0)))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(SELECT_INST_TID, "the parts of the lhs rel that the argument rel's pattern matches")
+                        .dom(REL_TID, "a rel").rng(REL_TID.maybe(), "the selected rel, or noobj")
+                        .argLst(T(REL_TID), "the rel pattern")
+                        .body((lhs, inst) -> Poly.Helper.selectRelRecursion(lhs.asRel(), inst.arg(0).asRel(), false))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(PLUS_INST_TID, "sum the lhs rel and the argument: a relation, the stream of their arrows")
+                        .dom(REL_TID, "the lhs rel").rng(REL_TID.maybeSome(), "the sum, its arrows as a stream")
+                        .argLst(T(REL_TID.maybeSome()), "the rel or rels to add")
+                        .body((lhs, inst) -> {
+                            if (inst.arg(0).isObjs()) {
+                                // distributive addition: a + {b, c} = {a+b, a+c}
+                                return objs(inst.arg(0).stream().map(Obj::<Rel>as).map(rhs -> {
+                                    // the identity, directly, to avoid recursion
+                                    if (lhs.asRel().isZero()) return rhs;
+                                    if (rhs.isZero()) return lhs.asRel();
+                                    return (Rel) objs(lhs, rhs);
+                                }));
+                            } else {
+                                // the direct sum of two relations
+                                if (lhs.asRel().isZero()) return inst.arg(0);
+                                if (inst.arg(0).asRel().isZero()) return lhs.asRel();
+                                return objs(lhs.asRel(), inst.arg(0).asRel());
+                            }
+                        })
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(MULT_INST_TID, "compose the lhs rel with the argument: (a=>b)·(b=>c) is a=>c")
+                        .dom(REL_TID, "the lhs rel").rng(REL_TID.maybeSome(), "the composite, one arrow per object the join yields, the zero when the arrows do not meet")
+                        .argLst(T(REL_TID.maybeSome()), "the rel or rels to compose with")
+                        .body((lhs, inst) -> {
+                            if (lhs.asRel().isZero())
+                                return lhs.asRel().c(cInt.ZERO());
+                            if (inst.arg(0).isObjs()) {
+                                return objs(inst.arg(0).stream().map(Obj::<Rel>as).map(rhs -> {
+                                    if (rhs.isZero())
+                                        return rhs.c(cInt.ZERO());
+                                    if (lhs.asRel().isOne())
+                                        return rhs;
+                                    else if (rhs.isOne())
+                                        return lhs;
+                                    return lhs.asRel().mult(rhs);
+                                }));
+                            } else {
+                                if (lhs.asRel().isOne())
+                                    return inst.arg(0);
+                                else if (inst.arg(0).asRel().isOne())
+                                    return lhs;
+                                return lhs.asRel().mult(inst.arg(0).asRel());
+                            }
+                        })
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(NEG_INST_TID, "reverse the lhs rel: its ends swapped, (a=>b) to (b=>a)")
+                        .dom(REL_TID, "a rel").rng(REL_TID, "the reversed rel")
+                        .argLst()
+                        .body((lhs, _) -> lhs.asRel().neg())
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(ONE_INST_TID, "the unity of the relation ring: id()=>id(), the parametric diagonal")
+                        .dom(REL_TID, "a rel").rng(REL_TID, "the unity")
+                        .argLst()
+                        .body((lhs, _) -> lhs.asRel().one())
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(ZERO_INST_TID, "the zero of the relation ring: noobj=>noobj, the empty sum")
+                        .dom(REL_TID, "a rel").rng(REL_TID, "the zero")
+                        .argLst()
+                        .body((lhs, _) -> lhs.asRel().zero())
+                        .law(Law.pure)
+                        .create()
+        ));
+    }
+
+    /**
      * {@code lst::T}'s operations: the word ring, the selectors, and the folds.
      */
     public static Set<Inst> lsts_insts() {

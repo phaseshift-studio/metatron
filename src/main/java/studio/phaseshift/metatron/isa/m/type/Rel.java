@@ -18,17 +18,11 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.REL_TID;
@@ -38,14 +32,10 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.split_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
-import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.selectRelRecursion;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
@@ -277,68 +267,6 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>> {
     default Rel minus(final Rel r) {
         return Ring.O.super.minus(r);
     }*/
-
-    public static final class RelType {
-
-        public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(REL_TID).rng(Tokens.LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(List.of(lhs.asRel().jvm().get0(), lhs.asRel().jvm().get1()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(REL_TID).rng(Tokens.REC_TID), lst(T(Tokens.REC_TID)), (lhs, inst) -> rec(lhs.asRel().jvm().get0(), lhs.asRel().jvm().get1())),
-                    instC(MERGE_INST_TID.dom(REL_TID.maybeSome()).rng(Tokens.REC_TID), lst(T(Tokens.REC_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
-                    instC(SPLIT_INST_TID.dom(A).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> rel(Tuple.Pair.with(inst.arg(0).asRel().first().apply(lhs), inst.arg(0).asRel().second().apply(lhs)), inst.arg(0).tid(), null)),
-                    //  instC(MERGE_INST_TID.dom(REL_TID).rng(ALL.c("2")), lst(), (lhs, inst) -> objs(lhs.elements())),
-                    instC(DOM_INST_TID.dom(REL_TID).rng(ALL.maybeSome()), lst(), (lhs, inst) -> lhs.relValue().get0()),
-                    instC(RNG_INST_TID.dom(REL_TID).rng(ALL.maybeSome()), lst(), (lhs, inst) -> lhs.relValue().get1()),
-                    // instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().second()),
-                    // instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(T(ALL)), (lhs, inst) -> lhs.asRel().at(inst.arg(0))),
-                    instC(GET_INST_TID.dom(REL_TID).rng(A.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Rel>as().at(inst.arg(0))),
-                    instC(SELECT_INST_TID.dom(REL_TID).rng(REL_TID.maybe()), lst(T(REL_TID)), (lhs, inst) -> selectRelRecursion(lhs.asRel(), inst.arg(0).asRel(), false)),
-                    // Ring operations
-                    instC(PLUS_INST_TID.dom(REL_TID).rng(REL_TID.maybeSome()), lst(T(REL_TID.maybeSome())), (lhs, inst) -> {
-                        if (inst.arg(0).isObjs()) {
-                            // Distributive addition: a + {b, c} = {a+b, a+c}
-                            return objs(inst.arg(0).stream().map(Obj::<Rel>as).map(rhs -> {
-                                // Handle identity directly to avoid recursion
-                                if (lhs.asRel().isZero()) return rhs;
-                                if (rhs.isZero()) return lhs.asRel();
-                                return (Rel) objs(lhs, rhs);
-                            }));
-                        } else {
-                            // Direct addition of two relations
-                            if (lhs.asRel().isZero()) return inst.arg(0);
-                            if (inst.arg(0).asRel().isZero()) return lhs.asRel();
-                            return objs(lhs.asRel(), inst.arg(0).asRel());
-                        }
-                    }),
-                    instC(MULT_INST_TID.dom(REL_TID).rng(REL_TID.maybeSome()), lst(T(REL_TID.maybeSome())), (lhs, inst) -> {
-                        if (lhs.asRel().isZero())
-                            return lhs.asRel().c(cInt.ZERO());
-                        if (inst.arg(0).isObjs()) {
-                            return objs(inst.arg(0).stream().map(Obj::<Rel>as).map(rhs -> {
-                                if (rhs.isZero())
-                                    return rhs.c(cInt.ZERO());
-                                if (lhs.asRel().isOne())
-                                    return rhs;
-                                else if (rhs.isOne())
-                                    return lhs;
-                                return lhs.asRel().mult(rhs);
-                            }));
-                        } else {
-                            if (lhs.asRel().isOne())
-                                return inst.arg(0);
-                            else if (inst.arg(0).asRel().isOne())
-                                return lhs;
-                            return lhs.asRel().mult(inst.arg(0).asRel());
-                        }
-                    }),
-                    instC(NEG_INST_TID.dom(REL_TID).rng(REL_TID), lst(), (lhs, inst) -> lhs.asRel().neg()),
-                    instC(ONE_INST_TID.dom(REL_TID).rng(REL_TID), lst(), (lhs, inst) -> lhs.asRel().one()),
-                    instC(ZERO_INST_TID.dom(REL_TID).rng(REL_TID), lst(), (lhs, inst) -> lhs.asRel().zero())
-            ));
-
-
-        }
-    }
 
     public static final class Helper {
         private Helper() {
