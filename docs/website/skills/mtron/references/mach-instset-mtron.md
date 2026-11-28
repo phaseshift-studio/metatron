@@ -126,10 +126,10 @@ mtron> */m/mach/component/compiler?docq
      {?}resolver=>resolver::T,
      {?}typer=>typer::T]][ctor?compiler<=(#{*}::T){<j>}]@/m/mach/component/compiler,
           args=>[
-           {?}typer=>'the fourth stage — the per-machine...',
            {?}resolver=>'the third stage — the walk that th...',
            {?}rewriter=>'the second stage — the code::T to ...',
-           {?}parser=>'the first stage — source text to o...'],
+           {?}parser=>'the first stage — source text to o...',
+           {?}typer=>'the fourth stage — the per-machine...'],
           desc=>'the compiler contract of machine::...',
           example=>[
            'compiler::[rewriter=>fixpoint_rewr...',
@@ -470,12 +470,12 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(2 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}listener=>'the sockets this machine serves th...',
            {?}pattern=>'the branch this network answers as...',
            {?}peer=>"machine's own connections, one per...",
            {?}analyzer=>"the network's statistics (analyzer...",
            {?}roster=>'what the system knows, connectionl...',
-           {?}status=>'the health method — an auto inst c...'],
+           {?}status=>'the health method — an auto inst c...',
+           {?}listener=>'the sockets this machine serves th...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[machine=>[lab=>...',

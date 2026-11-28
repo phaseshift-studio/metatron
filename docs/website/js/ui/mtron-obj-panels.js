@@ -13,8 +13,7 @@
  * UMD: `window.MtronObjPanels` in a page, `module.exports` under node (for tests).
  */
 import { read } from '../sdk/mtron-io.js';
-import { parseSchema, renderForm, collectForm } from './mtron-form.js';
-import { parse, write, quote, real, int, writeCodeForm, FORMS, FULL_FORM, nextForm } from '../sdk/obj_mtron_serializer.js';
+import { parse, write, quote, writeCodeForm, FORMS, FULL_FORM, nextForm } from '../sdk/obj_mtron_serializer.js';
 import { f } from '../sdk/furi.js';
 import { parse as envelope } from '../sdk/mtron-envelope.js';
 import { toElement, iconButton, ICONS } from './mtron-dom.js';
@@ -1421,6 +1420,14 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
             const full = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
             return full.length > limit ? full.slice(0, limit - 1) + "…" : full;
         };
+        const fieldOf = (rec, name) => {
+            let found = null;
+            if (rec && rec.isRec && rec.isRec())
+                rec.js.forEach((value, key) => {
+                    if (String(key) === name || String(key).split("/").pop() === name) found = value;
+                });
+            return found;
+        };
 
         const lane = (peer, data) => {
             const details = document.createElement("details");
@@ -1498,6 +1505,296 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
     }
 
     register("/m/mach/component/network/trace", wirePanel);
+
+    /* agent — a name, a description, and the FEATURES attached to it. a feature is a
+       TYPED REC in the agent's `feature` lst: its tid names the feature
+       (`chat_feature::[model=>…,response=>…]`) and its fields are the hooks the machine
+       calls (`on_before_chat`, `to`, `root`, …). the panel reads the WHOLE agent, one
+       read per paint, over `api.mtron` — `api.pretty()` is the clipped ui form AND its
+       reader caches per vid forever, so the reload after a write would paint the
+       pre-write text.
+       writes go through the address the card was opened on. the live agent's address is
+       the RELATIVE name `dr` (drstynx.boot.mtron writes `agent::[…]@<dr>`), a copy is
+       whatever address holds one; both spell the same inside `<…>`.
+       ADD appends to the lst (the product concatenates: `lst * [x]`) and REMOVE retracts
+       the member BY SLOT (`<vid>/feature/<i> -> noobj`). both re-read first, so the write
+       is computed from the machine's current list, not from a stale paint. NEITHER writes
+       the other members back: a read's text is not source — code comes back as
+       `/m/inst(…)`/`λ` — so only the NEW text (typed by the human) or a slot address ever
+       crosses back to the machine. */
+    function agentPanel(env, api) {
+        const box = node("div", "mpanel agent-panel");
+        /* the card names the address; `<dr>` and `dr` are the same address, and the
+           panel supplies the brackets around it */
+        const vid = String((env && env.vid) || "").trim().replace(/^</, "").replace(/>$/, "");
+        const transcript = node("div", "agent-transcript");
+        let armed = null;
+
+        const brief = (text, limit) => {
+            const full = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
+            return full.length > limit ? full.slice(0, limit - 1) + "…" : full;
+        };
+        /* a rec field by name — the keys are fURIs, so match the bare name too */
+        const fieldOf = (rec, name) => {
+            let found = null;
+            if (rec && rec.isRec && rec.isRec())
+                rec.js.forEach((value, key) => {
+                    if (String(key) === name || String(key).split("/").pop() === name) found = value;
+                });
+            return found;
+        };
+        /* a feature rec's name is its tid (`chat_feature::[…]`) */
+        const memberName = (value) => (value && value.tid && value.tid.name() ? value.tid.name() : "feature");
+        /* `feature` is a lst of typed recs — the tid names the feature, the rec's fields
+           are its hooks. an empty feature is `[=>]`, so a feature may carry no hook. */
+        const featuresOf = (rec) => {
+            const list = fieldOf(rec, "feature");
+            const members = list && Array.isArray(list.js) ? list.js
+                : (list && list.isRec && list.isRec() ? [...list.js.values()] : []);
+            return members.map((value) => ({
+                name: memberName(value),
+                hooks: value && value.isRec && value.isRec()
+                    ? [...value.js.entries()].map(([key, hook]) => ({name: String(key), value: hook}))
+                    : [],
+                value: value
+            }));
+        };
+        const readAgent = async () => {
+            const text = String(vid ? await api.mtron("*<" + vid + ">") : await api.pretty()).trim();
+            if (!text || text === "noobj") throw new Error(vid ? "nothing at " + vid : "no address");
+            if (/^fail::/.test(text)) throw new Error(text);
+            return parse(text);
+        };
+
+        /* a write answers its value, or `fail::[…]` when the machine refused it — a
+           refusal is painted, never swallowed: the reload would otherwise look like the
+           edit simply did not take */
+        let refusal = "";
+        let attached = [];
+        const run = async (write) => {
+            const answer = String((await write) || "").trim();
+            refusal = /^fail::/.test(answer) ? answer : "";
+            return answer;
+        };
+        const writeField = (name, text) => api.mtron("@" + vid + "/" + name + " >>= " + quote(text));
+        /* a chat answers the TURN, not just the words: `chat_result::[runtime=>…,
+           time=>…,prompt=>…,chat=>'…',token=>[…],cost=>…]`. the panel speaks the `chat`
+           field (what the model said); the whole answer stays as the bubble's title, so
+           the turn's accounting is one hover away instead of in the transcript. */
+        const replyText = (raw) => {
+            if (!raw || raw === "noobj") return "(no answer)";
+            if (/^fail::/.test(raw)) return "error: " + brief(raw, 400);
+            try {
+                const value = parse(raw);
+                if (value && value.isRec && value.isRec()) {
+                    const said = fieldOf(value, "chat");
+                    return said == null ? raw : String(said);
+                }
+                if (value && value.isStr && value.isStr()) return String(value.js);
+            } catch (ignored) {
+            }
+            return raw;
+        };
+        const addFeature = async (text) => {
+            const trimmed = String(text || "").trim();
+            if (!trimmed) return "";
+            const rec = trimmed.charAt(0) === "[" ? trimmed : "[" + trimmed + "]";
+            /* the read inside the update names the whole path — `*<vid/feature>`, never
+               `*<vid>/feature`: the angle form closes the uri, so a trailing segment is a
+               parse error */
+            return api.mtron("@" + vid + "/feature >>= (*<" + vid + "/feature> * " + rec + ")");
+        };
+        /* the member leaves by ITS SLOT — `<vid>/feature/<i> -> noobj` is a machine-side
+           retraction: the other members are untouched (writing the kept ones back would
+           re-run each ctor on read text, which cannot carry code). a keyed rec-shaped
+           `feature` is addressed by the member's name instead of its slot. */
+        const removeFeature = async (name) => {
+            const list = fieldOf(await readAgent(), "feature");
+            if (list && Array.isArray(list.js)) {
+                const slot = list.js.findIndex((value) => memberName(value) === name);
+                if (slot < 0) return "";
+                return api.mtron("<" + vid + "/feature/" + slot + "> -> noobj");
+            }
+            return api.mtron("<" + vid + "/feature/" + name + "> -> noobj");
+        };
+
+        const featureRow = (feature) => {
+            const details = document.createElement("details");
+            details.className = "agent-feature";
+            details.open = false;
+            const summary = document.createElement("summary");
+            summary.className = "agent-feature-head";
+            summary.appendChild(node("span", "agent-feature-name", feature.name));
+            summary.appendChild(node("span", "agent-feature-count",
+                feature.hooks.length + (feature.hooks.length === 1 ? " hook" : " hooks")));
+            /* the remove is TWO-CLICK: the first arms the ×, the second writes. no
+               confirm dialog — a panel owns no dialogs. */
+            if (vid) {
+                const remove = node("button", "agent-feature-remove", "×");
+                remove.type = "button";
+                remove.title = "remove this feature";
+                remove.addEventListener("click", async (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    if (armed !== feature.name) {
+                        armed = feature.name;
+                        remove.textContent = "×?";
+                        remove.classList.add("armed");
+                        return;
+                    }
+                    armed = null;
+                    remove.disabled = true;
+                    try {
+                        await run(removeFeature(feature.name));
+                    } finally {
+                        await load();
+                    }
+                });
+                summary.appendChild(remove);
+            }
+            details.appendChild(summary);
+            const body = node("div", "agent-feature-body");
+            const hooks = feature.hooks.slice().sort((a, b) => a.name.localeCompare(b.name));
+            if (!hooks.length) body.appendChild(node("div", "mpanel-empty", "no hooks"));
+            hooks.forEach((hook) => {
+                const row = node("div", "agent-hook");
+                row.appendChild(node("span", "agent-hook-name", hook.name));
+                const codeText = write(hook.value);
+                const code = node("span", "agent-hook-code", brief(codeText, 90));
+                code.title = codeText;
+                row.appendChild(code);
+                body.appendChild(row);
+            });
+            details.appendChild(body);
+            return details;
+        };
+
+        const load = async () => {
+            box.textContent = "";
+            armed = null;
+            let rec = null;
+            try {
+                rec = await readAgent();
+            } catch (problem) {
+                box.appendChild(node("div", "mpanel-empty",
+                    "cannot read the agent: " + (problem && problem.message ? problem.message : problem)));
+                return;
+            }
+            const head = node("div", "mpanel-head agent-head");
+            head.appendChild(node("span", "mpanel-k", "agent"));
+            head.title = vid ? "editing the agent at " + vid : "no address — the agent is read-only here";
+            const nameField = node("input", "agent-name");
+            nameField.value = String(fieldOf(rec, "name") || "");
+            nameField.title = "the agent's name";
+            nameField.disabled = !vid;
+            nameField.addEventListener("change", async () => {
+                await run(writeField("name", nameField.value));
+                await load();
+            });
+            head.appendChild(nameField);
+            box.appendChild(head);
+            if (refusal) box.appendChild(node("div", "mpanel-empty", brief(refusal, 300)));
+
+            const descField = node("textarea", "agent-desc");
+            descField.value = String(fieldOf(rec, "desc") || "");
+            descField.title = "the agent's description";
+            descField.rows = 2;
+            descField.disabled = !vid;
+            descField.addEventListener("change", async () => {
+                await run(writeField("desc", descField.value));
+                await load();
+            });
+            box.appendChild(descField);
+
+            const features = featuresOf(rec);
+            attached = features.map((feature) => feature.name);
+            const section = node("div", "agent-section");
+            section.appendChild(node("span", "agent-section-name", "feature"));
+            section.appendChild(node("span", "agent-section-count", String(features.length)));
+            box.appendChild(section);
+            const list = node("div", "agent-features");
+            features.forEach((feature) => list.appendChild(featureRow(feature)));
+            if (!features.length) list.appendChild(node("div", "mpanel-empty", "no features"));
+            box.appendChild(list);
+
+            if (vid) {
+                const adder = node("div", "agent-add");
+                const input = node("textarea", "agent-add-input");
+                input.rows = 2;
+                input.placeholder = "name::[on_before_chat=>…] — a feature rec to attach";
+                const add = node("button", "primary", "add feature");
+                add.type = "button";
+                add.addEventListener("click", async () => {
+                    add.disabled = true;
+                    try {
+                        /* one feature per type: the rows are named by the member's tid, so a
+                           second cost_feature would be indistinguishable from the first */
+                        const name = (String(input.value || "").trim().match(/^\[?\s*([A-Za-z0-9_/.\-]+)\s*::/) || [])[1];
+                        if (name && attached.indexOf(name) >= 0) {
+                            refusal = name + " is already attached — one feature per type";
+                            return;
+                        }
+                        await run(addFeature(input.value));
+                    } finally {
+                        input.value = "";
+                        await load();
+                    }
+                });
+                adder.appendChild(input);
+                adder.appendChild(add);
+                box.appendChild(adder);
+            }
+
+            const chatSection = node("div", "agent-section");
+            chatSection.appendChild(node("span", "agent-section-name", "chat"));
+            box.appendChild(chatSection);
+            const chat = node("div", "agent-chat");
+            chat.appendChild(transcript);
+            if (vid) {
+                const compose = node("div", "agent-compose");
+                const message = node("textarea", "agent-message");
+                message.rows = 3;
+                message.placeholder = "say something to " + (nameField.value || "the agent") + "…";
+                const send = node("button", "primary", "send");
+                send.type = "button";
+                send.addEventListener("click", async () => {
+                    const text = String(message.value || "").trim();
+                    if (!text) return;
+                    transcript.appendChild(node("div", "agent-said", text));
+                    message.value = "";
+                    const answer = node("div", "agent-answer", "thinking…");
+                    transcript.appendChild(answer);
+                    transcript.scrollTop = transcript.scrollHeight;
+                    send.disabled = true;
+                    try {
+                        /* THE BOOT'S OWN CALL: `@dr.chat('…')`. a chat answers when the
+                           model is done — minutes, not the page's 15 s read ceiling — so
+                           it rides its own reader LANE (the page's polls stay unqueued)
+                           with no timer at all: the socket closing is the only end. */
+                        const expr = "@" + vid + ".chat(" + quote(text) + ")";
+                        const raw = String((await (api.mtronApart
+                            ? api.mtronApart(expr, 3, 0)
+                            : api.mtron(expr))) || "").trim();
+                        answer.textContent = replyText(raw);
+                        answer.title = raw;
+                    } catch (problem) {
+                        answer.textContent = "error: " + (problem && problem.message ? problem.message : problem);
+                    }
+                    send.disabled = false;
+                    transcript.scrollTop = transcript.scrollHeight;
+                });
+                compose.appendChild(message);
+                compose.appendChild(send);
+                chat.appendChild(compose);
+            }
+            box.appendChild(chat);
+        };
+
+        load();
+        return box;
+    }
+
+    register("/m/ai/llm/agent", agentPanel);
 
     /* analysis — a meter rec as a table. Groups nest (wire => [recv, sent]), a leaf wears
        its kind and its reading: counter is a number, gauge a point-in-time, timer the
@@ -2850,196 +3147,6 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         });
 
         pick.addEventListener("change", () => { if (pick.value) loadTable(pick.value, 0); });
-        return box;
-    });
-
-    /* ── agent::T — a feature tree (spine + branches) ──────────────────────
-       an agent is a rec with `feature => [ <feature>::[params] … ]`. each
-       feature's tid names its type (chat_feature, tool_feature, …) and its
-       value is the params rec. the [+] buttons are the "add" affordances:
-       [+] on `feature` adds a feature (from /m/ai/llm/feature/+), [+] on a
-       feature adds a param (keys dictated by that feature's type). the add /
-       edit writes and the type-driven editors are the next step — here the
-       tree is built and labelled. */
-
-    /* a rec field by key string — Map keys are fURI (reference equality), so
-       .get(f(key)) misses; walk and match on the name. */
-    function recGet(rec, key) {
-        if (!rec || !rec.js) return undefined;
-        for (const [k, v] of rec.js) if (k.toString() === key) return v;
-        return undefined;
-    }
-
-    /* the value leaf of a param — scalars plain, uri unbracketed, poly compact. */
-    function shortVal(v) {
-        if (v == null || v.isNoObj()) return "noobj";
-        if (v.isCode()) return "[code]";
-        if (v.isInt() || v.isReal() || v.isBool()) return String(v.js);
-        if (v.isStr()) return v.js;
-        if (v.isUri()) return v.js.toString();
-        if (v.isBytes()) return "0x" + Array.from(v.js).map((b) => b.toString(16).padStart(2, "0")).join("");
-        const s = write(v);
-        return s.length > 70 ? s.slice(0, 69) + "…" : s;
-    }
-
-    function treeNode() {
-        const li = document.createElement("li");
-        const row = node("div", "tree-row");
-        li.appendChild(row);
-        return { li: li, row: row };
-    }
-
-    function treeChildren(li) {
-        const ul = node("ul", "tree-children");
-        li.appendChild(ul);
-        return ul;
-    }
-
-    function treeToggle(childrenUl) {
-        const b = node("button", "tree-toggle", "−");
-        b.type = "button";
-        b.title = "fold";
-        if (childrenUl) {
-            b.addEventListener("click", () => {
-                const folded = childrenUl.hidden;
-                childrenUl.hidden = !folded;
-                b.textContent = folded ? "−" : "+";
-                b.title = folded ? "fold" : "unfold";
-            });
-        } else {
-            b.hidden = true;
-        }
-        return b;
-    }
-
-    function treeEdit(title, onClick) {
-        const b = node("button", "tree-edit", "✎");
-        b.type = "button";
-        b.title = title;
-        b.addEventListener("click", onClick);
-        return b;
-    }
-
-    /* the form's values → a mtron rec, typed by the schema (stub: str/uri/ref
-       quote as strings, rec/lst pass through raw). */
-    function buildRecText(schema, values) {
-        const parts = [];
-        schema.forEach((f) => {
-            const v = values[f.key];
-            if (v === undefined || v === null || v === '' || v === false) return;
-            let text;
-            if (f.kind === 'bool') text = v ? 'true' : 'false';
-            else if (f.kind === 'int') text = int(parseInt(v, 10));
-            else if (f.kind === 'real') text = real(parseFloat(v));
-            else if (f.kind === 'rec' || f.kind === 'lst') text = v;
-            else text = quote(String(v));
-            parts.push(f.key + '=>' + text);
-        });
-        return '[' + parts.join(',') + ']';
-    }
-
-    /* the pencil: a popup with a type-definition-driven form (stub — save builds
-       the mtron and previews it; the write is not wired yet). */
-    function openFeatureEditor(featName, feat, api) {
-        const modal = document.createElement("div");
-        modal.className = "agent-modal";
-        const box = node("div", "agent-modal-box");
-        box.appendChild(node("h3", "agent-modal-title", "edit " + featName));
-        const body = node("div", "agent-modal-body");
-        body.appendChild(spinner("reading " + featName + " type…"));
-        box.appendChild(body);
-        const result = node("pre", "agent-modal-result");
-        result.hidden = true;
-        box.appendChild(result);
-        const actions = node("div", "agent-modal-actions");
-        const saveBtn = node("button", "btn btn-save", "save");
-        const cancelBtn = node("button", "btn", "cancel");
-        actions.appendChild(saveBtn);
-        actions.appendChild(cancelBtn);
-        box.appendChild(actions);
-        modal.appendChild(box);
-        document.body.appendChild(modal);
-
-        cancelBtn.addEventListener("click", () => modal.remove());
-        modal.addEventListener("click", (ev) => { if (ev.target === modal) modal.remove(); });
-
-        (async () => {
-            let schema = [];
-            try {
-                const typeDef = await api.mtron("*</m/ai/llm/feature/" + featName + ">");
-                schema = parseSchema(typeDef);
-            } catch (ignored) { }
-            body.textContent = "";
-            const form = renderForm(schema, feat && feat.isRec() ? feat.js : null);
-            body.appendChild(form);
-            saveBtn.addEventListener("click", () => {
-                const values = collectForm(form);
-                const recText = buildRecText(schema, values);
-                const expr = "</usr/dr/agent/feature/" + featName + "> -> " + featName + "::" + recText;
-                result.hidden = false;
-                result.textContent = "would write: " + expr;
-            });
-        })();
-    }
-
-    function agentTree(agent, api) {
-        const root = node("ul", "agent-tree");
-        const name = shortVal(recGet(agent, "name"));
-        const featureList = recGet(agent, "feature");
-        const features = featureList && featureList.isLst() ? featureList.js : [];
-
-        const agentNode = treeNode();
-        agentNode.row.appendChild(node("span", "tree-label", name && name !== "noobj" ? name : "agent"));
-        root.appendChild(agentNode.li);
-
-        const featUl = treeChildren(agentNode.li);
-        const featNode = treeNode();
-        featNode.row.appendChild(treeToggle(featUl));
-        featNode.row.appendChild(node("span", "tree-label", "feature"));
-        featUl.appendChild(featNode.li);
-
-        const featsUl = treeChildren(featNode.li);
-        features.forEach((feat) => {
-            const featName = feat && feat.tid ? feat.tid.name() : "feature";
-            const fNode = treeNode();
-            const hasParams = feat && feat.isRec();
-            const paramsUl = hasParams ? treeChildren(fNode.li) : null;
-            fNode.row.appendChild(treeToggle(paramsUl));
-            fNode.row.appendChild(node("span", "tree-label", featName));
-            fNode.row.appendChild(treeEdit("edit " + featName, () => openFeatureEditor(featName, feat, api)));
-            featsUl.appendChild(fNode.li);
-            if (hasParams) {
-                for (const [k, v] of feat.js) {
-                    const pNode = treeNode();
-                    pNode.row.appendChild(node("span", "tree-key", k.toString()));
-                    pNode.row.appendChild(node("span", "tree-arrow", "=>"));
-                    pNode.row.appendChild(node("span", "tree-val", shortVal(v)));
-                    paramsUl.appendChild(pNode.li);
-                }
-            }
-        });
-
-        return root;
-    }
-
-    register("/m/ai/llm/agent", async function (env, api) {
-        const box = node("div", "mpanel agent");
-        let vid = String((env && env.vid) || "").trim();
-        if (vid.charAt(0) === "<" && vid.charAt(vid.length - 1) === ">") vid = vid.slice(1, -1);
-        if (!vid) {
-            box.appendChild(node("div", "mpanel-empty", "no agent address"));
-            return box;
-        }
-        box.appendChild(spinner("reading agent…"));
-        try {
-            const text = await api.mtron("*<" + vid + ">");
-            const agent = read(text);
-            box.textContent = "";
-            box.appendChild(agentTree(agent, api));
-        } catch (problem) {
-            box.textContent = "";
-            box.appendChild(node("div", "mpanel-empty", String(problem && problem.message ? problem.message : problem)));
-        }
         return box;
     });
 

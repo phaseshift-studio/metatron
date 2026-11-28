@@ -1157,7 +1157,9 @@ function mountObjPanel(objCard, host, env) {
         instance: owner.wsBase,
         fsspaces: () => owner.fsspaces || [],
         mtron: (expr) => evalMtronOn(owner, expr),
-        mtronApart: (expr, lane) => evalMtronOn(owner, expr, apartReaders(owner, lane)),
+        /* a panel's long call (a chat) rides its own lane and its own wait: `timeoutMs`
+           0 means no timer — the answer comes when the machine's model is done */
+        mtronApart: (expr, lane, timeoutMs) => evalMtronOn(owner, expr, apartReaders(owner, lane), timeoutMs),
         open: (env) => inspectReference(env || {}),
         at: (text) => {
             if (host.at) host.at.textContent = text;
@@ -1963,7 +1965,7 @@ async function loadFsspaces(instance) {
 /* evaluate one expression on the x-mtron (structural) socket — unit- and
    vid-preserving; the json codec drops tids/vids, so the stats strip and
    the panels that need the raw machine form read through here. */
-function evalMtronOn(instance, expr, pool) {
+function evalMtronOn(instance, expr, pool, timeoutMs) {
     const mime = "application/x-mtron";
     /* a BACKGROUND read passes its own pool: its chain is separate, so a panel's probes
        (which are several reads deep) never queue the page's polls behind them */
@@ -1973,14 +1975,19 @@ function evalMtronOn(instance, expr, pool) {
         /* a dead socket answers "" at once, not at the timeout: the reader is
            queued, so one aborted request (a sys_stat the machine drops) must not
            stall every panel read behind it */
+        let timer = null;
         const done = (text) => {
-            clearTimeout(timer);
+            if (timer) clearTimeout(timer);
             socket.removeEventListener("message", answer);
             cleanup();
             resolve(text);
         };
         const cleanup = settleOnClose(socket, () => done(""));
-        const timer = setTimeout(() => done(""), 15000);
+        /* A CALL THAT RUNS FOR MINUTES ASKS FOR ITS OWN WAIT — a chat answers when the
+           model is done, and 0 means "no timer at all" (the socket closing is then the
+           only end). Every other read keeps the page's 15 s ceiling: a panel must not
+           hang behind a machine that will not answer. */
+        if (timeoutMs !== 0) timer = setTimeout(() => done(""), timeoutMs || 15000);
         const answer = (ev) => {
             frameText(ev.data).then((text) => done(text)).catch(() => done(""));
         };

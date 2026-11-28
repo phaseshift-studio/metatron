@@ -322,3 +322,24 @@ eq(write(new Rec(new Map(), f('rec'), null)), '[=>]', 'write empty Rec');
 }
 
 });
+
+/* ---- a uri QUERY ARG carries quoted text and polys ----
+   `!*bash?reject=['rm','git']` is one token: the bare-uri scan used to stop at the
+   comma INSIDE the arg list, which closed the enclosing rec one `]` early — the
+   fields after the arg (to=>, on_before_chat=>, …) then vanished, and the text that
+   was left over parsed as a stray rel. A live agent's tool feature is exactly this
+   shape, so the whole feature list read back one member short (a `rel` named
+   `tool_feature`). */
+test('a uri query arg keeps its quoted polys', () => {
+    const text = "[tool=>[!*bash?reject=['rm','git'],!*read_file],to=>/m/inst(id())]";
+    const rec = parse(text);
+    const keys = [...rec.js.keys()].map(String);
+    eq(keys.join(','), 'tool,to', 'the fields after the query arg survive');
+    const tool = rec.js.get([...rec.js.keys()][0]);
+    eq(tool.js.length, 2, 'the list keeps both members');
+    t(write(rec).includes("reject=['rm','git']"), 'the arg round-trips: ' + write(rec));
+    /* the same shape at the tail: an empty rec after the query-arg member survives */
+    const list = parse("[bash_feature::[tool=>[!*bash?reject=['rm']]],system_feature::[=>]]");
+    eq(list.js.length, 2, 'the member after the query-arg rec survives');
+    eq(list.js[1].tid.toString(), 'system_feature', 'and keeps its tid');
+});

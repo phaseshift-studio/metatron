@@ -442,6 +442,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/graph-traversal-rings.html"><i
+                                class="bi bi-share icon-color me-2 isa-row"></i>Graph Traversal Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/graph-traversal-rings.html">html</a>
+                            <a class="article-format" href="../articles/graph-traversal-rings.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -579,24 +588,24 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 ==&gt;[stdin=&gt;block(/sys/io/stdin?str&lt;=(){&lt;j&gt;}),
     stdout=&gt;/sys/io/stdout?#{?}&lt;=(#{?}::T){&lt;j&gt;}]
 ==&gt;[executor=&gt;thread_executor::[
-     stop=&gt;[!*/sys/thread/c6e4dd48],
+     stop=&gt;[!*/sys/thread/2b4b52ab],
      run=&gt;[!*/sys/thread/main]]@/sys/thread/executor,
     main=&gt;core::[
      code=&gt;λ(#{*}::T){&lt;j&gt;},
      rhs=&gt;!λawait(){&lt;j&gt;},
      lhs=&gt;noobj,
      state=&gt;run,
-     time=&gt;datetime::&lt;//2026.11:28/01/14/54/642?tz=-0700&gt;,
+     time=&gt;datetime::&lt;//2026.11:28/04/46/48/684?tz=-0700&gt;,
      runtime=&gt;!λ(){&lt;j&gt;}]@/sys/thread/main,
-    c6e4dd48=&gt;virtual::[
+    &lt;2b4b52ab&gt;=&gt;virtual::[
      code=&gt;λ(#{*}::T){&lt;j&gt;},
      source=&gt;!*/processor/analyzer,
      rhs=&gt;!λawait(){&lt;j&gt;},
      lhs=&gt;noobj,
      state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.11:28/01/14/54/572?tz=-0700&gt;,
+     time=&gt;datetime::&lt;//2026.11:28/04/46/48/598?tz=-0700&gt;,
      runtime=&gt;!λ(){&lt;j&gt;},
-     ...(1 more)]@/sys/thread/c6e4dd48]
+     ...(1 more)]@/sys/thread/2b4b52ab]
 ==&gt;[PATH=&gt;'/home/killswitch/.local/bin:/home/...',
     XAUTHORITY=&gt;'/home/killswitch/.Xauthority',
     XMODIFIERS=&gt;'@im=ibus',

@@ -442,6 +442,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/graph-traversal-rings.html"><i
+                                class="bi bi-share icon-color me-2 isa-row"></i>Graph Traversal Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/graph-traversal-rings.html">html</a>
+                            <a class="article-format" href="../../../articles/graph-traversal-rings.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../../../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -638,10 +647,10 @@ after which instruction memory answers the address.</p>
      {?}resolver=&gt;resolver::T,
      {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
           args=&gt;[
-           {?}typer=&gt;'the fourth stage — the per-machine...',
            {?}resolver=&gt;'the third stage — the walk that th...',
            {?}rewriter=&gt;'the second stage — the code::T to ...',
-           {?}parser=&gt;'the first stage — source text to o...'],
+           {?}parser=&gt;'the first stage — source text to o...',
+           {?}typer=&gt;'the fourth stage — the per-machine...'],
           desc=&gt;'the compiler contract of machine::...',
           example=&gt;[
            'compiler::[rewriter=&gt;fixpoint_rewr...',
@@ -954,12 +963,12 @@ dom/rng types) is a data read, so instruction memory is not re-entered.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(2 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
-           {?}listener=&gt;'the sockets this machine serves th...',
            {?}pattern=&gt;'the branch this network answers as...',
            {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
            {?}analyzer=&gt;&quot;the network's statistics (analyzer...&quot;,
            {?}roster=&gt;'what the system knows, connectionl...',
-           {?}status=&gt;'the health method — an auto inst c...'],
+           {?}status=&gt;'the health method — an auto inst c...',
+           {?}listener=&gt;'the sockets this machine serves th...'],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
            'network::[roster=&gt;[machine=&gt;[lab=&gt;...',

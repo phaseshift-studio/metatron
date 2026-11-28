@@ -442,6 +442,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/graph-traversal-rings.html"><i
+                                class="bi bi-share icon-color me-2 isa-row"></i>Graph Traversal Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/graph-traversal-rings.html">html</a>
+                            <a class="article-format" href="../articles/graph-traversal-rings.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -579,9 +588,11 @@ mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'marko'
 ==&gt;'grant'
+==&gt;'alex'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;2</code></pre>
+==&gt;2
+==&gt;3</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -625,7 +636,21 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; *lite:+</code></pre>
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; *lite:+
+==&gt;rec::T[?[trophy=&gt;str::T,
+            recipient=&gt;isa(person/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
+==&gt;rec::T[?[name=&gt;str::T,
+            age=&gt;int::T,
+            {?}skill=&gt;uri::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
+==&gt;rec::T[?[player=&gt;str::T,
+            points=&gt;int::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
+==&gt;rec::T[?[name=&gt;str::T,
+            {?}parent=&gt;&lt;#&gt;::T,
+            location=&gt;isa(area:V/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -635,7 +660,21 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
 ==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
-mtron&gt; *lite:+</code></pre>
+mtron&gt; *lite:+
+==&gt;rec::T[?[trophy=&gt;str::T,
+            recipient=&gt;isa(person/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
+==&gt;rec::T[?[name=&gt;str::T,
+            age=&gt;int::T,
+            {?}skill=&gt;uri::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
+==&gt;rec::T[?[player=&gt;str::T,
+            points=&gt;int::T,
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
+==&gt;rec::T[?[name=&gt;str::T,
+            {?}parent=&gt;&lt;#&gt;::T,
+            location=&gt;isa(area:V/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
 </div>
 </div>
 </div>

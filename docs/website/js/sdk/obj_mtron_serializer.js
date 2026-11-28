@@ -494,15 +494,38 @@ class Reader {
         if (this.startsWith('noobj') && !WORD.test(this.peekAt(5) || '')) { this.i += 5; return noobj; }
 
         /* a bare symbol/path: an inst, a code chain, or a uri (which may carry a
-           query, a poly, or a {point} — all read back by f()) */
+           query, a poly, or a {point} — all read back by f()). A QUERY ARG CARRIES
+           QUOTED TEXT AND POLYS (`?reject=['rm','git']`), so the token scan steps over
+           strings and balances brackets — to stop at the `,` or `]` INSIDE an arg is
+           to end the token mid-uri and close the caller's rec one bracket early. `(`
+           still ends the token: that is how an inst call is detected. */
         const start = this.i;
         let j = this.i;
         let brace = 0;
+        let square = 0;
         while (j < this.text.length) {
             const ch = this.text[j];
+            if (ch === "'" || ch === '"') {
+                if (ch === '"' && this.text.startsWith('"""', j)) {
+                    const end = this.text.indexOf('"""', j + 3);
+                    j = end < 0 ? j + 3 : end + 3;
+                    continue;
+                }
+                j += 1;
+                while (j < this.text.length) {
+                    const q = this.text[j];
+                    j += 1;
+                    if (q === '\\') { j += 1; continue; }
+                    if (q === ch) break;
+                }
+                continue;
+            }
+            if (ch === '[') { square += 1; j += 1; continue; }
+            if (ch === ']') { if (square === 0) break; square -= 1; j += 1; continue; }
             if (ch === '{') { brace += 1; j += 1; continue; }
             if (ch === '}') { if (brace === 0) break; brace -= 1; j += 1; continue; }
-            if (brace === 0 && (WS.test(ch) || ch === '(' || ch === '.' || ch === ',' || ch === ']' || ch === ')' ||
+            if (brace === 0 && square === 0 &&
+                    (WS.test(ch) || ch === '(' || ch === '.' || ch === ',' || ch === ')' ||
                     (ch === '=' && this.text[j + 1] === '>'))) break;
             if (ch === '<' && this.text[j + 1] !== '=') { const e = this.text.indexOf('>', j + 1); j = e < 0 ? j + 1 : e + 1; continue; }
             j += 1;

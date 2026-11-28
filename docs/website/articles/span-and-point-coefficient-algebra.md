@@ -1141,9 +1141,9 @@ parse. A type used as a step is a filter, and so its own converse (Theorem 14).
 - A lst read as a word has its reversal for its converse (Marko, 2026-11-25; Claim 21 of
   ring-theoretic-distributed-structures.md): a span after the brackets is the lst's power, so `[1,2,3]{-1}` is
   `[3,2,1]`, and `pow(-1)` is the same span at run time. The lst's `reverse()` retired with it.
-- On a rel, mtron's `neg()` swaps the ends, so `(1=>2).neg()` is `2=>1`. The arrow $x \Rightarrow y$ is the matrix
-  with a $1$ at row $x$ and column $y$ [2], so the swap is its transpose, the converse
-  $(x \Rightarrow y)^{\smile} = y \Rightarrow x$, and not its additive inverse, which is the point `{-1}(1=>2)`.
+- On a rel, mtron's `converse()` swaps the ends, so `(1=>2).converse()` is `2=>1`. The arrow $x \Rightarrow y$ is the
+  matrix with a $1$ at row $x$ and column $y$ [2], so the swap is its transpose, the converse
+  $(x \Rightarrow y)^{\smile} = y \Rightarrow x$. Its additive inverse is the point, `(1=>2).neg()` is `{-1}(1=>2)`.
 - A lst under test lays a span as indices, a value's, a type's or an instruction's, and reads a point as mass at its
   index, so `[{-1}3,4]` is no `[int::T]`: its index 0 holds a mass of $-1$. A run of like slots read backward is the
   same run, so a value's

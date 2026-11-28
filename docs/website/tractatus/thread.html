@@ -442,6 +442,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/graph-traversal-rings.html"><i
+                                class="bi bi-share icon-color me-2 isa-row"></i>Graph Traversal Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/graph-traversal-rings.html">html</a>
+                            <a class="article-format" href="../articles/graph-traversal-rings.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -704,9 +713,9 @@ core::[code=&gt;expensive_computation]            [-- &lt;3&gt; --]</code></pre>
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; */sys/thread/executor/run
 ==&gt;[,]
 mtron&gt; */sys/thread/executor/stop
-==&gt;[!*/sys/thread/c6e4dd48,
+==&gt;[!*/sys/thread/2b4b52ab,
     !*/sys/thread/main,
-    !*/sys/thread/bba89a87]
+    !*/sys/thread/c26bddb9]
 mtron&gt; */sys/thread/executor/stop/+/source
 ==&gt;analyzer{2}::[analysis=&gt;!λ(#{*}::T){&lt;j&gt;},mute=&gt;!λ(#{*}::T){&lt;j&gt;}]
 mtron&gt; */sys/thread/executor/stop/+/source/source</code></pre>
@@ -729,7 +738,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:28/01/15/07/747?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:28/04/47/02/611?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -748,7 +757,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:28/01/15/07/747?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:28/04/47/02/611?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -775,7 +784,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; *ab
-==&gt;'BABABABABAAB'</code></pre>
+==&gt;'BABABABABAB'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -841,7 +850,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
           rhs=&gt;!λawait(){&lt;j&gt;},
           lhs=&gt;noobj,
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:28/01/14/54/642?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:28/04/46/48/684?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;},
           result=&gt;noobj]@/sys/thread/main
 mtron&gt; */sys/thread/main?docq
@@ -850,7 +859,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:28/01/14/54/642?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:28/04/46/48/684?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>

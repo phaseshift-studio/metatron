@@ -4,8 +4,8 @@ portal_page::[
     obj_card::[tid => </m/sys/ui/console>,          vid => </usr/marko/console>,   label => 'console',            view => panel, span => [col => 4, row => 2]],
     obj_card::[label => 'core', card => [
       obj_card::[tid => </m/mach/machine>,            vid => </.>,                   label => 'machine',            view => panel, span => [col => 4]],
-      obj_card::[tid => </m/mach/component/network>,  vid => <~/network>,            label => 'current network',    view => panel, span => [col => 2, row => 1]],
-      obj_card::[tid => </m/mach/component/memory>,   vid => <~/memory>,             label => 'current memory',     view => panel, span => [col => 2, row => 1]],
+      obj_card::[tid => </m/mach/component/network>,  vid => <~/network>,            label => 'network',            view => panel, span => [col => 2, row => 1]],
+      obj_card::[tid => </m/mach/component/memory>,   vid => <~/memory>,             label => 'memory',             view => panel, span => [col => 2, row => 1]],
       obj_card::[tid => </m/mach/component/network/trace>, vid => <~/network/analyzer/analysis/trace>, label => 'wire', view => panel, span => [col => 2, row => 1]],
       obj_card::[tid => </m/mach/component/compiler>, vid => <~/compiler>,           label => 'compiler',           view => panel, span => [col => 4, row => 2]],
       obj_card::[tid => </m/inst/explain/explanation>, vid => <~>,                   label => 'explain',            view => panel, span => [col => 4, row => 2]]
@@ -14,6 +14,9 @@ portal_page::[
       obj_card::[tid => </m/web/http/http_server>,    vid => </network/web/http>,    label => 'http server',        view => panel, span => [col => 2, row => 1]],
       obj_card::[tid => </m/web/ws/ws_server>,        vid => </network/web/ws>,      label => 'ws server',          view => panel, span => [col => 2, row => 1]]
     ]],
-    obj_card::[tid => </m/db/tble/space/tblespace>, vid => </memory/space/usr/dr>, label => 'agent tables',       view => panel, span => [col => 4, row => 2]],
+    obj_card::[label => 'agent', card => [
+        obj_card::[tid => </m/ai/llm/agent>,             vid => <dr>,                  label => 'agent',                view => panel, span => [col => 2, row => 2]],
+        obj_card::[tid => </m/db/tble/space/tblespace>, vid => </memory/space/usr/dr>, label => 'persistence',         view => panel, span => [col => 4, row => 2]]
+    ]]
   ]
 ]

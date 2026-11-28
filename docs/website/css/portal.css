@@ -2400,78 +2400,6 @@ dialog.save-as.open-page {
     line-height: 1.8;
 }
 
-/* ── agent::T — feature tree (spine + branches) ──────────── */
-.agent-tree {
-    list-style: none;
-    margin: 0;
-    padding: .25rem .6rem .45rem;
-    font-size: 11px;
-    line-height: 1.4;
-}
-
-.agent-tree ul {
-    list-style: none;
-    margin: 0 0 0 .25rem;
-    padding: 0 0 0 .6rem;
-    border-left: 1px solid var(--line);
-}
-
-.agent-tree .tree-row {
-    display: flex;
-    align-items: baseline;
-    gap: .28rem;
-    position: relative;
-}
-
-.agent-tree ul .tree-row::before {
-    content: "";
-    position: absolute;
-    left: -.6rem;
-    top: .7em;
-    width: .6rem;
-    border-top: 1px solid var(--line);
-}
-
-.agent-tree .tree-toggle,
-.agent-tree .tree-edit {
-    background: none;
-    border: 0;
-    padding: 0 .08rem;
-    color: var(--faint);
-    font: inherit;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.agent-tree .tree-toggle:hover,
-.agent-tree .tree-edit:hover {
-    color: var(--red-hi);
-}
-
-.agent-tree .tree-edit {
-    opacity: .35;
-}
-
-.agent-tree .tree-row:hover .tree-edit {
-    opacity: 1;
-}
-
-.agent-tree .tree-label {
-    color: var(--fg);
-}
-
-.agent-tree .tree-key {
-    color: var(--dim);
-}
-
-.agent-tree .tree-arrow {
-    color: var(--faint);
-}
-
-.agent-tree .tree-val {
-    color: var(--faint);
-    overflow-wrap: anywhere;
-}
 
 /* ── mtron-tree — a flat rec view (one level deep) ──────── */
 .mtron-tree {
@@ -2557,54 +2485,6 @@ dialog.save-as.open-page {
     font: 12px/1.55 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
-/* ── obj editor modal (type-driven form) ──────────────── */
-.agent-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, .55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.agent-modal-box {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: var(--r);
-    padding: .7rem .8rem;
-    width: min(360px, 90vw);
-    max-height: 84vh;
-    overflow: auto;
-    display: flex;
-    flex-direction: column;
-    gap: .5rem;
-}
-
-.agent-modal-title {
-    margin: 0;
-    font-size: 12px;
-    letter-spacing: .05em;
-    color: var(--fg);
-}
-
-.agent-modal-result {
-    margin: 0;
-    padding: .4rem .5rem;
-    background: #070a0f;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    color: var(--dim);
-    font-size: 10.5px;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-}
-
-.agent-modal-actions {
-    display: flex;
-    gap: .4rem;
-    justify-content: flex-end;
-}
 
 .btn {
     background: #0d1117;
@@ -3093,6 +2973,134 @@ button.machine-tile:focus-visible {
 .analysis-group[open] > .analysis-group-head::before { content: "▾ "; }
 
 .analysis-group-body { padding-left: .8rem; }
+
+/* the agent: its name and description, then the features it carries, then the chat */
+.agent-head { gap: .5rem; align-items: baseline; }
+
+.agent-name {
+    background: none;
+    border: 0;
+    border-bottom: 1px dashed var(--line-hi);
+    color: var(--fg);
+    font: 11px/1.5 var(--mono);
+    min-width: 12rem;
+    padding: 0 .1rem;
+}
+
+.agent-desc {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--panel-hi);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--dim);
+    font: 10.5px/1.5 var(--mono);
+    margin: .3rem 0 .5rem;
+    padding: .3rem .4rem;
+    resize: vertical;
+}
+
+.agent-section {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .35rem 0 .15rem;
+    border-top: 1px solid var(--line);
+    color: var(--dim);
+    font: 10.5px/1.5 var(--mono);
+}
+
+.agent-feature { border-top: 1px dashed var(--line); padding: .1rem 0; }
+
+.agent-feature-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    list-style: none;
+    cursor: pointer;
+    padding: .2rem .1rem;
+    font: 11px/1.5 var(--mono);
+}
+
+.agent-feature-head::-webkit-details-marker { display: none; }
+
+.agent-feature-head::before { content: "▸ "; color: var(--faint); }
+
+.agent-feature[open] > .agent-feature-head::before { content: "▾ "; }
+
+.agent-feature-name { color: var(--fg); flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agent-feature-count { color: var(--faint); font-size: 10px; }
+
+.agent-feature-remove {
+    background: none;
+    border: 0;
+    color: var(--mred);
+    cursor: pointer;
+    font: 11px/1 var(--mono);
+    padding: 0 .2rem;
+}
+
+.agent-feature-remove.armed { color: var(--bad); font-weight: 600; }
+
+.agent-feature-body { padding-left: .9rem; }
+
+.agent-hook {
+    display: grid;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: .4rem;
+    align-items: baseline;
+    padding: .1rem 0;
+    font: 10.5px/1.5 var(--mono);
+}
+
+.agent-hook-name { color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agent-hook-code { color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.agent-add { display: flex; flex-direction: column; gap: .3rem; margin: .3rem 0 .5rem; }
+
+.agent-add-input,
+.agent-message {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--panel-hi);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--fg);
+    font: 10.5px/1.5 var(--mono);
+    padding: .3rem .4rem;
+    resize: vertical;
+}
+
+.agent-add .primary,
+.agent-compose .primary {
+    align-self: flex-end;
+    font-size: 10px;
+    padding: .1rem .6rem;
+}
+
+.agent-chat { display: flex; flex-direction: column; gap: .3rem; }
+
+.agent-transcript {
+    max-height: 16rem;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    padding: .2rem 0;
+}
+
+.agent-said,
+.agent-answer {
+    font: 10.5px/1.5 var(--mono);
+    padding: .2rem .4rem;
+    border-radius: 6px;
+    white-space: pre-wrap;
+}
+
+.agent-said { background: var(--panel-hi); color: var(--fg); align-self: flex-end; max-width: 85%; }
+.agent-answer { background: var(--panel); color: var(--dim); align-self: flex-start; max-width: 85%; }
+
+.agent-compose { display: flex; flex-direction: column; gap: .3rem; }
 
 /* the wire — the messages themselves, one lane per peer, newest first */
 .wire-head {
