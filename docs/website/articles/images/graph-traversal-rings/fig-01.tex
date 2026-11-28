@@ -1,0 +1,74 @@
+\begin{tikzpicture}[x=1cm, y=1cm,
+  v/.style={draw, circle, inner sep=0pt, minimum size=5pt},
+  lab/.style={font=\scriptsize\ttfamily},
+  tiny/.style={font=\tiny\ttfamily},
+  knows/.style={->, cyan, line width=0.6pt},
+  created/.style={->, orange, line width=0.6pt},
+  walk/.style={line width=1.8pt},
+  faint/.style={opacity=0.35}]
+% ---- the network: a traverser walks the modern graph ----
+\node[font=\small] at (1.75, 2.4) {a traverser walks the edges};
+\node[v, label={[lab]left:marko}] (marko) at (0, 0) {};
+\node[v, label={[lab]above:vadas}] (vadas) at (1.7, 1.1) {};
+\node[v, label={[lab]below:josh}] (josh) at (1.7, -0.5) {};
+\node[v, label={[lab]left:peter}] (peter) at (1.7, -1.9) {};
+\node[v, label={[lab]right:lop}] (lop) at (3.5, 0.3) {};
+\node[v, label={[lab]right:ripple}] (ripple) at (3.5, -1.2) {};
+\draw[knows, faint] (marko) -- (vadas);
+\draw[created, faint] (marko) -- (lop);
+\draw[created, faint] (peter) -- (lop);
+\draw[knows, walk] (marko) -- node[tiny, below left=-1pt] {knows} (josh);
+\draw[created, walk] (josh) -- (lop);
+\draw[created, walk] (josh) -- (ripple);
+\node[tiny, orange] at (2.75, -0.47) {created};
+\fill (marko) circle (2.2pt);
+% ---- phi: the walks onto the counts ----
+\draw[->, line width=0.8pt] (4.6, 0.25) -- node[above] {$\varphi$} node[tiny, below] {forget josh} (5.9, 0.25);
+% ---- the matrix: the label slices multiply ----
+\node[font=\small] at (9.1, 2.4) {the label slices multiply};
+% A^knows: the row of marko, the columns of vadas and josh
+\node at (7.05, 1.8) {$\mathcal{A}^{\texttt{knows}}$};
+\fill[cyan, opacity=0.85] (6.6, 0.15) rectangle (7.05, 0.6);
+\fill[cyan, opacity=0.85] (7.05, 0.15) rectangle (7.5, 0.6);
+\draw (7.05, 0.15) -- (7.05, 0.6);
+\draw (6.6, 0.15) rectangle (7.5, 0.6);
+\node[tiny, anchor=east] at (6.55, 0.375) {marko};
+\node[tiny, anchor=south west, rotate=60] at (6.75, 0.65) {vadas};
+\node[tiny, anchor=south west, rotate=60] at (7.2, 0.65) {josh};
+\node at (7.75, 0.375) {$\cdot$};
+% A^created: the rows of vadas and josh, the columns of lop and ripple
+\node at (8.95, 1.8) {$\mathcal{A}^{\texttt{created}}$};
+\fill[orange, opacity=0.85] (8.5, -0.075) rectangle (8.95, 0.375);
+\fill[orange, opacity=0.85] (8.95, -0.075) rectangle (9.4, 0.375);
+\draw (8.5, -0.075) rectangle (9.4, 0.825);
+\draw (8.5, 0.375) -- (9.4, 0.375);
+\draw (8.95, -0.075) -- (8.95, 0.825);
+\node[tiny, anchor=east] at (8.45, 0.6) {vadas};
+\node[tiny, anchor=east] at (8.45, 0.15) {josh};
+\node[tiny, anchor=south west, rotate=60] at (8.65, 0.875) {lop};
+\node[tiny, anchor=south west, rotate=60] at (9.1, 0.875) {ripple};
+\node at (9.75, 0.375) {$=$};
+% Z: the row of marko, the columns of lop and ripple, each a count of walks
+\node at (11.15, 1.8) {$\mathbf{Z}$};
+\draw (10.7, 0.15) rectangle (11.6, 0.6);
+\draw (11.15, 0.15) -- (11.15, 0.6);
+\node[font=\footnotesize] at (10.925, 0.375) {$1$};
+\node[font=\footnotesize] at (11.375, 0.375) {$1$};
+\node[tiny, anchor=east] at (10.65, 0.375) {marko};
+\node[tiny, anchor=south west, rotate=60] at (10.85, 0.65) {lop};
+\node[tiny, anchor=south west, rotate=60] at (11.3, 0.65) {ripple};
+% the join vertex: josh's column meets josh's row, and the product sums it away
+\draw[dashed] (7.275, 0.1) .. controls (7.4, -0.55) and (8.1, -0.55) .. (8.3, 0.1);
+\node[tiny] at (7.8, -0.6) {join: josh};
+\node at (8.95, -1.15) {$\mathbf{Z}_{i,j} = \sum_{l} \mathcal{A}^{\texttt{knows}}_{i,l}\,\mathcal{A}^{\texttt{created}}_{l,j}$};
+% ---- the two realizations in mtron ----
+\node[lab] at (1.75, -2.75) {g:V/1.out(knows).out(created)};
+\node[tiny] at (1.75, -3.2) {*knows * *created over recs keeps the walks:};
+\node[tiny] at (1.75, -3.55) {[marko=>\{josh=>ripple,josh=>lop\}]};
+\node[lab] at (8.95, -2.75) {*knows * *created};
+\node[tiny] at (8.95, -3.2) {over rels, the counts:};
+\node[tiny] at (8.95, -3.55) {\{marko=>ripple,marko=>lop\}};
+% ---- the labels ----
+\draw[knows] (4.55, -2.6) -- (5.05, -2.6) node[tiny, right] {knows};
+\draw[created] (4.55, -2.95) -- (5.05, -2.95) node[tiny, right] {created};
+\end{tikzpicture}

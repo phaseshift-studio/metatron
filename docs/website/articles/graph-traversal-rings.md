@@ -29,6 +29,16 @@ is the number of walks of length $t$ from $i$ to $j$: a traversal is a product, 
 multiplication by $\mathbf{A}$. Two algebras stand behind that sentence. One keeps the walks themselves, the other keeps
 only how many there are. metatron has both, as types.
 
+<!-- figure source: images/graph-traversal-rings/fig-01.tex (the PDF surface typesets it; the svg is its render) -->
+![figure 1](images/graph-traversal-rings/fig-01.svg)
+
+Figure 1 draws one traversal both ways. On the left, a traverser walks the modern graph,
+`g:V/1.out(knows).out(created)`: from marko along a `knows` edge to josh, and on along josh's `created` edges to ripple
+and lop. The rec algebra keeps those walks, josh included. On the right, the label slices multiply, `*knows * *created`,
+and the product sums over the join vertex, $\mathbf{Z}_{i,j} = \sum_{l} \mathcal{A}^{\texttt{knows}}_{i,l}\,
+\mathcal{A}^{\texttt{created}}_{l,j}$, so it keeps how many walks join each pair and forgets which. $\varphi$, defined
+below, maps the one onto the other.
+
 ## Rings and distributivity
 
 A ring $\langle R, +, \cdot, 0, 1 \rangle$ is an abelian group under $+$ and a monoid under $\cdot$, tied by the two
@@ -55,6 +65,12 @@ $$
 by right distributivity: one product becomes one per place. This is the shard identity of
 [[2]](./ring-theoretic-distributed-computing.md), with the seed's parts named by rows.
 
+The same partition splits the unity. The unity of relations is the diagonal $\Delta_{V} = \sum_{i \in V} (i \Rightarrow
+i)$, the $\mathbf{I}$ of [[8]](#references), and a row filter is left multiplication by the part of the diagonal a place
+owns, $\mathbf{R}_{V_{p}} \circ \mathbf{A} = \Delta_{V_{p}}\,\mathbf{A}$. So
+$\mathbf{A} = \Delta_{V}\,\mathbf{A} = \sum_{p} \Delta_{V_{p}}\,\mathbf{A}$: one diagonal per place
+[[9]](./parametric-identities-in-ring-theory.md).
+
 [To be written: semirings (walk counting lives in $\mathbb{N}$, which has no additive inverses) against metatron's
 rings (the uri and rec rings declare `neg`), and why traversal only needs the semiring.]
 
@@ -62,6 +78,23 @@ rings (the uri and rec rings declare `neg`), and why traversal only needs the se
 
 Every type declares its algebra in its declarations, read at `?decq`: which instruction is its sum, which is its product,
 and what its zero and one are.
+
+**Zero is not noobj.** In Stream Ring Theory [[1]](./stream-ring-theory.md) the zero is a function, $0(x) = \emptyset$,
+and in mtron it is `noobj`: it outputs nothing, so a chain that meets it stops before its next instruction runs. A type's
+ring cannot name its zero as noobj itself, or $0 + a$ would never be computed. Each type names its zero by a value that
+stands for nothing: uri's sentinel `<noobj>`, lst's `[noobj]` (the lst of a hole), and rec's empty `[=>]`. rel's
+`noobj=>noobj` is still read as noobj, which is what its ring's declaration waits on.
+
+**A ring has one inverse under each operation.** Under $+$ the inverse is the $-1$ point, the coefficient that cancels.
+Under $\cdot$ a type may have a *converse*, the span $-1$: a path reversed, a walk reversed, an arrow flipped. The
+converse is the transpose $\mathbf{A}^{\top}$ of [[8]](#references), an involution that reverses products,
+$(r\,s)^{\smile} = s^{\smile}\,r^{\smile}$ [[3]](./span-and-point-coefficient-algebra.md).
+
+| type     | zero           | one            | the inverse under $+$         | the converse                              |
+|----------|----------------|----------------|-------------------------------|-------------------------------------------|
+| `uri::T` | `<noobj>`      | `<>`           | `/a/b.neg()`, `</a/b{-1}>`    | `</a/b>{-1}`, `b/a/`                      |
+| `rec::T` | `[=>]`         | `[id()=>id()]` | `[a=>b].neg()`, `[a=>{-1}b]`  | `[a=>{b,c}].converse()`, `[b=>a,c=>a]`    |
+| `rel::T` | `noobj=>noobj` | `id()=>id()`   | `(a=>b).neg()`, `{-1}(a=>b)`  | `(a=>b).converse()`, `b=>a`               |
 
 ## uri::T: paths
 
@@ -100,9 +133,22 @@ $$
 
 The factored form is both distributive laws read right to left at once: many paths layered into one.
 
-[To be written: the zero `<noobj>` and the one `<>`; `neg`; spans as powers on a path, `<…>{n}`, with `{-1}` the
-converse.]
+The zero is `<noobj>` and the one is the empty path `<>`, the identity of concatenation. A span is a power, `{0}` is the
+one, the inverse under $+$ is the $-1$ point on the path's last segment, and the span $-1$ is the converse, the path
+reversed:
 
+```mtron
+mtron> </a/b>{2}
+==>/a/b/a/b
+mtron> </a/b>{0}
+==><>
+mtron> /a/b * <>
+==>/a/b
+mtron> /a/b.neg()
+==></a/b{-1}>
+mtron> </a/b>{-1}
+==>b/a/
+```
 ## rec::T: walks
 
 ```mtron
@@ -134,8 +180,20 @@ mtron> [a=>b] * [b=>c]
 ```
 The sum merges entries. The product is the **walk join**: an entry whose value is $b$ extends by the entry keyed $b$, and
 the join vertex stays in the walk, $[a \Rightarrow b] \cdot [b \Rightarrow c] = [a \Rightarrow b \Rightarrow c]$. The
-zero is the empty rec `[=>]` and the one is `[id()=>id()]`, the walk that goes nowhere.
+zero is the empty rec `[=>]` and the one is `[id()=>id()]`, the walk that goes nowhere, which the span `{0}` also
+answers. The inverse under $+$ puts the $-1$ point on every value, and the converse reverses every walk: the span `{-1}`
+on a rec literal, and `converse()` on any rec, a read's included.
 
+```mtron
+mtron> [a=>b]{0}
+==>[id()=>id()]
+mtron> [a=>b] + [=>]
+==>[a=>b]
+mtron> [a=>b].neg()
+==>[a=>{-1}b]
+mtron> [a=>{b,c}].converse()
+==>[b=>a,c=>a]
+```
 ## rel::T: relations
 
 ```mtron
@@ -143,17 +201,43 @@ mtron> *rel?decq
 ==>decs::[obj=>rel::T,
           theory=>[mul_monoid=>monoid_theory::[
            op=>!*/m/inst/mult?rng=/m/rel&dom=/m/rel,
-           id=>id()=>id()]]]
+           id=>id?A<=A()=>id?A<=A()]]]
 mtron> (a=>b) + (b=>c)
 ==>a=>b
 ==>b=>c
 mtron> (a=>b) * (b=>c)
 ==>a=>c
 ```
-A rel declares only a multiplicative monoid: composition, with identity `id()=>id()`. Composition forgets the join
-vertex, $(a \Rightarrow b) \cdot (b \Rightarrow c) = a \Rightarrow c$. The sum of two rels is not a rel: it is the
-stream's sum, a bag. With the stream's $+$ and composition lifted over it, a bag of rels is a matrix over $\mathbb{N}$,
-and a rel's coefficient is its entry.
+A rel is an arrow, and a relation is a finite sum of arrows with coefficients, a bag of rels. Under composition,
+relations form the ring of finitely supported matrices whose rows and columns are objects
+[[9]](./parametric-identities-in-ring-theory.md): the arrow $i \Rightarrow j$ is the matrix unit $\mathbf{E}_{i,j}$, a
+rel's coefficient is its entry, and composition, which forgets the join vertex,
+$(a \Rightarrow b) \cdot (b \Rightarrow c) = a \Rightarrow c$, distributes over the sum.
+
+The unity is the diagonal $\Delta_{X} = \sum_{x \in X} (x \Rightarrow x)$, which no finite sum holds when $X$ is
+infinite. The parametric unity `id()=>id()` is that diagonal as one arrow, with the identity instruction at both ends
+[[9]](./parametric-identities-in-ring-theory.md). The zero is `noobj=>noobj`, the empty sum, which prints nothing and
+counts as nothing. The $-1$ point cancels an arrow in a sum. The converse flips it, and composes back to the identity at
+the arrow's ends, $(a \Rightarrow b) \cdot (a \Rightarrow b)^{\smile} = a \Rightarrow a$:
+
+```mtron
+mtron> (a=>b).one()
+==>id?A<=A()=>id?A<=A()
+mtron> (a=>b).zero().count()
+==>0
+mtron> (a=>b) * (id()=>id())
+==>a=>b
+mtron> (a=>b).neg()
+==>{-1}(a=>b)
+mtron> {(a=>b),{-1}(a=>b),(c=>d)}
+==>c=>d
+mtron> (a=>b).converse()
+==>b=>a
+mtron> (a=>b).mult((a=>b).converse())
+==>a=>a
+```
+[To be written: the declaration of the relation ring. Today `*rel?decq` names the multiplicative monoid alone, and the
+ring waits on its zero, which mtron reads as noobj, and on a sum that adds a whole relation at once.]
 
 ## From walks to matrices
 
@@ -173,7 +257,7 @@ its last vertex is the next entry's key.
 |-----------------------|--------------------|---------------|------------------|----------------|--------------------|
 | `uri::T`              | branch, `/a/{b,d}` | concatenation | `<noobj>`        | `<>`           | is the path        |
 | `rec::T`              | entry merge        | walk join     | `[=>]`           | `[id()=>id()]` | kept               |
-| `rel::T`, in a stream | bag                | composition   | the empty stream | `id()=>id()`   | forgotten, counted |
+| `rel::T`, in a stream | bag                | composition   | `noobj=>noobj`   | `id()=>id()`   | forgotten, counted |
 
 [To be written: $\varphi$ as the homomorphism from rec::T's walks to the rel bags, and a figure of one graph seen three
 ways (paths, walks, matrix).]
@@ -248,18 +332,27 @@ terminate and a breadth-first search needs a bound or a visited set.]
 
 ## Transpose and degree
 
-The converse of a literal is its span `{-1}`, the transpose $\mathbf{A}^{\top}$, written here as a slice of its own:
+The converse is the transpose $\mathbf{A}^{\top}$, and `converse()` takes it from a read, of the rec and of the bag
+alike:
 
 ```mtron
-mtron> [a=>b,a=>c,a=>d,b=>c,b=>d,c=>a,c=>d]{-1}@gT
-==>[b=>a,c=>{a,b},d=>{a,b,c},a=>c]@gT
+mtron> *g.converse()
+==>[b=>a,c=>{a,b},d=>{a,b,c},a=>c]
+mtron> *k.converse()
+==>b=>a
+==>c=>a
+==>d=>a
+==>c=>b
+==>d=>b
+==>a=>c
+==>d=>c
 mtron> *g==[_=>count()]
 ==>[a=>3,b=>2,c=>2]
-mtron> *gT==[_=>count()]
+mtron> *g.converse()==[_=>count()]
 ==>[b=>1,c=>2,d=>3,a=>1]
 mtron> *k.count()
 ==>7
-mtron> *g + *gT
+mtron> *g.plus(*g.converse())
 ==>[a=>{b,{2}c,d},
     b=>{c,d,a},
     c=>{{2}a,d,b},
@@ -269,8 +362,7 @@ The out-degree of $i$ is the row sum $\sum_{j} \mathbf{A}_{i,j}$, the in-degree 
 $\sum_{i} \mathbf{A}_{i,j}$, and $|E|$ is the bag's count. $\mathbf{A} + \mathbf{A}^{\top}$ is the graph without
 direction, with $\{2\}$ where an edge runs both ways ($a \to c$ and $c \to a$).
 
-[To be written: the converse of a stored graph (a span after `*g` binds to the address, and `.{-1}mult(…)` declares no
-converse); $|V|$ as the keys of $\mathbf{A} + \mathbf{A}^{\top}$ (an isolated vertex has none) and $v^{\pm}$ of
+[To be written: $|V|$ as the keys of $\mathbf{A} + \mathbf{A}^{\top}$ (an isolated vertex has none) and $v^{\pm}$ of
 [[8]](#references); bfs.]
 
 ## Multi-relational graphs
@@ -298,15 +390,14 @@ through, and the bag keeps only the endpoints.
 [[8]](#references), a graph with $m$ labels is $\mathcal{A} \in \{0,1\}^{n \times n \times m}$, one adjacency slice
 $\mathcal{A}^{k}$ per label, and an abstract path maps the tensor to a single-relational path matrix,
 $\sigma : \{0,1\}^{n \times n \times m} \rightarrow \mathbb{R}_{+}^{n \times n}$. An inverse label is a transpose,
-$\mathcal{A}^{\texttt{createdBy}} = {\mathcal{A}^{\texttt{created}}}^{\top}$, and coauthorship,
+$\mathcal{A}^{\texttt{createdBy}} = {\mathcal{A}^{\texttt{created}}}^{\top}$, `*created.converse()`, and coauthorship,
 $\mathbf{Z} = \mathcal{A}^{\texttt{authored}} \cdot {\mathcal{A}^{\texttt{authored}}}^{\top} \circ n(\mathbf{I})$, is
 co-creation in the modern graph: who made what someone made, without themselves.
 
 ```mtron
-mtron> [marko=>lop,josh=>{ripple,lop},peter=>lop]{-1}@createdBy
-==>[lop=>{marko,josh,peter},
-    ripple=>josh]@createdBy
-mtron> *created * *createdBy
+mtron> *created.converse()
+==>[lop=>{marko,josh,peter},ripple=>josh]
+mtron> *created.mult(*created.converse())
 ==>[marko=>{lop=>marko,lop=>josh,lop=>peter},
     josh=>{ripple=>josh,lop=>marko,lop=>josh,lop=>peter},
     peter=>{lop=>marko,lop=>josh,lop=>peter}]
@@ -315,7 +406,7 @@ mtron> *created * *createdBy
 |----------------------------------------------------|------------------------------|--------------------------------------------------|
 | $\mathcal{A}^{k}$                                  | one label's slice            | `*knows`, `*created`                             |
 | $\mathbf{A} \cdot \mathbf{B}$                      | traverse: count the paths    | `*a * *b`, a bag; a rec keeps the walks          |
-| $\mathbf{A}^{\top}$                                | traverse backward            | `[…]{-1}`, on a literal                          |
+| $\mathbf{A}^{\top}$                                | traverse backward            | `*a.converse()`                                  |
 | $\mathbf{A} + \mathbf{B}$                          | merge                        | `*a + *b`                                        |
 | $\lambda \mathbf{A}$                               | weight                       | a coefficient, `{2}(a=>b)`                       |
 | $\mathbf{A} \circ \mathbf{F}$, $n$, $c$, $v^{\pm}$ | filter, not, clip, vertex    | [To be written]                                  |
@@ -498,3 +589,4 @@ sums its partials by column: PageRank's messages [[7]](#references).]
    Large-Scale Graph Processing," Proceedings of the ACM SIGMOD International Conference on Management of Data, 2010.
 8. Rodriguez, M.A., Shinavier, J., "[Exposing Multi-Relational Networks to Single-Relational Network Analysis
    Algorithms](https://arxiv.org/abs/0806.2274)," arXiv:0806.2274.
+9. Rodriguez, M.A., Stynx, D.R., "[Parametric Identities in Ring Theory](./parametric-identities-in-ring-theory.md)."
