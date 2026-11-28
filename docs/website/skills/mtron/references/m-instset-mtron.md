@@ -520,27 +520,42 @@ mtron> {1,2,3}-<[plus(1),plus(2)]          [-- {[2,3],[3,4],[4,5]}  (each member
 ==>[3,4]
 ==>[4,5]
 ```
-### partition (`partition(p, k => c, …)`)
+### partition (`partition(p => {k => c, …}, …)`)
 
-Each member goes to the lane its key names, where a branch sends it to every lane: `p` keys each member once (a uri, or
-an int read as its decimal spelling), `<#>` takes the members no key names, and a zeroable lane (`{?}<a>`) takes the
-members keyed noobj. A partition is a barrier: its dom gathers the whole lhs by default, and a smaller maximum makes it
-a lazy barrier (`?<=int{2}` a page, `?<=int{?}` one member at a time). A key that names a place (`//a`) runs its lane
-there: see menu entry X of the [distributed computing reference](distributed-computing-mtron.md).
+Each member goes down the first route its key admits, where a branch sends it to every lane. The args are varargs of
+relations, matched as the rec algebra joins a walk (`[# => p(x)] * [k => v, …]`, the first walk kept). A relation's key
+selects or guards. A selector computes (`mod(2)`, a key template `<${mod(2)}>`), keys each member once, and looks what it
+answers up in the table under it. A guard answers its member or nothing (a type, `?k`, `_`, any filter), and once it
+admits a member it opens its whole table. A value admits its equal. In a table, `?` on a value admits its equal, on a type
+its instances, a guard what it holds for, and `_` everything, so `_` written last is the else. Written paths factor their
+common key, `p => ?0 => a, p => ?1 => b` is `p => {?0 => a, ?1 => b}`, and an argument that is no relation fails the
+call. A selector's key is what it answers, applied once as written, never unwrapped or applied again. A selector's key
+of noobj forms no relation and drops its member, and a member no route admits fails the call. A partition is a barrier: its dom gathers the whole lhs by default, and a smaller maximum makes it a lazy
+barrier (`?<=int{2}` a page, `?<=int{?}` one member at a time). A key that names a place (`//a`) runs its lane there: see
+menu entry X of the [distributed computing reference](distributed-computing-mtron.md).
 
 ```mtron
-mtron> {1,2,3,4}.partition(mod(2), <0> => plus(10), <1> => plus(20))     [-- the evens to <0>, the odds to <1> --]
-==>12
-==>14
+mtron> {1,2,3,4}.partition(mod(2) => {?0 => plus(10), ?1 => plus(20)})   [-- the evens down ?0, the odds down ?1 --]
 ==>21
 ==>23
-mtron> {1,2,3,4}.partition(mod(2), <0> => sum(), <1> => sum())           [-- {6,4}  (each lane folds its whole share) --]
-==>6
+==>12
+==>14
+mtron> {1,2,3,4}.partition(mod(2) => {?0 => sum(), ?1 => sum()})         [-- {6,4}  (each route folds its whole share) --]
 ==>4
-mtron> {1,2,3}.partition(mod(3), <0> => id(), <#> => plus(100))          [-- 3 keys <0>, and the rest takes 1 and 2 --]
-==>3
+==>6
+mtron> {1,2,3}.partition(mod(3) => {?0 => id(), _ => plus(100)})         [-- 3 keys 0, and _ takes 1 and 2 --]
 ==>101
 ==>102
+==>3
+mtron> {1,2,3,4}.partition(?>2 => plus(10), _ => plus(20))               [-- a guard, then the else --]
+==>21
+==>22
+==>13
+==>14
+mtron> {1,2,7}.partition(1 => plus(10), 2 => plus(20), _ => plus(100))   [-- a value admits its equal --]
+==>11
+==>22
+==>107
 ```
 ### conditional branch: `-<|[?pred=>a, _=>b]`
 

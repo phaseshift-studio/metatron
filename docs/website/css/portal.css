@@ -568,7 +568,30 @@ td.st {
 
 .popup-out.panel-view > .console-panel {
     flex: 1 1 auto;
+    /* A FLEX CHILD WITH min-height:0 AND A SCROLLER INSIDE HAS NO INTRINSIC HEIGHT: in a
+       dialog whose height is auto, the console collapsed to nothing (one line of
+       terminal, unexpandable). the panel brings its own floor; the dialog grows to it
+       and a drag-resize adds to that. */
+    min-height: 14rem;
+}
+
+/* the panel hosts the PAGE'S console element (#console-card) rather than its children:
+   the terminal keeps its id, its listeners and its sockets, and moves as one node */
+.mpanel.console-panel {
+    display: flex;
+    flex-direction: column;
     min-height: 0;
+}
+
+.mpanel.console-panel > #console-card.card {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: none;
+    border: 0;
+    padding: 0;
+    box-shadow: none;
 }
 
 .mpanel.console-panel > .out {
@@ -2486,6 +2509,30 @@ dialog.save-as.open-page {
     display: none;
 }
 
+/* A PARENT MACHINE'S MEMORY, folded: a closed accordion per ancestor (/a/b/c sees
+   /a/b, /a, /). it reuses the space head's chevron and reads lazily on first open. */
+.memory-parent { border-top: 1px solid var(--line); }
+
+.memory-parent-head {
+    display: flex;
+    align-items: baseline;
+    gap: .35rem;
+    padding-left: 0;
+    color: var(--dim);
+}
+
+.memory-parent-head::before { content: "▸ "; }
+
+.memory-parent[open] > .memory-parent-head::before { content: "▾ "; }
+
+.memory-parent-mark { color: var(--faint); font-size: 10px; }
+
+.memory-parent-name { color: var(--dim); }
+
+.memory-parent[open] > .memory-parent-head .memory-parent-name { color: var(--fg); }
+
+.memory-parent-body { padding-left: .8rem; }
+
 .memory-space-head::before {
     content: "▸ ";
     color: var(--faint);
@@ -2873,8 +2920,8 @@ button.machine-tile:focus-visible {
    columns ragged). */
 .network-rows {
     display: grid;
-    grid-template-columns: minmax(9rem, 1fr) 1.6fr;
-    column-gap: .6rem;
+    grid-template-columns: minmax(7rem, 1fr) 1.6fr;
+    column-gap: .35rem;
 }
 
 .network-rows .mpanel-row {
@@ -2890,8 +2937,8 @@ button.machine-tile:focus-visible {
    continuation lines, so "mcp => https://… / ws://… / http://…" reads as one group. */
 .network-endpoints {
     display: grid;
-    grid-template-columns: max-content 3.1rem minmax(0, 1fr);
-    column-gap: .45rem;
+    grid-template-columns: max-content 2.6rem minmax(0, 1fr);
+    column-gap: .3rem;
     row-gap: .06rem;
     font-size: 11px;
     line-height: 1.35;
@@ -2908,10 +2955,16 @@ button.machine-tile:focus-visible {
 
 .network-uri { color: var(--fg); overflow-wrap: anywhere; }
 
+/* the address is the door: its transport says which client it is for */
+.network-uri.door { cursor: pointer; }
+
 .network-peers {
     display: grid;
-    grid-template-columns: minmax(10rem, 1.25fr) 4.6rem minmax(9rem, 1fr) auto;
-    column-gap: .6rem;
+    /* the ADDRESS gets the room: the key is (mostly) the target plus a path, so it takes
+       the smaller share, the target the larger, and the note (auxiliary) ellipsizes. the
+       hang-up is a fixed tittle, never a `1fr`. */
+    grid-template-columns: minmax(6rem, 1fr) 3.8rem minmax(8rem, 1.15fr) minmax(0, .85fr) max-content;
+    column-gap: .35rem;
 }
 
 .network-peers .mpanel-empty { grid-column: 1 / -1; }
@@ -2925,9 +2978,37 @@ button.machine-tile:focus-visible {
     border-top: 1px solid var(--line);
 }
 
-.network-key { color: var(--dim); font-size: 11px; overflow-wrap: anywhere; }
-.network-target { color: var(--fg); font-size: 11px; overflow-wrap: anywhere; }
-.network-note { color: var(--faint); font-size: 10.5px; white-space: nowrap; }
+/* ONE LINE, NOT A WRAPPED PARAGRAPH: the card is often narrower than these addresses,
+   so each cell ellipsizes and carries its full text in the title */
+.network-key,
+.network-target,
+.network-uri {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.network-key { color: var(--dim); font-size: 11px; }
+.network-target { color: var(--fg); font-size: 11px; }
+.network-note { color: var(--faint); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* the tool count: a number and a wrench, in the note's own row of signs */
+.network-tools {
+    display: inline-flex;
+    align-items: baseline;
+    gap: .15rem;
+    margin-left: .1rem;
+    color: var(--dim);
+}
+
+.network-tools-icon { display: inline-flex; }
+
+.network-tools-icon svg {
+    width: 10px;
+    height: 10px;
+    vertical-align: -1px;
+    color: var(--faint);
+}
 
 .network-peer.template .network-key,
 .network-peer.template .network-target,
@@ -2946,6 +3027,21 @@ button.machine-tile:focus-visible {
     white-space: nowrap;
     overflow-wrap: normal;
 }
+
+/* hang up: retracts the peer at its key (the supervisor stops redialing it) */
+.network-close {
+    background: none;
+    border: 0;
+    padding: 0 .15rem;
+    color: var(--mred);
+    font: 12px/1 var(--mono);
+    cursor: pointer;
+    justify-self: end;
+    opacity: .7;
+}
+
+.network-close:hover { opacity: 1; }
+.network-close:disabled { opacity: .3; cursor: default; }
 
 /* which side dialed: in = it reached us, out = we reached it (prefixed, because a
    bare .out is the console's log tone) */

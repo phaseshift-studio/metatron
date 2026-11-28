@@ -15,12 +15,12 @@ the remaining sections are outlined.
 
 In Stream Ring Theory [[1]](./stream-ring-theory.md), a program is a term of the ring
 $\langle\mathcal{C}\mathcal{F}, +, \cdot \rangle$: the $+$ branches a stream into computations that share nothing, and
-the $\cdot$ composes them in series. Read with a network in mind, the $+$ is already a distributed computation. The
+the $\cdot$ composes them in series. From a distributed computing perspective, the $+$ is a distributed computation. The
 summands of $a + b$ never meet until their streams merge, and by Theorem 5 streams are atemporal, so the summands may
 run in any order and therefore on any machine. What a distributed system must decide is not *whether* a term may be
-split, but *where the splitting must stop*: the places where a stream contracts back to a single value. Those places
-are the reduce functions, and the stream ring states exactly when a reduce function may be pushed into the branches
-before it.
+split, but *where the splitting must stop*: the places where a stream contracts back into a singular flow. Those places
+are the **barrier functions** ─ e.g. the _many-to-one_ reduce functions. The stream ring states exactly when a
+reduce function may be pushed into the branches before it.
 
 The statement is Theorem 19 of [[1]](./stream-ring-theory.md). A reduce function $r$ over a commutative monoid is
 *semi-right distributive*:
@@ -53,13 +53,13 @@ The stream ring's function set $\mathcal{F}$ has four logical subsets [[1]](./st
 and flatmap functions, each of which forms a ring with unity, and the reduce functions $\mathcal{F}_r$, which form only
 a *near-ring*. The difference is distributivity, and distributivity is exactly the question a distributed system asks.
 
-| form                                           | right distributive         | left distributive   |
-|------------------------------------------------|----------------------------|---------------------|
-| `*inst?decq>>form`                             | $(a+b)c = ac + bc$         | $c(a+b) = ca + cb$  |
-| ────────────────────────────────────────────── | ────────────────────────── | ─────────────────── |
-| map, filter, flatmap rings                     | yes                        | yes                 |
-| reduce near-ring $\mathcal{F}_r$ (Theorem 18)  | no                         | yes                 |
-| monoidic reduce functions (Theorem 19)         | semi: $(a+b)c = (ac+bc)c$  | yes                 |
+| form                                          | right distributive        | left distributive  |
+|-----------------------------------------------|---------------------------|--------------------|
+| `*inst?decq>>form`                            | $(a+b)c = ac + bc$        | $c(a+b) = ca + cb$ |
+| ─────────────────────────                     | ──────────────────        | ─────────────      |
+| map, filter, flatmap rings                    | yes                       | yes                |
+| reduce near-ring $\mathcal{F}_r$ (Theorem 18) | no                        | yes                |
+| monoidic reduce functions (Theorem 19)        | semi: $(a+b)c = (ac+bc)c$ | yes                |
 
 For a map, a filter, or a flatmap $f$, right distributivity says $(a + b)\,f = a\,f + b\,f$: an elementwise function
 applied to a merged stream is the merge of its applications to the parts. Each part may be processed where it lies.
@@ -219,7 +219,8 @@ Each place maps its share, and home receives `{4}1`, `{2}2` and `3` with every m
 
 **A cut may recombine through itself, after a lift.** `mean` is no monoid: the mean of two means is not the mean of
 their union. What recombines is a summary of each part, its mean weighted by its count, and the stream ring carries the
-weight as a coefficient. Write $\ell$ for the lift $a\,\ell = \{\lvert a\rvert\}\,\mathrm{mean}(a)$, so `{1,1,2}` lifts to
+weight as a coefficient. Write $\ell$ for the lift $a\,\ell = \{\lvert a\rvert\}\,\mathrm{mean}(a)$, so `{1,1,2}` lifts
+to
 `{3}1.333…`. A weighted mean averages to itself, $\mathrm{mean} = \ell\,\mathrm{mean}$, and the lift is itself
 self-combining, $(a+b)\,\ell = (a\,\ell + b\,\ell)\,\ell$, as the stream's sum adds the weights of equal means. So
 
@@ -573,7 +574,9 @@ reads what its keys address where it is held. Keyed by the places themselves, th
 
 <aside class="deep-dive">
 
-**Partition or branch?** From the stream ring's point of view a partition is a branch, its lanes guarded by the
+### Branch and Partition Instructions
+
+From the stream ring's point of view a partition is a branch, its lanes guarded by the
 fibers of one function. In practice the two differ, and the difference is why the partition is an instruction of its
 own.
 
@@ -612,15 +615,16 @@ alike, one member at a time, and a fold in each lane recombines to the star's an
 **The same algebra, a different cost.** Written as a guarded branch, the partition is sound, and the stream ring
 cannot tell the two apart. The machine can. A guarded lane sees every member: when its lane is a place, the branch
 ships the whole stream to each of the $n$ places, $n\,\lvert x\rvert$ members on the wire, and each place evaluates
-its guard over all of them. Putting each guard before its cut, so the lane is $\phi_{k_i}\,\mathrm{cut}(a_i, c)$ in place
+its guard over all of them. Putting each guard before its cut, so the lane is $\phi_{k_i}\,\mathrm{cut}(a_i, c)$ in
+place
 of $\mathrm{cut}(a_i, \phi_{k_i}\,c)$, ships each member once, but home still evaluates every guard on every member.
 A partition evaluates $p$ once per member and routes the member to its lane:
 
-| form                                                                  | evaluations of $p$                 | members shipped        |
-|-----------------------------------------------------------------------|------------------------------------|------------------------|
-| $\sum_i \mathrm{cut}(a_i,\ \phi_{k_i}\,c)$, guards at the places      | $n\,\lvert x\rvert$, at the places | $n\,\lvert x\rvert$ |
-| $\sum_i \phi_{k_i}\,\mathrm{cut}(a_i,\ c)$, guards before the cuts    | $n\,\lvert x\rvert$, at home       | $\lvert x\rvert$     |
-| $\mathrm{partition}(p \Rightarrow \{a_i \Rightarrow c\})$                | $\lvert x\rvert$, at home           | $\lvert x\rvert$     |
+| form                                                               | evaluations of $p$                 | members shipped     |
+|--------------------------------------------------------------------|------------------------------------|---------------------|
+| $\sum_i \mathrm{cut}(a_i,\ \phi_{k_i}\,c)$, guards at the places   | $n\,\lvert x\rvert$, at the places | $n\,\lvert x\rvert$ |
+| $\sum_i \phi_{k_i}\,\mathrm{cut}(a_i,\ c)$, guards before the cuts | $n\,\lvert x\rvert$, at home       | $\lvert x\rvert$    |
+| $\mathrm{partition}(p \Rightarrow \{a_i \Rightarrow c\})$          | $\lvert x\rvert$, at home          | $\lvert x\rvert$    |
 
 **No lane is read for its guard.** A planner could recover the cheap form from a guarded branch only by reading each
 lane's head as a guard, finding one function $p$ under all of them, and proving the guards orthogonal and complete:
@@ -643,8 +647,7 @@ $\varphi$ for reading them:
 
 $$
 r = \ell\,\varphi, \quad (a + b)\,\ell = a\,\ell \oplus b\,\ell
-\quad\Longrightarrow\quad
-(s_1 + \cdots + s_k)\,r = (s_1\,\ell \oplus \cdots \oplus s_k\,\ell)\,\varphi.
+\quad\Longrightarrow\quad (s_1 + \cdots + s_k)\,r = (s_1\,\ell \oplus \cdots \oplus s_k\,\ell)\,\varphi.
 $$
 
 Each place writes the books of its part, the books travel home and combine, and home reads the answer. The shape is
@@ -732,7 +735,7 @@ instruction's, as a program writes it, and no planner emits one yet.
 | **U** | $\checkmark$ | profile collation         | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$                                                                               | each shard's profile ships home, and the master collates one report                                                                    |
 | **V** | $\checkmark$ | generative run            | $a^{[m,n]} = \sum_{k=m}^{n} a^k$                                                                                                   | a span range or a point is an index set: the lanes split the unrolls by work, or the copies evenly                                     |
 | **W** | $\checkmark$ | embarrassingly parallel   | $(a + b) \cdot f = a \cdot f + b \cdot f$                                                                                          | no cut: each place runs the floatable run on its share, and the branch's merge brings it all home                                      |
-| **X** | $\checkmark$ | partition by key          | $\mathrm{partition}(p \Rightarrow \{k_i \Rightarrow c_i\}) = \sum_i \mathrm{filter}(p = k_i)\,c_i$                                                | each obj to the lane its key names: a hosted key is a place, so each place is sent its share alone                                     |
+| **X** | $\checkmark$ | partition by key          | $\mathrm{partition}(p \Rightarrow \{k_i \Rightarrow c_i\}) = \sum_i \mathrm{filter}(p = k_i)\,c_i$                                 | each obj to the lane its key names: a hosted key is a place, so each place is sent its share alone                                     |
 
 [To be written: the menu as a tree of these laws, a figure.]
 

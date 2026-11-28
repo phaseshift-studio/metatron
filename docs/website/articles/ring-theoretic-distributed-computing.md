@@ -264,7 +264,8 @@ Each place maps its share, and home receives `{4}1`, `{2}2` and `3` with every m
 
 **A cut may recombine through itself, after a lift.** `mean` is no monoid: the mean of two means is not the mean of
 their union. What recombines is a summary of each part, its mean weighted by its count, and the stream ring carries the
-weight as a coefficient. Write $\ell$ for the lift $a\,\ell = \{\lvert a\rvert\}\,\mathrm{mean}(a)$, so `{1,1,2}` lifts to
+weight as a coefficient. Write $\ell$ for the lift $a\,\ell = \{\lvert a\rvert\}\,\mathrm{mean}(a)$, so `{1,1,2}` lifts
+to
 `{3}1.333…`. A weighted mean averages to itself, $\mathrm{mean} = \ell\,\mathrm{mean}$, and the lift is itself
 self-combining, $(a+b)\,\ell = (a\,\ell + b\,\ell)\,\ell$, as the stream's sum adds the weights of equal means. So
 
@@ -397,35 +398,35 @@ expansion and contraction of each cut in figure 2, and lists `law_shard` among t
 ```mtron
 mtron> {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()>>format
 ==>"""
-     master //local   apply 354.468 ms, 2 places
-       places      2, gathered in 354.468 ms (the master's apply, its gather wait included)
+     master //local   apply 333.825 ms, 2 places
+       places      2, gathered in 333.825 ms (the master's apply, its gather wait included)
        place      objs  apply (ms)   share
-       //0           3       3.197   50.8%  straggler
-       //1           1       3.100   49.2%
-       apply       min 3.100   max 3.197   mean 3.149 (ms)
-       imbalance   1.02 (max ÷ mean apply)
+       //0           3       2.856   48.7%
+       //1           1       3.014   51.3%  straggler
+       apply       min 2.856   max 3.014   mean 2.935 (ms)
+       imbalance   1.03 (max ÷ mean apply)
        efficiency  0.009 (Σ lane apply ÷ (k × gather wait))
-       tree        depth 1   leaves 2   objs 4   lane time 6.297 ms
-       level 1     2 places, imbalance 1.02
-       critical    //0 3.197 ms
+       tree        depth 1   leaves 2   objs 4   lane time 5.870 ms
+       level 1     2 places, imbalance 1.03
+       critical    //1 3.014 ms
        stage     min (ms)   max (ms)
-       rewrite     18.959     23.274
-       resolve      0.029      0.058
-       apply      354.468    445.947
+       rewrite     18.692     25.685
+       resolve      0.027      0.044
+       apply      333.825    398.892
        insts     3
        resolve sub-stages (avg ms):
-         inst-resolve         2.999   42.4%
-         generic-binding      3.702   52.3%
-         inst-composition     0.374    5.3%
+         inst-resolve         2.731   45.2%
+         generic-binding      2.978   49.3%
+         inst-composition     0.335    5.5%
        rewrite rules:
                      law_shard           branch_factor       derivation_contractiongremlin_pushdown    theory_unit_removal branch_collapse     
            insts.in  110                 110                 110                 110                 110                 110                 
            insts.out 110                 110                 110                 110                 110                 110                 
-           time(ms)  23.600              22.775              11.831              2.141               1.678               1.525               
-           TOTAL     inst.in 3   inst.out 3   time(ms) 95.669
+           time(ms)  22.093              21.300              11.714              2.120               1.478               1.470               
+           TOTAL     inst.in 3   inst.out 3   time(ms) 91.620
        apply sub-stages (avg ms):
          split        0.008    0.0%
-         apply       35.483  100.0%
+         apply       31.116  100.0%
          next         0.003    0.0%
        per-instruction (per iteration):
                      branch    sum       branch    
@@ -433,65 +434,65 @@ mtron> {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()>>format
            in.coeff  0         2         0         
            out.monad 1         1         1         
            out.coeff 2         1         2         
-           time(ms)  35.483    0.000     0.000     
+           time(ms)  31.116    0.000     0.000     
        flow       monads=25 coeff-sum=25 compression=1.00 processors=10
        cache     hits=95355 misses=0 hit=100.0%
-       //0   apply 3.197 ms, a leaf, objs 3, straggler
+       //0   apply 2.856 ms, a leaf, objs 3
          stage     min (ms)   max (ms)
-         rewrite      6.984      8.022
-         resolve      0.028      0.040
-         apply        3.197      3.820
+         rewrite      6.413      7.236
+         resolve      0.026      0.041
+         apply        2.856      3.185
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         1.207   53.7%
-           generic-binding      0.513   22.8%
-           inst-composition     0.527   23.5%
+           inst-resolve         1.106   55.3%
+           generic-binding      0.451   22.5%
+           inst-composition     0.442   22.1%
          rewrite rules:
                        law_shard           branch_factor       derivation_contractiontheory_unit_removal gremlin_pushdown    law_idempotent      
              insts.in  30                  30                  30                  30                  30                  30                  
              insts.out 30                  30                  30                  30                  30                  30                  
-             time(ms)  19.767              8.818               1.721               0.940               0.549               0.467               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 36.280
+             time(ms)  18.934              7.824               1.640               0.903               0.574               0.419               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 34.106
          apply sub-stages (avg ms):
-           split        0.011    4.5%
-           apply        0.225   91.8%
-           next         0.009    3.7%
+           split        0.010    4.8%
+           apply        0.197   92.3%
+           next         0.006    2.9%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         3         
              out.monad 1         1         1         
              out.coeff 1         3         1         
-             time(ms)  0.024     0.202     0.000     
+             time(ms)  0.020     0.177     0.000     
          flow       monads=20 coeff-sum=25 compression=1.25 processors=10
          cache     hits=32130 misses=0 hit=100.0%
-       //1   apply 3.100 ms, a leaf, objs 1
+       //1   apply 3.014 ms, a leaf, objs 1, straggler
          stage     min (ms)   max (ms)
-         rewrite      7.244      8.387
-         resolve      0.030      0.041
-         apply        3.100      3.534
+         rewrite      6.957      7.652
+         resolve      0.029      0.038
+         apply        3.014      3.493
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         1.367   56.0%
-           generic-binding      0.498   20.4%
-           inst-composition     0.574   23.5%
+           inst-resolve         1.263   54.6%
+           generic-binding      0.468   20.3%
+           inst-composition     0.579   25.1%
          rewrite rules:
                        law_shard           branch_factor       derivation_contractiontheory_unit_removal gremlin_pushdown    law_idempotent      
              insts.in  30                  30                  30                  30                  30                  30                  
              insts.out 30                  30                  30                  30                  30                  30                  
-             time(ms)  20.371              9.761               1.784               0.984               0.666               0.477               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 38.065
+             time(ms)  18.455              9.560               1.738               0.926               0.570               0.431               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 35.324
          apply sub-stages (avg ms):
-           split        0.011    4.5%
-           apply        0.217   92.8%
-           next         0.006    2.7%
+           split        0.010    4.3%
+           apply        0.225   92.7%
+           next         0.007    3.0%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         1         
              out.monad 1         1         1         
              out.coeff 1         1         1         
-             time(ms)  0.023     0.193     0.000     
+             time(ms)  0.023     0.203     0.000     
          flow       monads=20 coeff-sum=15 compression=0.75 processors=10
          cache     hits=32730 misses=0 hit=100.0%
    """
@@ -753,35 +754,35 @@ that ran, a `branch` and a `sum`, and the time spent at the `branch` waiting on 
 ```mtron
 mtron> 0.{0,3}plus(1).sum().profile()>>format
 ==>"""
-     master //local   apply 297.738 ms, 2 places
-       places      2, gathered in 297.738 ms (the master's apply, its gather wait included)
+     master //local   apply 290.877 ms, 2 places
+       places      2, gathered in 290.877 ms (the master's apply, its gather wait included)
        place      objs  apply (ms)   share
-       //0           3       3.000   51.8%  straggler
-       //1           1       2.790   48.2%
-       apply       min 2.790   max 3.000   mean 2.895 (ms)
-       imbalance   1.04 (max ÷ mean apply)
-       efficiency  0.010 (Σ lane apply ÷ (k × gather wait))
-       tree        depth 1   leaves 2   objs 4   lane time 5.790 ms
-       level 1     2 places, imbalance 1.04
-       critical    //0 3.000 ms
+       //0           3       2.716   49.4%
+       //1           1       2.786   50.6%  straggler
+       apply       min 2.716   max 2.786   mean 2.751 (ms)
+       imbalance   1.01 (max ÷ mean apply)
+       efficiency  0.009 (Σ lane apply ÷ (k × gather wait))
+       tree        depth 1   leaves 2   objs 4   lane time 5.502 ms
+       level 1     2 places, imbalance 1.01
+       critical    //1 2.786 ms
        stage     min (ms)   max (ms)
-       rewrite      9.465     12.199
-       resolve      0.025      0.033
-       apply      297.738    321.809
+       rewrite      9.083     10.127
+       resolve      0.024      0.027
+       apply      290.877    335.821
        insts     1
        resolve sub-stages (avg ms):
-         inst-resolve         1.783   45.0%
-         generic-binding      1.968   49.7%
-         inst-composition     0.211    5.3%
+         inst-resolve         1.728   44.2%
+         generic-binding      1.988   50.8%
+         inst-composition     0.198    5.1%
        rewrite rules:
-                     law_shard           branch_factor       derivation_contractiongremlin_pushdown    theory_unit_removal branch_collapse     
+                     law_shard           branch_factor       derivation_contractiongremlin_pushdown    branch_collapse     theory_unit_removal 
            insts.in  50                  50                  50                  50                  50                  50                  
            insts.out 50                  50                  50                  50                  50                  50                  
-           time(ms)  13.599              9.580               6.692               1.179               0.983               0.912               
-           TOTAL     inst.in 1   inst.out 1   time(ms) 51.362
+           time(ms)  11.627              8.605               6.147               1.015               0.836               0.718               
+           TOTAL     inst.in 1   inst.out 1   time(ms) 45.541
        apply sub-stages (avg ms):
          split        0.007    0.0%
-         apply      302.843  100.0%
+         apply      301.136  100.0%
          next         0.002    0.0%
        per-instruction (per iteration):
                      branch    
@@ -789,65 +790,65 @@ mtron> 0.{0,3}plus(1).sum().profile()>>format
            in.coeff  0         
            out.monad 1         
            out.coeff 2         
-           time(ms)  302.843   
+           time(ms)  301.136   
        flow       monads=5 coeff-sum=0 compression=0.00 processors=10
        cache     hits=59045 misses=1 hit=100.0%
-       //0   apply 3.000 ms, a leaf, objs 3, straggler
+       //0   apply 2.716 ms, a leaf, objs 3
          stage     min (ms)   max (ms)
-         rewrite      6.431      7.812
-         resolve      0.031      0.079
-         apply        3.000      3.181
+         rewrite      6.115      7.280
+         resolve      0.031      0.049
+         apply        2.716      2.992
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         1.179   54.0%
-           generic-binding      0.500   22.9%
-           inst-composition     0.504   23.1%
+           inst-resolve         1.129   56.1%
+           generic-binding      0.447   22.2%
+           inst-composition     0.438   21.7%
          rewrite rules:
                        law_shard           branch_factor       derivation_contractiontheory_unit_removal gremlin_pushdown    law_idempotent      
              insts.in  30                  30                  30                  30                  30                  30                  
              insts.out 30                  30                  30                  30                  30                  30                  
-             time(ms)  18.918              8.382               1.548               0.846               0.463               0.456               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 34.037
+             time(ms)  18.094              7.492               1.536               0.766               0.477               0.378               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 32.039
          apply sub-stages (avg ms):
-           split        0.009    4.4%
-           apply        0.196   94.0%
-           next         0.003    1.6%
+           split        0.009    4.8%
+           apply        0.181   93.7%
+           next         0.003    1.5%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         3         
              out.monad 1         1         1         
              out.coeff 1         3         1         
-             time(ms)  0.022     0.174     0.000     
+             time(ms)  0.018     0.163     0.000     
          flow       monads=20 coeff-sum=25 compression=1.25 processors=10
          cache     hits=32325 misses=0 hit=100.0%
-       //1   apply 2.790 ms, a leaf, objs 1
+       //1   apply 2.786 ms, a leaf, objs 1, straggler
          stage     min (ms)   max (ms)
-         rewrite      6.596      8.666
-         resolve      0.031      0.040
-         apply        2.790      3.313
+         rewrite      6.428      6.832
+         resolve      0.029      0.035
+         apply        2.786      5.003
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         1.429   55.6%
-           generic-binding      0.522   20.3%
-           inst-composition     0.620   24.1%
+           inst-resolve         1.333   56.9%
+           generic-binding      0.461   19.7%
+           inst-composition     0.549   23.4%
          rewrite rules:
-                       law_shard           branch_factor       derivation_contractiontheory_unit_removal gremlin_pushdown    law_idempotent      
+                       law_shard           branch_factor       derivation_contractiontheory_unit_removal gremlin_pushdown    law_monoidic        
              insts.in  30                  30                  30                  30                  30                  30                  
              insts.out 30                  30                  30                  30                  30                  30                  
-             time(ms)  18.127              10.569              1.603               0.706               0.577               0.363               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 35.168
+             time(ms)  16.905              8.987               1.463               0.668               0.541               0.359               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 32.127
          apply sub-stages (avg ms):
-           split        0.008    4.1%
-           apply        0.193   94.4%
-           next         0.003    1.5%
+           split        0.010    4.0%
+           apply        0.230   94.6%
+           next         0.003    1.4%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         1         
              out.monad 1         1         1         
              out.coeff 1         1         1         
-             time(ms)  0.019     0.175     0.000     
+             time(ms)  0.022     0.208     0.000     
          flow       monads=20 coeff-sum=15 compression=0.75 processors=10
          cache     hits=32970 misses=0 hit=100.0%
    """
@@ -943,7 +944,7 @@ Shipping each place only its share asks for the other reading, one lane per memb
 $\phi_k = \mathrm{filter}(p = k)$ for the guard that keeps the members $p$ keys $k$. Then
 
 $$
-\mathrm{partition}(p,\ k_1 \Rightarrow c_1, \ldots, k_n \Rightarrow c_n) = \phi_{k_1}\,c_1 + \cdots + \phi_{k_n}\,c_n ,
+\mathrm{partition}(p \Rightarrow \{k_1 \Rightarrow c_1, \ldots, k_n \Rightarrow c_n\}) = \phi_{k_1}\,c_1 + \cdots + \phi_{k_n}\,c_n ,
 $$
 
 the branch whose lanes are guarded by the fibers of $p$, with $p$ evaluated once per member. A key that names a place,
@@ -959,20 +960,22 @@ reads what its keys address where it is held. Keyed by the places themselves, th
 *The Shard Identity* again, its owners named by the keys rather than by the address:
 
 ```mtron
-mtron> {1,2,3,4,5,6,7,8}.partition(<//${mod(2)}>, //0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()).sum()
+mtron> {1,2,3,4,5,6,7,8}.partition(<//${mod(2)}> => {//0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()}).sum()
 ==>88
-mtron> {1,2,3,4,5,6,7,8}.partition(<//${mod(2)}>, //0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()).explain()>>ext/topology/format
+mtron> {1,2,3,4,5,6,7,8}.partition(<//${mod(2)}> => {//0 => plus(1).mult(2).sum(), //1 => plus(1).mult(2).sum()}).explain()>>ext/topology/format
 ==>"""
         ┌─►//0─{0,8}─{0,8}─{0,8}─{1}─┐
    {8}──┤                            ├─►//local─{2}
         └─►//1─{0,8}─{0,8}─{0,8}─{1}─┘
    """
-mtron> {0,1}.partition(<//${_}>, //0 => */n/data.count(), //1 => */n/data.count()).sum()
+mtron> {0,1}.partition(<//${_}> => {//0 => */n/data.count(), //1 => */n/data.count()}).sum()
 ==>6
 ```
 <aside class="deep-dive">
 
-**Partition or branch?** From the stream ring's point of view a partition is a branch, its lanes guarded by the
+### Branch and Partition Instructions
+
+From the stream ring's point of view a partition is a branch, its lanes guarded by the
 fibers of one function. In practice the two differ, and the difference is why the partition is an instruction of its
 own.
 
@@ -1009,7 +1012,7 @@ mtron> {1,2,3,4,5,6,7,8}.branch(filter(mod(2).eq(0)).plus(10), filter(mod(2).eq(
 ==>16
 ==>27
 ==>18
-mtron> {1,2,3,4,5,6,7,8}.partition?<=int{?}(mod(2), <0> => plus(10), <1> => plus(20))
+mtron> {1,2,3,4,5,6,7,8}.partition?<=int{?}(mod(2) => {?0 => plus(10), ?1 => plus(20)})
 ==>21
 ==>12
 ==>23
@@ -1018,7 +1021,7 @@ mtron> {1,2,3,4,5,6,7,8}.partition?<=int{?}(mod(2), <0> => plus(10), <1> => plus
 ==>16
 ==>27
 ==>18
-mtron> {1,2,3,4}.partition?<=int{?}(mod(2), <0> => plus(1), <1> => plus(1))
+mtron> {1,2,3,4}.partition?<=int{?}(mod(2) => {?0 => plus(1), ?1 => plus(1)})
 ==>2
 ==>3
 ==>4
@@ -1028,7 +1031,7 @@ mtron> {1,2,3,4}.branch(plus(1), plus(1))
 ==>{2}4
 ==>{2}3
 ==>{2}5
-mtron> {1,2,3,4,5,6,7,8}.partition(mod(2), <0> => plus(1).mult(2).sum(), <1> => plus(1).mult(2).sum()).sum()
+mtron> {1,2,3,4,5,6,7,8}.partition(mod(2) => {?0 => plus(1).mult(2).sum(), ?1 => plus(1).mult(2).sum()}).sum()
 ==>88
 mtron> {1,2,3,4,5,6,7,8}.plus(1).mult(2).sum()
 ==>88
@@ -1036,24 +1039,27 @@ mtron> {1,2,3,4,5,6,7,8}.plus(1).mult(2).sum()
 **The same algebra, a different cost.** Written as a guarded branch, the partition is sound, and the stream ring
 cannot tell the two apart. The machine can. A guarded lane sees every member: when its lane is a place, the branch
 ships the whole stream to each of the $n$ places, $n\,\lvert x\rvert$ members on the wire, and each place evaluates
-its guard over all of them. Putting each guard before its cut, so the lane is $\phi_{k_i}\,\mathrm{cut}(a_i, c)$ in place
+its guard over all of them. Putting each guard before its cut, so the lane is $\phi_{k_i}\,\mathrm{cut}(a_i, c)$ in
+place
 of $\mathrm{cut}(a_i, \phi_{k_i}\,c)$, ships each member once, but home still evaluates every guard on every member.
 A partition evaluates $p$ once per member and routes the member to its lane:
 
-| form                                                                  | evaluations of $p$                 | members shipped        |
-|-----------------------------------------------------------------------|------------------------------------|------------------------|
-| $\sum_i \mathrm{cut}(a_i,\ \phi_{k_i}\,c)$, guards at the places      | $n\,\lvert x\rvert$, at the places | $n\,\lvert x\rvert$ |
-| $\sum_i \phi_{k_i}\,\mathrm{cut}(a_i,\ c)$, guards before the cuts    | $n\,\lvert x\rvert$, at home       | $\lvert x\rvert$     |
-| $\mathrm{partition}(p,\ a_i \Rightarrow c)$                           | $\lvert x\rvert$, at home           | $\lvert x\rvert$     |
+| form                                                               | evaluations of $p$                 | members shipped     |
+|--------------------------------------------------------------------|------------------------------------|---------------------|
+| $\sum_i \mathrm{cut}(a_i,\ \phi_{k_i}\,c)$, guards at the places   | $n\,\lvert x\rvert$, at the places | $n\,\lvert x\rvert$ |
+| $\sum_i \phi_{k_i}\,\mathrm{cut}(a_i,\ c)$, guards before the cuts | $n\,\lvert x\rvert$, at home       | $\lvert x\rvert$    |
+| $\mathrm{partition}(p \Rightarrow \{a_i \Rightarrow c\})$          | $\lvert x\rvert$, at home          | $\lvert x\rvert$    |
 
 **No lane is read for its guard.** A planner could recover the cheap form from a guarded branch only by reading each
 lane's head as a guard, finding one function $p$ under all of them, and proving the guards orthogonal and complete:
 that means looking into code the user wrote for other reasons, and taking on proof obligations the branch never
 states. A partition states $p$ and its keys, so its fibers are orthogonal by construction, as each member has one key,
-and the layout is read off the call. What the guarded reading leaves implicit becomes a rule of the instruction. A
-member whose key no lane names fails the call unless a `<#>` lane takes the rest. A member keyed nothing goes to every
-lane whose key is zeroable, `{?}//a`. And the routed member is its lane's input, so the lane can name it,
-`*</data/${_}>`.
+and the layout is read off the call. What the guarded reading leaves implicit is the rec algebra's own. The routes
+are a table, and a member's key is joined to it as a walk, $[\# \Rightarrow p(x)] * [k_i \Rightarrow c_i]$, with
+the first walk kept. `_` written last takes the rest, a key of noobj forms no relation and its member is
+dropped, `none` names a miss as any key does, and a member no route admits fails the call. The routed member is its
+lane's input, so the lane can name it, `*</data/${_}>`, and a route may name its place after its key,
+`?0 => //east => code`.
 
 </aside>
 
@@ -1065,8 +1071,7 @@ $\varphi$ for reading them:
 
 $$
 r = \ell\,\varphi, \quad (a + b)\,\ell = a\,\ell \oplus b\,\ell
-\quad\Longrightarrow\quad
-(s_1 + \cdots + s_k)\,r = (s_1\,\ell \oplus \cdots \oplus s_k\,\ell)\,\varphi.
+\quad\Longrightarrow\quad (s_1 + \cdots + s_k)\,r = (s_1\,\ell \oplus \cdots \oplus s_k\,\ell)\,\varphi.
 $$
 
 Each place writes the books of its part, the books travel home and combine, and home reads the answer. The shape is
@@ -1154,7 +1159,7 @@ instruction's, as a program writes it, and no planner emits one yet.
 | **U** | $\checkmark$ | profile collation         | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$                                                                               | each shard's profile ships home, and the master collates one report                                                                    |
 | **V** | $\checkmark$ | generative run            | $a^{[m,n]} = \sum_{k=m}^{n} a^k$                                                                                                   | a span range or a point is an index set: the lanes split the unrolls by work, or the copies evenly                                     |
 | **W** | $\checkmark$ | embarrassingly parallel   | $(a + b) \cdot f = a \cdot f + b \cdot f$                                                                                          | no cut: each place runs the floatable run on its share, and the branch's merge brings it all home                                      |
-| **X** | $\checkmark$ | partition by key          | $\mathrm{partition}(p, k_i \Rightarrow c_i) = \sum_i \mathrm{filter}(p = k_i)\,c_i$                                                | each obj to the lane its key names: a hosted key is a place, so each place is sent its share alone                                     |
+| **X** | $\checkmark$ | partition by key          | $\mathrm{partition}(p \Rightarrow \{k_i \Rightarrow c_i\}) = \sum_i \mathrm{filter}(p = k_i)\,c_i$                                 | each obj to the lane its key names: a hosted key is a place, so each place is sent its share alone                                     |
 
 [To be written: the menu as a tree of these laws, a figure.]
 

@@ -47,8 +47,14 @@ const STOPWATCH_SVG = '<svg viewBox="0 0 16 16" width="11" height="11" aria-hidd
     + '<path d="M8 2.2v1.9" fill="none" stroke="currentColor" stroke-width="1.2"/>'
     + '</svg>';
 
+/* a wrench, for "how many tools this peer provides" (the peer note renders it as an
+   ICON beside the count: "6 🛠" in the mono theme, not a word) */
+const TOOLS_SVG = '<svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true" focusable="false">'
+    + '<path fill="currentColor" d="M.102 2.223A3.004 3.004 0 0 0 3.78 5.897l6.341 6.252A3.003 3.003 0 0 0 13 16a3 3 0 1 0-.851-5.878L5.897 3.641A3.003 3.003 0 0 0 2.223.102L4.5 2.379l-.004 2.121-2.121.004L.102 2.223z"/></svg>';
+
 const ICONS = {
     explain: {mark: '?', title: 'explain'},
+    tools: {mark: TOOLS_SVG, title: 'tools', html: true},
     profile: {mark: STOPWATCH_SVG, title: 'profile (where the time went)', html: true},
     docq: {mark: BOOK_SVG, title: 'documentation (?docq)', html: true},
     decq: {mark: 'a*b', title: 'algebraic declaration (?decq)'}

@@ -126,7 +126,6 @@ strong {
 }
 
 .article-body aside.deep-dive::before {
-    content: "deep dive";
     display: block;
     color: var(--mmagenta, #9f4040);
     font-size: 0.85em;

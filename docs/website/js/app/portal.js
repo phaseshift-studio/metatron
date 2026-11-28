@@ -666,7 +666,10 @@ function createConsole(instance) {
     }
 
     function framePrefix() {
-        return REPL.frame ? "move(<" + REPL.frame + ">)." : "";
+        /* TWO DOTS, NOT ONE: a move quotes the frame and the next expression continues
+           with `..` — `move(</a>).ws_client::[…]` is a parse error, `move(</a>)..…` is
+           the code it names (Marko's rule: the parser's move seam is `..`) */
+        return REPL.frame ? "move(<" + REPL.frame + ">).." : "";
     }
 
     function evaluate(expr) {
@@ -1163,6 +1166,9 @@ function mountObjPanel(objCard, host, env) {
             const next = (!vid || vid === "/.") ? null : String(vid);
             if (next !== owner.console.frame) {
                 owner.console.frame = next;
+                /* the tab REMEMBERS where it was: a refresh puts the console back on
+                   this machine (per instance, so each server keeps its own place) */
+                rememberFrame(owner, next);
                 document.dispatchEvent(new CustomEvent("metatron:frame", {detail: next}));
             }
         },
@@ -2094,6 +2100,7 @@ function activate(instance) {
     PAGE_PANEL.replaceChildren(instance.main, PAGE_FOOTER);
     active = instance;
     syncChrome();
+    restoreFrame(instance);
     /* the stats strip is this machine's: its cached numbers now, a fresh read next */
     renderActiveStats();
     loadStats();
@@ -2117,6 +2124,103 @@ function syncChrome() {
     renderIdentity();
     active.page.sync();
     document.title = active.page.docTitle || "metatron";
+    refreshPlace();
+}
+
+/* THE TAB IS A THREAD: it is always AT a machine, so its title is host + frame —
+   "booger/.", "booger/a", "booger/b/c". the machine answers both: /network/host is its
+   name, and *<~>.vid() is the frame it is at, which a move changes. */
+/* a PLACE IS A NAME AND A PATH: anything else (a quoted string, an `at` expression, a
+   vid in angle brackets) is not a place, and a title is no spot for it. `*<~>.vid()`
+   answers `</.>` — the brackets are the serializer's, not the path's. */
+function cleanName(text) {
+    const name = String(text == null ? "" : text).replace(/^<|>$/g, "").trim();
+    return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name) ? name : "";
+}
+
+function cleanFrame(vid) {
+    const at = String(vid == null ? "" : vid).replace(/^<|>$/g, "").trim();
+    return /^\/[A-Za-z0-9_.\/-]*$/.test(at) && at !== "/" ? at : "/.";
+}
+
+function placeOf(instance) {
+    /* THE FRAME IS THE CONSOLE'S OWN — the equivalent of `*<~>.vid()` read on the
+       console's socket: `console.frame` is what the page's evaluations are moved to
+       (`move(<frame>)`) and what the machine panel sets when it pushes or moves. asking
+       `*<~>.vid()` over a reader socket would answer the reader's frame (the root), not
+       the thread's. the NAME is machine-wide, so a plain read answers it. */
+    const at = cleanFrame(instance.console && instance.console.frame ? instance.console.frame : "/.");
+    return evalMtronOn(instance, "*</network/host>").then((text) => {
+        const raw = String(text || "").trim();
+        return {
+            name: raw && raw !== "noobj" && !/^fail::/.test(raw) ? cleanName(raw) : "",
+            at: at
+        };
+    }).catch(() => ({name: "", at: at}));
+}
+
+let placing = 0;
+
+function refreshPlace() {
+    if (!active) return;
+    const instance = active;
+    const ticket = ++placing;
+    placeOf(instance).then((place) => {
+        if (ticket !== placing || instance !== active) return;
+        instance.page.hostName = place.name;
+        instance.page.frame = place.at;
+        document.title = (place.name || "metatron") + place.at;
+    }).catch(() => {
+    });
+}
+
+document.addEventListener("metatron:frame", refreshPlace);
+
+/* ── the tab's place, remembered ──────────────────────────────────────────
+   A MACHINE IS WHERE A THREAD IS. the console's frame is stored per instance, so a
+   refresh puts the tab back on the machine it was on; a frame that no longer exists (a
+   reboot mints new ones) resolves to the root, and its stale entry is dropped. */
+function frameStore(instance) {
+    return "metatron.frame" + (instanceIsLocal(instance) ? "" : ":" + instance.name);
+}
+
+function rememberFrame(instance, frame) {
+    if (!instance) return;
+    try {
+        if (frame) localStorage.setItem(frameStore(instance), String(frame));
+        else localStorage.removeItem(frameStore(instance));
+    } catch (ignored) {
+    }
+}
+
+function restoreFrame(instance) {
+    if (!instance || !instance.console || instance.console.frame) return;
+    let saved = "";
+    try {
+        saved = localStorage.getItem(frameStore(instance)) || "";
+    } catch (ignored) {
+        return;
+    }
+    if (!saved || saved === "/." || saved === "/") return;
+    /* a saved place must still look like a path: an `at` expression or a quoted vid
+       from some earlier console is not a machine and is dropped */
+    if (cleanFrame(saved) !== saved) {
+        rememberFrame(instance, null);
+        return;
+    }
+    /* a machine answers `machine::[…]` at its root; a stale vid answers nothing */
+    evalMtronOn(instance, "*<" + saved + ">").then((text) => {
+        const answer = String(text || "").trim();
+        if (/^machine::/.test(answer)) {
+            if (!instance.console.frame) {
+                instance.console.frame = saved;
+                document.dispatchEvent(new CustomEvent("metatron:frame", {detail: saved}));
+            }
+        } else {
+            rememberFrame(instance, null);
+        }
+    }).catch(() => {
+    });
 }
 
 /* ?ws= is the instance the page is looking at: a switch is URL state, so a
@@ -2296,6 +2400,9 @@ async function refresh() {
     try {
         renderIdentity();
         renderActiveStats();
+        /* the frame a machine is at can change without an event (a console `move`):
+           the tab's host/frame follows on the same tick */
+        refreshPlace();
         /* a machine that just aborted sys_stat() is not asked again on the next tick:
            activation retries it, and so does the poll after a minute */
         if (active && (!active.statsError || Date.now() - (active.statsFailedAt || 0) > 60000)) loadStats();
@@ -2825,7 +2932,10 @@ function createPage(instance) {
                 const name = String(hostName == null ? "" : hostName).trim();
                 if (name && name !== "noobj" && !/^fail::/.test(name)) {
                     page.docTitle = name + " - " + page.title;
-                    if (instance === active) document.title = page.docTitle;
+                    /* the title is the tab's PLACE (host/frame), never the old
+                       "host - page" banner: hand it back to refreshPlace, which
+                       knows the frame as well as the name */
+                    if (instance === active) refreshPlace();
                 }
             }).catch(() => {});
         }

@@ -17,7 +17,7 @@ import { parseSchema, renderForm, collectForm } from './mtron-form.js';
 import { parse, write, quote, real, int, writeCodeForm, FORMS, FULL_FORM, nextForm } from '../sdk/obj_mtron_serializer.js';
 import { f } from '../sdk/furi.js';
 import { parse as envelope } from '../sdk/mtron-envelope.js';
-import { toElement, iconButton } from './mtron-dom.js';
+import { toElement, iconButton, ICONS } from './mtron-dom.js';
 import { typesetMath } from './mathjax.js';
 import { explanationModel, explainExtension, explainBadge } from './explain-flow.js';
 
@@ -153,6 +153,20 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         if (!source || source === "noobj") return [];
         const parsed = parse(source);
         const out = [];
+        /* A TABLE ANSWERS A REC: the rewrite table is { name => inst }, and each rule's
+           body is code. writing the rec put every rule's code in ONE cell, and the
+           highlighter hung on it — the browser froze on the [rewrite] click. the NAME is
+           the signature; only non-inst values fall back to their written form. */
+        if (parsed.isRec()) {
+            for (const [key, value] of parsed.js) {
+                if (value && value.isInst && value.isInst()) out.push(key.toString());
+                else {
+                    const sig = signatureOf(value);
+                    if (sig) out.push(sig);
+                }
+            }
+            return out;
+        }
         if (parsed.isLst() || parsed.isObjs()) {
             for (const obj of parsed.js) {
                 const sig = signatureOf(obj);
@@ -169,22 +183,38 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
        tables the machine can be asked. */
     register("/m/instset", async function (env, api) {
         const box = node("div", "mpanel instset-panel");
-        const value = await api.json();
-        if (!value || typeof value !== "object") {
+        /* THE INSTSET IS THE MACHINE'S OWN DATA (x-mtron), not JSON: JSON drops tids and
+           hands each q entry back as an object of plain strings, which is exactly the
+           brace dump this panel used to print. the serializer keeps the types. */
+        let rec = null;
+        try {
+            const text = String((await api.pretty()) || "").trim();
+            if (text && text !== "noobj" && !/^fail::/.test(text)) rec = parse(text);
+        } catch (ignored) {
+        }
+        if (!rec || !rec.isRec || !rec.isRec()) {
             box.appendChild(node("div", "mpanel-empty", "no instset value"));
             return box;
         }
+        const at = (name) => {
+            for (const [key, value] of rec.js) if (key.toString() === name) return value;
+            return null;
+        };
         const head = node("div", "mpanel-head");
         head.appendChild(node("span", "mpanel-k", "instset"));
-        head.appendChild(node("span", "mpanel-pattern", value.pattern || ""));
+        head.appendChild(node("span", "mpanel-pattern", String(at("pattern") || "")));
         box.appendChild(head);
-        const q = Array.isArray(value.q) ? value.q : [];
+        const qrec = at("q");
+        const q = qrec && qrec.isRec && qrec.isRec() ? [...qrec.js] : [];
         box.appendChild(node("div", "mpanel-count", q.length + (q.length === 1 ? " q" : " qs")));
-        q.forEach((entry) => {
+        q.forEach(([key, value]) => {
             const row = node("div", "mpanel-row");
-            row.appendChild(node("span", "mpanel-k", (entry && entry.pattern) || "?"));
-            const target = entry && (entry.obj || entry.pattern || entry);
-            row.appendChild(node("span", "mpanel-v", brief(target)));
+            row.appendChild(node("span", "mpanel-k", String(key)));
+            const cell = node("span", "mpanel-v");
+            const code = write(value);
+            if (api && api.paint) api.paint(cell, code, "mtron");
+            else cell.textContent = code;
+            row.appendChild(cell);
             box.appendChild(row);
         });
 
@@ -605,7 +635,7 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         form.className = "machine-push";
         const input = document.createElement("input");
         input.type = "text";
-        input.placeholder = "push a frame…";
+        input.placeholder = "push a frame… (blank mints one; a call runs as-is)";
         input.spellcheck = false;
         const push = document.createElement("button");
         push.type = "submit";
@@ -839,20 +869,26 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
 
         form.addEventListener("submit", (ev) => {
             ev.preventDefault();
-            const name = input.value.trim().replace(/^\/+/, "");
-            if (!name) {
-                fail("a frame name is required");
-                return;
-            }
+            const raw = input.value.trim();
+            const name = raw.replace(/^\/+/, "");
             fail("");
-            run("push(<" + name + ">).@~.vid()").then(async (text) => {
+            /* THE FIELD TAKES A SEGMENT OR A CALL: a bare name is wrapped as push(<name>);
+               an EMPTY field is push() — the machine mints a uuid; anything already
+               written as a call (`push(c)`, a pasted expression) is evaluated as-is, not
+               wrapped into a uri literal (that is the `push(<push(c)>)` parse error). */
+            const made = !raw ? "push()" : (/[()<>\s]/.test(raw) ? raw : "push(<" + name + ">)");
+            const expr = made.indexOf("@~.vid()") >= 0 ? made : made + ".@~.vid()";
+            run(expr).then(async (text) => {
                 if (/^fail::/.test(String(text))) {
                     fail(String(text));
                     return;
                 }
-                const landed = uiVids(text)[0];
+                /* a frame's vid is a PATH: an `at` expression's answer or a quoted uri
+                   is not one, and putting it in the frame would drag every later
+                   evaluation (and the tab's title) to a place that is not a machine */
+                const landed = uiVids(text).find((vid) => /^\/[A-Za-z0-9_.\/-]+$/.test(vid));
                 if (!landed) {
-                    fail("push failed: " + text);
+                    fail("push returned no usable frame: " + text);
                     return;
                 }
                 input.value = "";
@@ -1010,11 +1046,57 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
            "mtron / ws => ws://host:8555/mtron, mcp => https://…, ws://…, http://…". */
         function endpointsOf(value) {
             const table = node("div", "network-endpoints");
+            /* THE TRANSPORT SAYS WHICH CLIENT THE ADDRESS IS FOR: a `mcp` endpoint is
+               reached by mcp_client, a `ws` one by ws_client, and the modal shows the
+               rec the machine builds for that host — mcp_client::[host=><ws://…>]. */
+            const clientTypeOf = (transport, uri) => {
+                const t = String(transport || "").toLowerCase();
+                if (t === "mcp") return "mcp_client";
+                if (t === "ws" || t === "wss") return "ws_client";
+                const scheme = /^([a-z]+):\/\//i.exec(String(uri || ""));
+                return (scheme ? scheme[1].toLowerCase() : "http") + "_client";
+            };
             const line = (protocol, transport, uri) => {
                 const el = node("div", "network-endpoint");
                 el.appendChild(node("span", "network-protocol", protocol || ""));
                 el.appendChild(node("span", "network-transport", transport || ""));
-                el.appendChild(node("span", "network-uri", uri == null ? "" : String(uri)));
+                const shown = uri == null ? "" : String(uri);
+                const uriEl = node("span", "network-uri", shown);
+                uriEl.title = shown;
+                if (/^[a-z]+:\/\//i.test(shown) && !/[#{}]/.test(shown)
+                    && api && typeof api.open === "function") {
+                    const client = clientTypeOf(transport, shown);
+                    uriEl.classList.add("door");
+                    uriEl.title = "open " + client + " for this address";
+                    uriEl.addEventListener("click", async (ev) => {
+                        ev.stopPropagation();
+                        /* THE CONSOLE'S OWN IDIOM, verbatim:
+                             map([host=><ws://…>].as(ws_client::T))
+                           `map` APPLIES the construction — that is what dials and mints the
+                           peer at <frame>/network/peer. the bare literal
+                           `ws_client::[host=><…>]` only annotates: it answered the same rec
+                           and registered nothing (the difference Marko pointed at). when the
+                           page console sits in a pushed frame, the move rides along — the
+                           call seam is one dot (`move(/b).map(…)`). */
+                        const frame = (typeof api.currentFrame === "function") ? api.currentFrame() : null;
+                        const code = "map([host=><" + shown + ">].as(" + client + "::T))";
+                        const expr = (frame && frame !== "/." && frame !== "/")
+                            ? "move(" + frame + ")." + code
+                            : code;
+                        /* A DOOR DIALS — it does not open a modal: the construction
+                           registers the peer, then the panel re-reads so the new member
+                           shows up under `peer` straight away. */
+                        uriEl.classList.add("busy");
+                        try {
+                            await api.mtron(expr);
+                        } catch (ignored) {
+                        }
+                        uriEl.classList.remove("busy");
+                        await load();
+                        document.dispatchEvent(new CustomEvent("metatron:network-changed"));
+                    });
+                }
+                el.appendChild(uriEl);
                 table.appendChild(el);
             };
             const uris = (target) => (Array.isArray(target) ? target : [target]).filter((uri) => uri != null);
@@ -1077,7 +1159,9 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
             const client = member.client && typeof member.client === "object" ? member.client : {};
             const template = String(key).includes("#");
             const rowEl = node("div", "network-peer" + (template ? " template" : ""));
-            rowEl.appendChild(node("span", "network-key", key));
+            const keyEl = node("span", "network-key", key);
+            keyEl.title = key;
+            rowEl.appendChild(keyEl);
             /* the tag has a TRACK of its own, between key and target, so every row's tag
                starts at the same x instead of trailing the key's varying width */
             if (template) {
@@ -1098,14 +1182,62 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 rowEl.appendChild(dir);
             }
             const origin = member.origin || member.host || "—";
-            rowEl.appendChild(node("span", "network-target", String(origin)));
-            const note = [schemeOf(key, member.origin)];
+            const targetEl = node("span", "network-target", String(origin));
+            targetEl.title = String(origin);
+            rowEl.appendChild(targetEl);
             const tools = client.tool && typeof client.tool === "object" ? Object.keys(client.tool).length : 0;
-            if (tools) note.push(tools + (tools === 1 ? " tool" : " tools"));
+            const noteEl = node("span", "network-note");
+            const part = (el) => {
+                if (noteEl.childNodes.length) noteEl.appendChild(document.createTextNode(" · "));
+                noteEl.appendChild(el);
+            };
+            part(document.createTextNode(schemeOf(key, member.origin)));
+            /* the tool count is COUNT + icon, not the words "6 tools": the note is a row of
+               signs, and a wrench says it in less width than a word */
+            if (tools) {
+                const toolTag = node("span", "network-tools");
+                toolTag.title = tools + (tools === 1 ? " tool" : " tools");
+                toolTag.appendChild(node("span", "network-tools-count", String(tools)));
+                const glyph = node("span", "network-tools-icon", "");
+                glyph.innerHTML = ICONS.tools.mark;
+                toolTag.appendChild(glyph);
+                part(toolTag);
+            }
             const host = client.host || member.host;
             if (!template && host && String(host) !== String(origin))
-                note.push(String(host).replace(/^[a-z]+:\/\/[^/]+/, ""));
-            rowEl.appendChild(node("span", "network-note", note.filter(Boolean).join(" · ")));
+                part(document.createTextNode(String(host).replace(/^[a-z]+:\/\/[^/]+/, "")));
+            rowEl.appendChild(noteEl);
+            /* A PEER CAN BE HUNG UP: writing noobj at its key retracts the member (the
+               socket closes, the supervisor stops redialing it) — the panel refreshes so
+               the row goes away at once. the KEY is the row's own name. */
+            /* a template (`http/#`) is a SURFACE, not a connection: retracting it would
+               take the route template away, so it gets no hang-up */
+            if (!template) {
+                const close = node("button", "network-close", "×");
+                close.type = "button";
+                close.title = "close this connection";
+                close.addEventListener("click", async (ev) => {
+                    ev.stopPropagation();
+                    close.disabled = true;
+                    /* THE CLOSING RECIPE (Marko, fully tested):
+                         move(/a)../a/network/peer/<key>.-<[_ * client.@_.>>=noobj,_.@_.>>=noobj]
+                       `.-<[…]` applies the two writes to the member: its client first, then
+                       the member itself. the spaces around `*` matter (multiply, not deref),
+                       and the machine rides in the move so the write lands at that level.
+                       At the root there is nothing to move: the absolute path is enough. */
+                    const machine = (dynamic && frame) ? String(frame).replace(/\/+$/, "") : "";
+                    const peerPath = (machine || "") + base.replace(/^~/, "") + "/peer/" + key;
+                    const recipe = peerPath + ".-<[_ * client.@_.>>=noobj,_.@_.>>=noobj]";
+                    const expr = machine ? "move(" + machine + ").." + recipe : recipe;
+                    try {
+                        await api.mtron(expr);
+                    } catch (ignored) {
+                    }
+                    await load();
+                    document.dispatchEvent(new CustomEvent("metatron:network-changed"));
+                });
+                rowEl.appendChild(close);
+            }
             /* a ws peer with an mtron endpoint is an instance: the page can wear its data */
             const endpoint = !template ? (client.host || member.host) : null;
             if (!template && endpoint && /^wss?:\/\//.test(String(member.origin || "")) && api && typeof api.view === "function") {
@@ -1185,6 +1317,13 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         /* a panel read is a COMPILE on the machine (0.3-0.6 s on a dev box, more when it is
            busy), so the tick is slow on purpose: the network's membership rarely changes,
            and one page polling it every 5 s is what kept a loaded machine behind */
+        /* ONE MACHINE, SEVERAL MOUNTS: the card and the obj modal are two panels reading
+           the same network, so a change seen by one is announced to all — otherwise a
+           door dialed in the modal refreshes the modal but leaves the card's list stale
+           (and vice versa). */
+        document.addEventListener("metatron:network-changed", () => {
+            if (box.isConnected) load();
+        });
         pollPanel(box, () => load(), 12000);
         return box;
     }
@@ -1299,6 +1438,53 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 }
                 vids.sort();
                 vids.forEach((vid) => box.appendChild(space(vid)));
+                /* A CHILD MACHINE READS ITS ANCESTORS' MEMORY: /a/b/c sees /a/b, /a
+                   and /. one CLOSED accordion per ancestor, read lazily on first open
+                   (so opening the panel costs the one read the current level needs). */
+                const here = String(mem).replace(/\/memory$/, "") || "/";
+                const ancestors = [];
+                for (let at = here; at && at !== "/";) {
+                    at = at.replace(/\/[^/]+$/, "");
+                    ancestors.push(at || "/");
+                }
+                ancestors.forEach((ancestor) => {
+                    const details = document.createElement("details");
+                    details.className = "memory-parent";
+                    details.open = false;
+                    const summary = document.createElement("summary");
+                    summary.className = "memory-space-head memory-parent-head";
+                    summary.appendChild(node("span", "memory-parent-mark", "↖"));
+                    summary.appendChild(node("span", "memory-parent-name", ancestor));
+                    details.appendChild(summary);
+                    const body = node("div", "memory-parent-body");
+                    details.appendChild(body);
+                    let loaded = false;
+                    details.addEventListener("toggle", async () => {
+                        if (!details.open || loaded) return;
+                        loaded = true;
+                        body.textContent = "";
+                        body.appendChild(spinner("reading spaces…"));
+                        try {
+                            const raw = await evalJson("*<" + (ancestor === "/" ? "" : ancestor)
+                                + "/memory>>>space.>>.vid()");
+                            const list = raw == null ? [] : (Array.isArray(raw) ? raw : [raw]);
+                            const parentVids = list.map((v) => String(v))
+                                .filter((v) => v && v !== "noobj").sort();
+                            body.textContent = "";
+                            if (!parentVids.length) {
+                                body.appendChild(node("div", "mpanel-empty", "no registered spaces"));
+                                return;
+                            }
+                            parentVids.forEach((vid) => body.appendChild(space(vid)));
+                        } catch (problem) {
+                            body.textContent = "";
+                            body.appendChild(node("div", "mpanel-empty",
+                                "cannot read " + ancestor + ": "
+                                + (problem && problem.message ? problem.message : problem)));
+                        }
+                    });
+                    box.appendChild(details);
+                });
             } catch (problem) {
                 box.textContent = "";
                 box.appendChild(node("div", "mpanel-empty", "cannot read memory spaces: " + (problem && problem.message ? problem.message : problem)));
@@ -1433,7 +1619,12 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
         return routePanel("ws_server", await api.json(), api);
     });
 
-    /* the console is the page's console section; the obj supplies its header */
+    /* THE CONSOLE IS ONE ELEMENT WITH ONE OWNER. #console-card is the page's live
+       terminal (its sockets and input are bound to it by id), so a view does not copy or
+       gut it: the view MOVES THE ELEMENT and remembers where it came from, and hands it
+       back there when the view goes away. Moving children was the old shape, and it lost
+       them: the card and the modal each took the terminal from #console-card, so after a
+       round trip the page's section was empty for good ("loads, then goes blank"). */
     register("/m/sys/ui/console", async function (env, api) {
         const box = node("div", "mpanel console-panel");
         const section = document.querySelector("#console-card");
@@ -1446,7 +1637,30 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
             const value = await api.json();
             label = value && (value.header || value.title);
         } catch (ignored) { }
-        while (section.firstChild) box.appendChild(section.firstChild);
+        /* where it lives right now: the card's panel, the modal's, or the page shell.
+           the shell keeps #console-card HIDDEN until a view hosts it (the `hidden`
+           attribute wins over any display rule), so hosting shows it and the hand-back
+           restores the shell's own state */
+        const from = section.parentNode;
+        const wasHidden = section.hidden;
+        section.hidden = false;
+        box.appendChild(section);
+        const giveBack = () => {
+            if (!from || !from.isConnected) return;
+            from.appendChild(section);
+            section.hidden = wasHidden;
+        };
+        const dialog = document.querySelector("#popup");
+        if (dialog) dialog.addEventListener("close", giveBack, {once: true});
+        const out = document.querySelector("#popup-out");
+        if (out && typeof MutationObserver !== "undefined") {
+            const watcher = new MutationObserver(() => {
+                if (box.isConnected) return;
+                watcher.disconnect();
+                giveBack();
+            });
+            watcher.observe(out, {childList: true});
+        }
         if (label) {
             const heading = box.querySelector(".console-head h2, h2");
             if (heading) heading.textContent = String(label);
@@ -1504,6 +1718,9 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
        instead of holding the panel), and it borrows the background reader. */
     const PROFILE_PREFIXES = new Map();
     const PROFILE_RECENT = new Map();
+    /* ONE PROFILE PER EXPRESSION AT A TIME: a second click while the first run is still
+       in flight joins it instead of starting a second 20x chain on the machine */
+    const PROFILE_INFLIGHT = new Map();
     /* how long a profile snapshot may be reused (close/reopen) before a fresh one is read */
     const PROFILE_TTL = 10000;
     function profilePrefixMap(api) {
@@ -1605,7 +1822,14 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
                 if (cached && Date.now() - cached.at < PROFILE_TTL) {
                     text = cached.text;
                 } else {
-                    text = String((await read(source, 0)) || "").trim();
+                    let pending = PROFILE_INFLIGHT.get(cacheKey);
+                    if (!pending) {
+                        pending = read(source, 0).then((answer) => String(answer || "").trim());
+                        PROFILE_INFLIGHT.set(cacheKey, pending);
+                        pending.then(() => PROFILE_INFLIGHT.delete(cacheKey),
+                            () => PROFILE_INFLIGHT.delete(cacheKey));
+                    }
+                    text = await pending;
                     if (text) PROFILE_RECENT.set(cacheKey, {at: Date.now(), text: text});
                 }
             } finally {
@@ -2523,7 +2747,11 @@ import { explanationModel, explainExtension, explainBadge } from './explain-flow
     }
 
     function paintSig(el, text) {
-        paintCode(el, text, FORMS[2]);
+        /* PLAIN, NOT HIGHLIGHTED: a signature is a uri — `name?rng=…&args=[…]` — and the
+           mtron grammar's regexes do not terminate on those spellings (the renderer
+           crashed on the [rewrite] click, whose table is 23 of them). the cell reads the
+           same in the mono font, and the full signature is its title. */
+        el.textContent = String(text == null ? "" : text);
     }
 
     register("type", async function (env, api) {

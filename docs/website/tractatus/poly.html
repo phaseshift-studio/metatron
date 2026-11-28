@@ -530,6 +530,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 <li class="legend-lvl-4"><a href="#sec-relations" onclick="var t=document.getElementById('sec-relations');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Relations</a></li>
 <li class="legend-lvl-4"><a href="#sec-records" onclick="var t=document.getElementById('sec-records');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Records</a></li>
 <li class="legend-lvl-3"><a href="#sec-control-structures" onclick="var t=document.getElementById('sec-control-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Control Structures</a></li>
+<li class="legend-lvl-4"><a href="#sec-guards-the-first-match-and-the-default" onclick="var t=document.getElementById('sec-guards-the-first-match-and-the-default');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">guards, the first match, and the default</a></li>
+<li class="legend-lvl-4"><a href="#sec-nothing-and-no-match" onclick="var t=document.getElementById('sec-nothing-and-no-match');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">nothing, and no match</a></li>
+<li class="legend-lvl-4"><a href="#sec-many-keys-every-key" onclick="var t=document.getElementById('sec-many-keys-every-key');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">many keys, every key</a></li>
+<li class="legend-lvl-4"><a href="#sec-composing-tables" onclick="var t=document.getElementById('sec-composing-tables');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">composing tables</a></li>
 <li class="legend-lvl-3"><a href="#sec-code-structures" onclick="var t=document.getElementById('sec-code-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Code Structures</a></li>
 <li class="legend-lvl-3"><a href="#sec-query-structures" onclick="var t=document.getElementById('sec-query-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Query Structures</a></li>
 </ul>
@@ -696,6 +700,352 @@ mtron&gt; **a
 </div>
 <h4 id="sec-records" class="discrete">Records</h4>
 <h3 id="sec-control-structures" class="discrete">Control Structures</h3>
+<div class="paragraph">
+<p>Most languages choose a path with keywords: <code>if</code>/<code>else</code>, <code>switch</code>/<code>case</code>, <code>match</code>, <code>cond</code>. Each is a construct of its own, with its own rules for what is tested, in what order, and what happens when nothing matches.
+In metatron, choosing is done with data. A <code>rec</code> is a relation, and the <code>rec</code> algebra already holds every one of those constructs.
+<code>` gathers alternatives into a table.
+`*` composes relations: each path of the left grows at its last element by every pair of the right whose key admits that element.
+Composition distributes over `</code>, so composing with a table is composing with each of its alternatives and gathering what results.</p>
+</div>
+<div class="paragraph">
+<p>\(R + S = R \cup S \qquad R * S = \{\, p \Rightarrow c \mid p \in R,\ \mathrm{last}(p) \Rightarrow c \in S \,\} \qquad R * (S + T) = R * S + R * T\)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; a=&gt;b=&gt;c=&gt;d     ​1​
+==&gt;a=&gt;(b=&gt;(c=&gt;d))
+mtron&gt; [a=&gt;b] + [b=&gt;c] + [c=&gt;a] + [c=&gt;d] + [d=&gt;b]     ​2​
+==&gt;[a=&gt;b,b=&gt;c,c=&gt;{a,d},d=&gt;b]
+mtron&gt; [a=&gt;b] * [b=&gt;c]     ​3​
+==&gt;[a=&gt;b=&gt;c]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>=&gt;</code> associates to the right, so a chain of relations is a path.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>+</code> unions relations, and pairs that share a key bulk under it.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>*</code> grows the path <code>a=&gt;b</code> at <code>b</code> by <code>b=&gt;c</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To select with this algebra, an obj is made the end of a path, and a table of alternatives is composed onto it.
+A table&#8217;s pairs read <code>key =&gt; location =&gt; code</code>: the key says which objs the alternative admits, the location where its code runs, and the code what runs.
+Here the locations and codes are names; a location may be a machine and a code a program.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; 3.-&lt;[|# =&gt; _]     ​1​
+==&gt;[&lt;#&gt;=&gt;3]
+mtron&gt; 1.plus(2).-&lt;[|# =&gt; _] * [1 =&gt; a =&gt; codeA,
+                                2 =&gt; b =&gt; codeB,
+                                3 =&gt; c =&gt; codeC]     ​2​
+==&gt;[&lt;#&gt;=&gt;3=&gt;c=&gt;codeC]
+mtron&gt; 1.plus(2).-&lt;[|# =&gt; _] * [1 =&gt; a =&gt; codeA,
+                                2 =&gt; b =&gt; codeB,
+                                3 =&gt; c =&gt; codeC].{3}&gt;&gt;     ​3​
+==&gt;codeC</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>splitting (<code>-&lt;</code>) an obj into a <code>rec</code> lifts it into a relation. The key <code>|<mark></code> is the pattern <code></mark></code> (any obj), blocked so it stays as written, and <code>_</code> is the obj itself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>composition matches <code>3</code> against the table&#8217;s keys, and the path grows by the alternative <code>3</code> names: a location, <code>c</code>, and a code, <code>codeC</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>three steps (<code>.{3}&gt;&gt;</code>) walk the path to its code.</td>
+</tr>
+</table>
+</div>
+<h4 id="sec-guards-the-first-match-and-the-default" class="discrete">guards, the first match, and the default</h4>
+<div class="paragraph">
+<p>A key need not be a value. A predicate is a key that admits every obj it holds for, and a type is a key that admits its instances.
+Composition takes every key that admits the obj, so a table of guards sends an obj down every guard it passes.
+Projecting each path onto its first, <code>==[_ =&gt; take(1)]</code>, keeps the first guard in written order.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; 1.plus(1).-&lt;[|# =&gt; _] * [?&gt;0 =&gt; a =&gt; codeA, ?&gt;1 =&gt; b =&gt; codeB, ?&gt;2 =&gt; c =&gt; codeC].{3}&gt;&gt;     ​1​
+==&gt;codeA
+==&gt;codeB
+mtron&gt; 1.plus(1).-&lt;[|# =&gt; _] * [?&gt;0 =&gt; a =&gt; codeA, ?&gt;1 =&gt; b =&gt; codeB, ?&gt;2 =&gt; c =&gt; codeC]==[_ =&gt; take(1)].{3}&gt;&gt;     ​2​
+==&gt;codeA
+mtron&gt; 5.-&lt;[|# =&gt; _] * [int::T =&gt; a =&gt; codeA, str::T =&gt; b =&gt; codeB].{3}&gt;&gt;     ​3​
+==&gt;codeA
+mtron&gt; 'five'.-&lt;[|# =&gt; _] * [int::T =&gt; a =&gt; codeA, str::T =&gt; b =&gt; codeB].{3}&gt;&gt;     ​4​
+==&gt;codeB</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>2</code> passes <code>?&gt;0</code> and <code>?&gt;1</code>: two paths, two codes.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>the first path alone, an <code>if</code>/<code>else if</code> chain.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>a type admits its instances: <code>5</code> is an <code>int</code> &#8230;&#8203;</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>&#8230;&#8203; and <code>'five'</code> is a <code>str</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The key <code>_</code> admits every obj. Alone it is a fallback, and with the first match, written last, it is an <code>else</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; 7.-&lt;[|# =&gt; _] * [1 =&gt; a =&gt; codeA, 2 =&gt; b =&gt; codeB, _ =&gt; d =&gt; codeD].{3}&gt;&gt;     ​1​
+==&gt;codeD
+mtron&gt; 2.-&lt;[|# =&gt; _] * [1 =&gt; a =&gt; codeA, 2 =&gt; b =&gt; codeB, _ =&gt; d =&gt; codeD].{3}&gt;&gt;     ​2​
+==&gt;codeB
+==&gt;codeD
+mtron&gt; 2.-&lt;[|# =&gt; _] * [1 =&gt; a =&gt; codeA, 2 =&gt; b =&gt; codeB, _ =&gt; d =&gt; codeD]==[_ =&gt; take(1)].{3}&gt;&gt;     ​3​
+==&gt;codeB
+mtron&gt; {-3,0,5}.-&lt;[|# =&gt; _] * [?&lt;0 =&gt; negative, ?=0 =&gt; zero, _ =&gt; positive]==[_ =&gt; take(1)].{2}&gt;&gt;     ​4​
+==&gt;negative
+==&gt;zero
+==&gt;positive</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>no key names <code>7</code>, so <code>_</code> takes it.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>_</code> admits <code>2</code> as well, beside the key <code>2</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>written last and projected onto the first match, <code>_</code> is an <code>else</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>a <code>cond</code>: each obj of the stream takes its own first match, two steps from its answer.</td>
+</tr>
+</table>
+</div>
+<h4 id="sec-nothing-and-no-match" class="discrete">nothing, and no match</h4>
+<div class="paragraph">
+<p>A relation with <code>noobj</code> on either side never forms: <code>noobj</code> is nothing, not a key.
+So an obj whose selection yields <code>noobj</code> reaches no alternative at all.
+A selection that must name its miss uses the sentinel <code>none</code>, which is a key like any other.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; [x =&gt; noobj] * [1 =&gt; a =&gt; codeA, none =&gt; d =&gt; codeD]     ​1​
+==&gt;[=&gt;]
+mtron&gt; [x =&gt; none] * [1 =&gt; a =&gt; codeA, none =&gt; d =&gt; codeD]     ​2​
+==&gt;[x=&gt;none=&gt;d=&gt;codeD]
+mtron&gt; 8.-&lt;[|# =&gt; _] * [?&gt;9 =&gt; a =&gt; codeA, ?&gt;10 =&gt; b =&gt; codeB].{3}&gt;&gt;     ​3​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>the relation <code>x=&gt;noobj</code> never forms, and the composition is the empty <code>rec</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>none</code> is matched like any key.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>no guard admits <code>8</code>, and nothing is selected.</td>
+</tr>
+</table>
+</div>
+<h4 id="sec-many-keys-every-key" class="discrete">many keys, every key</h4>
+<div class="paragraph">
+<p>What selects need not answer one key. An obj related to several keys reaches the alternative of each.
+A table whose alternatives all sit under <code>_</code> sends every obj to all of them.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; [x =&gt; {2,3}] * [1 =&gt; a =&gt; codeA, 2 =&gt; b =&gt; codeB, 3 =&gt; c =&gt; codeC].{3}&gt;&gt;     ​1​
+==&gt;codeB
+==&gt;codeC
+mtron&gt; 5.-&lt;[|# =&gt; _] * [_ =&gt; {a =&gt; codeA, b =&gt; codeB}].{3}&gt;&gt;     ​2​
+==&gt;codeA
+==&gt;codeB</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>the obj reaches the alternatives of <code>2</code> and <code>3</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>_</code> admits every obj, and both alternatives sit under it: a broadcast.</td>
+</tr>
+</table>
+</div>
+<h4 id="sec-composing-tables" class="discrete">composing tables</h4>
+<div class="paragraph">
+<p>Because composition grows a path at its last element, tables chain.
+A map from keys to locations, composed with a map from locations to code, keeps where a choice runs apart from what runs, and either map can be stored and reused.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-mtron hljs" data-lang="mtron">mtron&gt; 1.-&lt;[|# =&gt; _] * [1 =&gt; east, 2 =&gt; west] * [east =&gt; codeA, west =&gt; codeB]     ​1​
+==&gt;[&lt;#&gt;=&gt;1=&gt;east=&gt;codeA]
+mtron&gt; [1 =&gt; east, 2 =&gt; west]@placement     ​2​
+==&gt;[1=&gt;east,2=&gt;west]@placement
+mtron&gt; 2.-&lt;[|# =&gt; _] * *placement * [east =&gt; codeA, west =&gt; codeB].{3}&gt;&gt;     ​3​
+==&gt;codeB</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>1</code> is placed <code>east</code>, and <code>east</code> runs <code>codeA</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>the placement is a value at an address.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>moving work means rewriting the placement, not the program.</td>
+</tr>
+</table>
+</div>
+<div class="openblock card">
+<div class="content">
+<h4 id="_selection_is_composition" class="discrete">selection is composition</h4>
+<div class="paragraph">
+<p>Every construct above is one composition, \((\# \Rightarrow x) * T\), of an obj \(x\) with a table \(T = \sum_i k_i \Rightarrow c_i\).
+What differs is what the keys are, what the selection answers, and whether the paths are projected onto the first.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 25%;">
+<col style="width: 16.6666%;">
+<col style="width: 25%;">
+<col style="width: 16.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">selection</th>
+<th class="tableblock halign-left valign-top">the keys</th>
+<th class="tableblock halign-left valign-top">projection</th>
+<th class="tableblock halign-left valign-top">the obj reaches</th>
+<th class="tableblock halign-left valign-top">known elsewhere as</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">by value</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">values (<code>3</code>)</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">the alternative its key names</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>switch</code>, a lookup</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">by guard</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">predicates (<code>?&gt;1</code>)</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">every alternative whose guard holds</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">guarded commands</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">first guard</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">predicates, in written order</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>==[_ =&gt; take(1)]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">the first alternative whose guard holds</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>if</code>/<code>else if</code>, <code>cond</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">by type</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">types (<code>int::T</code>)</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">the alternative its type names</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">a type <code>match</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fallback</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>_</code>, beside other keys</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">the alternative its key names and the alternative of <code>_</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">a fallback</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">else</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>_</code>, written last</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>==[_ =&gt; take(1)]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">the alternative no earlier key took</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>else</code>, <code>default</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">many keys</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">the selection answers <code>{2,3}</code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">an alternative per key</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">multicast</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">every key</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>_</code> over a bag of alternatives</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">every alternative</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">broadcast</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no match</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>none</code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">the alternative of <code>none</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">an explicit miss</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">nothing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(<code>noobj</code>)</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">nothing: the relation never forms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">the zero</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The first match is a projection, not a construct of its own.
+With \(\phi_i\) the test of the \(i\)-th key, in written order, the \(i\)-th alternative receives \(\phi_i \prod_{j&lt;i} (1 - \phi_j)\) of the stream.
+So overlapping guards still route each obj exactly once.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Read a table&#8217;s middle element as a machine, and selection is distribution: the alternatives are lanes, and their locations are the places the lanes run.
+metatron&#8217;s <code>branch</code> sends an obj down every lane, as composition keeps every path, and its <code>partition</code> keeps the first walk, as <code>==[_ =&gt; take(1)]</code> does (<a href="../articles/ring-theoretic-distributed-computing.html">Ring Theoretic Distributed Computing</a>).
+The algebra above needs neither instruction: flow control is a composition of relations, and the table is a value that can be built, stored, composed and rewritten like any other.</p>
+</div>
 <h3 id="sec-code-structures" class="discrete">Code Structures</h3>
 <h3 id="sec-query-structures" class="discrete">Query Structures</h3></main>
 <footer class="container-fluid fixed-bottom text-light footer">
