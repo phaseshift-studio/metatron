@@ -420,7 +420,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
          * {@code [a=>[b=>c]]} comes back as {@code [a=>(b=>c)]}. This rec's own coefficient is the stream's, as in the
          * product.
          */
-        static Rec converse(final Rec rec) {
+        public static Rec converse(final Rec rec) {
             return rec.d(cInt.ONE()).asRec().elements().flatMap(arrow -> arrow.secondDirect().stream().flatMap(value -> {
                 if (rel(arrow.firstDirect(), value).isOne())
                     return Stream.of(rec(arrow.firstDirect(), value));

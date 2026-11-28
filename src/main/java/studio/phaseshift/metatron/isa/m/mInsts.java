@@ -886,11 +886,18 @@ public final class mInsts {
                         })
                         .law(Law.pure)
                         .create(),
-                InstBuilder.build().tid(NEG_INST_TID, "reverse the lhs rel: its ends swapped, (a=>b) to (b=>a)")
-                        .dom(REL_TID, "a rel").rng(REL_TID, "the reversed rel")
+                InstBuilder.build().tid(NEG_INST_TID, "the additive inverse of the lhs rel: -1 on its point, so a rel and its inverse cancel in a sum")
+                        .dom(REL_TID, "a rel").rng(REL_TID, "the additive inverse")
                         .argLst()
                         .body((lhs, _) -> lhs.asRel().neg())
-                        .law(Law.pure)
+                        .law(Law.involution, Law.pure)
+                        .create(),
+                InstBuilder.build().tid(CONVERSE_INST_TID, "the converse of the lhs rel: its ends swapped and its coefficient kept, (a=>b) to (b=>a), the transpose of its matrix")
+                        .dom(REL_TID, "a rel").rng(REL_TID, "the converse, the inverse under composition at the rel's ends")
+                        .argLst()
+                        .body((lhs, _) -> lhs.asRel().converse())
+                        .desc("an involution \\(r \\mapsto r^{\\top}\\): \\((a \\Rightarrow b)^{\\top} = b \\Rightarrow a\\), and \\((a \\Rightarrow b)\\,(b \\Rightarrow a) = a \\Rightarrow a\\)")
+                        .law(Law.involution, Law.pure)
                         .create(),
                 InstBuilder.build().tid(ONE_INST_TID, "the unity of the relation ring: id()=>id(), the parametric diagonal")
                         .dom(REL_TID, "a rel").rng(REL_TID, "the unity")
@@ -1130,6 +1137,12 @@ public final class mInsts {
      */
     public static Set<Inst> rec_insts() {
         return new LinkedHashSet<>(List.of(
+                InstBuilder.build().tid(CONVERSE_INST_TID, "the converse of the lhs rec: each walk reversed, its multiplicity kept, the rec's span -1 for a rec a read returns")
+                        .dom(REC_TID, "a rec").rng(REC_TID, "the converse, [a=>{b,c}] to [b=>a,c=>a]")
+                        .argLst()
+                        .body((lhs, _) -> Rec.Helper.converse(lhs.asRec()))
+                        .law(Law.involution, Law.pure)
+                        .create(),
               /*  InstBuilder.build().tid(MAP_INST_TID, "apply arg to every rel of lhs lst. \\(\\mathsf{map} : \\big((k \\mapsto v) \\to (k' \\mapsto v')\\big) \\to \\mathrm{rec}(K,V) \\to \\mathrm{rec}(K',V')\\)")
                         .dom(REC_TID, "the lhs rec containing rel fields to map")
                         .rng(REC_TID, "the lhs rec with mapped rel fields")

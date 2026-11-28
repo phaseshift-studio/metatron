@@ -537,6 +537,10 @@ public class RecTest extends AbstractAlgebraTest {
             "[a=>b].one().isa(rec::T)                                   % [_=>_]",
             "[a=>b] - [a=>b]                                            % [=>]",
             "[a=>b].neg().neg()                                         % [a=>b]",
+            // the converse, the span -1 as an instruction, so a rec a read returns has one too (Marko, 2026-11-28)
+            "[a=>{b,c}].converse()                                      % [b=>a,c=>a]",
+            "[a=>{b,c}].converse().converse()                           % [a=>{b,c}]",
+            "[a=>{b,c},b=>c].converse()                                 % [b=>a,c=>{a,b}]",
             "[a=>[b=>1]] * [_=>_]                                       % [a=>[b=>1]]",
             "[a=>b] * [_=>_,_=>c]                                       % [a=>{b,(b=>c)}]",
             "[_=>_,_=>c] * [b=>d]                                       % [b=>d]",

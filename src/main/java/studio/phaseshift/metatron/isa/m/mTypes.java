@@ -43,6 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.Rel.rel0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -284,14 +285,16 @@ public final class mTypes {
                                 uri(ID), lst()),
                         MONOID_THEORY_TID, null))));
         // rel: a monoid under composition (MULT), (a=>b)·(b=>c) is a=>c, whose identity is the parametric unity
-        // id()=>id() — the identity instruction at both ends, standing for the diagonal relation. Arrows that do not
-        // meet compose to noobj, the zero, which absorbs. There is no additive instance: plus leaves the carrier (two
-        // arrows sum to a stream, and a stream's + is the stream ring's), and its zero, noobj, cannot be named in a
-        // rec, which drops a noobj entry
+        // id()=>id(), Rel's own one(). Arrows that do not meet compose to the zero, which absorbs. rel is a RING by
+        // design (Marko, 2026-11-28; Parametric Identities in Ring Theory, Definition 1), with NEG its additive inverse,
+        // the -1 point, and CONVERSE the flip; the ring's declaration waits on three things RelTest's validator refutes:
+        // the zero noobj=>noobj reads as noobj (Rel.isNoObj), so zero() + r never runs; PLUS maps over a sum instead of
+        // adding to it once (a relation is a stream, so plus wants the whole stream, rel{*}); and NEG's -1 point fails
+        // the typer's range check against rel
         declare(REL_TYPE, rec(mutableMap(
                 uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(REL_TID).rng(REL_TID)).tryToInst(),
-                                uri(ID), rel(id_().tryToInst(), id_().tryToInst())),
+                                uri(ID), rel0().one()),
                         MONOID_THEORY_TID, null))));
         // rec: a RING (Marko, 2026-11-24). PLUS is the deep merge, a COMMUTATIVE monoid with the empty rec as its
         // identity (merge is keyed, so the order of the operands does not change the result), and NEG puts the -1

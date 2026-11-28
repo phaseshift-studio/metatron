@@ -237,13 +237,21 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>> {
     }
 
     /**
-     * Additive inverse: swap domain and range.
-     * -(a=>b) = (b=>a)
-     * This makes relations form an additive group where negation is relation reversal.
+     * Additive inverse: -1 on the arrow's point, so an arrow and its inverse cancel in a sum,
+     * {@code (a=>b) + -(a=>b)} is the zero (Marko, 2026-11-28). The flip is the {@link #converse()}.
      */
     // @Override
     default Rel neg() {
-        return rel(this.second(), this.first());
+        return rel(this.jvm(), this.tid().c(c -> c.inv()), this.vid());
+    }
+
+    /**
+     * The converse: the ends swapped and the coefficient kept, {@code (a=>b)} to {@code (b=>a)}. It is the transpose of
+     * the arrow's matrix, an involution, and the inverse under composition at the arrow's ends:
+     * {@code (a=>b)·(b=>a)} is {@code a=>a}.
+     */
+    default Rel converse() {
+        return rel(Pair.with(this.second(), this.first()), this.tid(), null);
     }
 
     /**

@@ -527,12 +527,19 @@ public class RelTest extends AbstractAlgebraTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "(a=>b).neg()                                                  % (b=>a)",
-            "(1=>2).neg()                                                  % (2=>1)",
-            // "(a=>b).neg().neg()                                            % (a=>b)",
-            "((a=>b)=>(c=>d)).neg()                                        % ((c=>d)=>(a=>b))",
-            "(noobj=>noobj).neg()                                          % (noobj=>noobj)",
-            "(id()=>id()).neg()                                            % (id()=>id())",
+            // the converse swaps the ends and keeps the coefficient (Marko, 2026-11-28) ...
+            "(a=>b).converse()                                             % (b=>a)",
+            "(1=>2).converse()                                             % (2=>1)",
+            "((a=>b)=>(c=>d)).converse()                                   % ((c=>d)=>(a=>b))",
+            "(id()=>id()).converse()                                       % (id()=>id())",
+            "(a=>b).converse().converse()                                  % (a=>b)",
+            "{(a=>b),(a=>b)}.converse()                                    % {2}(b=>a)",
+            // ... and composes back to the identity at the arrow's ends
+            "(a=>b).mult((a=>b).converse())                                % (a=>a)",
+            // neg is the additive inverse, -1 on the point: an arrow and its inverse cancel in a sum
+            "(a=>b).neg()                                                  % {-1}(a=>b)",
+            "(a=>b).neg().neg()                                            % (a=>b)",
+            "{(a=>b),(a=>b).neg(),(c=>d)}                                  % (c=>d)",
     }, delimiter = '%')
     public void testRelNegation(final String code, final String expected) {
         AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
