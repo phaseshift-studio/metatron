@@ -534,12 +534,12 @@ the remaining sections are outlined.</p>
 <h2>Introduction</h2>
 <p>In Stream Ring Theory <a href="./stream-ring-theory.html">[1]</a>, a program is a term of the ring
 \(\langle\mathcal{C}\mathcal{F}, +, \cdot \rangle\): the \(+\) branches a stream into computations that share nothing, and
-the \(\cdot\) composes them in series. Read with a network in mind, the \(+\) is already a distributed computation. The
+the \(\cdot\) composes them in series. From a distributed computing perspective, the \(+\) is a distributed computation. The
 summands of \(a + b\) never meet until their streams merge, and by Theorem 5 streams are atemporal, so the summands may
 run in any order and therefore on any machine. What a distributed system must decide is not <em>whether</em> a term may be
-split, but <em>where the splitting must stop</em>: the places where a stream contracts back to a single value. Those places
-are the reduce functions, and the stream ring states exactly when a reduce function may be pushed into the branches
-before it.</p>
+split, but <em>where the splitting must stop</em>: the places where a stream contracts back into a singular flow. Those places
+are the <strong>barrier functions</strong> ─ e.g. the <em>many-to-one</em> reduce functions. The stream ring states exactly when a
+reduce function may be pushed into the branches before it.</p>
 <p>The statement is Theorem 19 of <a href="./stream-ring-theory.html">[1]</a>. A reduce function \(r\) over a commutative monoid is
 <em>semi-right distributive</em>:</p>
 <p>\[
@@ -570,7 +570,7 @@ a <em>near-ring</em>. The difference is distributivity, and distributivity is ex
 </thead>
 <tbody>
 <tr><td><code>*inst?decq&gt;&gt;form</code></td><td>\((a+b)c = ac + bc\)</td><td>\(c(a+b) = ca + cb\)</td></tr>
-<tr><td>──────────────────────────────────────────────</td><td>──────────────────────────</td><td>───────────────────</td></tr>
+<tr><td>─────────────────────────</td><td>──────────────────</td><td>─────────────</td></tr>
 <tr><td>map, filter, flatmap rings</td><td>yes</td><td>yes</td></tr>
 <tr><td>reduce near-ring \(\mathcal{F}_r\) (Theorem 18)</td><td>no</td><td>yes</td></tr>
 <tr><td>monoidic reduce functions (Theorem 19)</td><td>semi: \((a+b)c = (ac+bc)c\)</td><td>yes</td></tr>
@@ -864,35 +864,35 @@ other (the next section reads a coefficient as an index set). The profile counts
 expansion and contraction of each cut in figure 2, and lists <code>law_shard</code> among the rewrite rules:</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3,4,5}.plus(1).sum().{0,3}plus(1).sum().profile()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
-     master //local   apply 333.825 ms, 2 places
-       places      2, gathered in 333.825 ms (the master's apply, its gather wait included)
+     master //local   apply 350.605 ms, 2 places
+       places      2, gathered in 350.605 ms (the master's apply, its gather wait included)
        place      objs  apply (ms)   share
-       //0           3       2.856   48.7%
-       //1           1       3.014   51.3%  straggler
-       apply       min 2.856   max 3.014   mean 2.935 (ms)
-       imbalance   1.03 (max ÷ mean apply)
+       //0           3       2.911   48.8%
+       //1           1       3.051   51.2%  straggler
+       apply       min 2.911   max 3.051   mean 2.981 (ms)
+       imbalance   1.02 (max ÷ mean apply)
        efficiency  0.009 (Σ lane apply ÷ (k × gather wait))
-       tree        depth 1   leaves 2   objs 4   lane time 5.870 ms
-       level 1     2 places, imbalance 1.03
-       critical    //1 3.014 ms
+       tree        depth 1   leaves 2   objs 4   lane time 5.961 ms
+       level 1     2 places, imbalance 1.02
+       critical    //1 3.051 ms
        stage     min (ms)   max (ms)
-       rewrite     18.692     25.685
-       resolve      0.027      0.044
-       apply      333.825    398.892
+       rewrite     18.463     20.764
+       resolve      0.030      0.055
+       apply      350.605    397.613
        insts     3
        resolve sub-stages (avg ms):
-         inst-resolve         2.731   45.2%
-         generic-binding      2.978   49.3%
-         inst-composition     0.335    5.5%
+         inst-resolve         2.882   44.1%
+         generic-binding      3.306   50.6%
+         inst-composition     0.349    5.3%
        rewrite rules:
-                     law_shard           branch_factor       derivation_contractiongremlin_pushdown    theory_unit_removal branch_collapse     
+                     law_shard           branch_factor       derivation_contractiongremlin_pushdown    branch_collapse     theory_unit_removal 
            insts.in  110                 110                 110                 110                 110                 110                 
            insts.out 110                 110                 110                 110                 110                 110                 
-           time(ms)  22.093              21.300              11.714              2.120               1.478               1.470               
-           TOTAL     inst.in 3   inst.out 3   time(ms) 91.620
+           time(ms)  21.331              21.324              11.227              2.001               1.447               1.415               
+           TOTAL     inst.in 3   inst.out 3   time(ms) 89.260
        apply sub-stages (avg ms):
-         split        0.008    0.0%
-         apply       31.116  100.0%
+         split        0.009    0.0%
+         apply       34.866  100.0%
          next         0.003    0.0%
        per-instruction (per iteration):
                      branch    sum       branch    
@@ -900,28 +900,28 @@ expansion and contraction of each cut in figure 2, and lists <code>law_shard</co
            in.coeff  0         2         0         
            out.monad 1         1         1         
            out.coeff 2         1         2         
-           time(ms)  31.116    0.000     0.000     
+           time(ms)  34.866    0.000     0.000     
        flow       monads=25 coeff-sum=25 compression=1.00 processors=10
        cache     hits=95355 misses=0 hit=100.0%
-       //0   apply 2.856 ms, a leaf, objs 3
+       //0   apply 2.911 ms, a leaf, objs 3
          stage     min (ms)   max (ms)
-         rewrite      6.413      7.236
-         resolve      0.026      0.041
-         apply        2.856      3.185
+         rewrite      6.588      7.793
+         resolve      0.026      0.046
+         apply        2.911      3.556
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         1.106   55.3%
-           generic-binding      0.451   22.5%
-           inst-composition     0.442   22.1%
+           inst-resolve         1.140   55.1%
+           generic-binding      0.465   22.5%
+           inst-composition     0.463   22.4%
          rewrite rules:
                        law_shard           branch_factor       derivation_contractiontheory_unit_removal gremlin_pushdown    law_idempotent      
              insts.in  30                  30                  30                  30                  30                  30                  
              insts.out 30                  30                  30                  30                  30                  30                  
-             time(ms)  18.934              7.824               1.640               0.903               0.574               0.419               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 34.106
+             time(ms)  19.055              8.139               1.701               0.946               0.510               0.436               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 34.600
          apply sub-stages (avg ms):
-           split        0.010    4.8%
-           apply        0.197   92.3%
+           split        0.010    4.4%
+           apply        0.207   92.7%
            next         0.006    2.9%
          per-instruction (per iteration):
                        start     plus      sum       
@@ -929,36 +929,36 @@ expansion and contraction of each cut in figure 2, and lists <code>law_shard</co
              in.coeff  0         1         3         
              out.monad 1         1         1         
              out.coeff 1         3         1         
-             time(ms)  0.020     0.177     0.000     
+             time(ms)  0.022     0.185     0.000     
          flow       monads=20 coeff-sum=25 compression=1.25 processors=10
          cache     hits=32130 misses=0 hit=100.0%
-       //1   apply 3.014 ms, a leaf, objs 1, straggler
+       //1   apply 3.051 ms, a leaf, objs 1, straggler
          stage     min (ms)   max (ms)
-         rewrite      6.957      7.652
-         resolve      0.029      0.038
-         apply        3.014      3.493
+         rewrite      7.102      8.761
+         resolve      0.029      0.040
+         apply        3.051      3.585
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         1.263   54.6%
-           generic-binding      0.468   20.3%
-           inst-composition     0.579   25.1%
+           inst-resolve         1.355   55.0%
+           generic-binding      0.500   20.3%
+           inst-composition     0.609   24.7%
          rewrite rules:
                        law_shard           branch_factor       derivation_contractiontheory_unit_removal gremlin_pushdown    law_idempotent      
              insts.in  30                  30                  30                  30                  30                  30                  
              insts.out 30                  30                  30                  30                  30                  30                  
-             time(ms)  18.455              9.560               1.738               0.926               0.570               0.431               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 35.324
+             time(ms)  19.644              10.216              1.703               0.946               0.612               0.446               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 37.374
          apply sub-stages (avg ms):
-           split        0.010    4.3%
-           apply        0.225   92.7%
-           next         0.007    3.0%
+           split        0.010    4.0%
+           apply        0.223   92.6%
+           next         0.008    3.3%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         1         
              out.monad 1         1         1         
              out.coeff 1         1         1         
-             time(ms)  0.023     0.203     0.000     
+             time(ms)  0.022     0.202     0.000     
          flow       monads=20 coeff-sum=15 compression=0.75 processors=10
          cache     hits=32730 misses=0 hit=100.0%
    &quot;&quot;&quot;
@@ -1065,12 +1065,6 @@ frontier never holds more than six members: the traversers that reach one vertex
 riding as that vertex's coefficient, so a pass ships six objects, not hundreds of paths. Each traversal step declares
 itself pure, so <code>law_bsp</code> deals <code>both()</code> like any floatable run:</p>
 <pre><code class="language-mtron">mtron&gt; *g:V/+.repeat?&lt;=A{*}(code=&gt;both(),until=&gt;loop()?&gt;4)&gt;&gt;name
-==&gt;{99}'lop'
-==&gt;{41}'vadas'
-==&gt;{99}'josh'
-==&gt;{99}'marko'
-==&gt;{41}'peter'
-==&gt;{41}'ripple'
 mtron&gt; *g:V/+.repeat?&lt;=A{*}(code=&gt;both(),until=&gt;loop()?&gt;4).explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
     op      dom      rng      args                                                                    f    desc      c_dom  c_rng  c_out 
@@ -1130,12 +1124,6 @@ mtron&gt; {1,2,3,4,5,6,7,8}.repeat?&lt;=int{*}&amp;hop=2(code=&gt;plus(1),until=
        └───────────────────────────────────────┘
    &quot;&quot;&quot;
 mtron&gt; *g:V/+.repeat?&lt;=A{*}&amp;hop=2(code=&gt;both(),until=&gt;loop()?&gt;4)&gt;&gt;name
-==&gt;{99}'lop'
-==&gt;{41}'vadas'
-==&gt;{99}'josh'
-==&gt;{99}'marko'
-==&gt;{41}'ripple'
-==&gt;{41}'peter'
 </code></pre>
 <p>Each lane of the root's <code>branch</code> states <code>?hop=1</code>, a level left, and the walk answers what the flat walk answers. The
 topology draws only the root's level: a peer plans its part of a frontier only when the part arrives, and <code>explain()</code>
@@ -1180,35 +1168,35 @@ the shares are cut by the work each costs, not by how many unrolls each holds. A
 that ran, a <code>branch</code> and a <code>sum</code>, and the time spent at the <code>branch</code> waiting on the two partials:</p>
 <pre><code class="language-mtron">mtron&gt; 0.{0,3}plus(1).sum().profile()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
-     master //local   apply 290.877 ms, 2 places
-       places      2, gathered in 290.877 ms (the master's apply, its gather wait included)
+     master //local   apply 314.570 ms, 2 places
+       places      2, gathered in 314.570 ms (the master's apply, its gather wait included)
        place      objs  apply (ms)   share
-       //0           3       2.716   49.4%
-       //1           1       2.786   50.6%  straggler
-       apply       min 2.716   max 2.786   mean 2.751 (ms)
-       imbalance   1.01 (max ÷ mean apply)
-       efficiency  0.009 (Σ lane apply ÷ (k × gather wait))
-       tree        depth 1   leaves 2   objs 4   lane time 5.502 ms
-       level 1     2 places, imbalance 1.01
-       critical    //1 2.786 ms
+       //0           3       3.458   53.9%  straggler
+       //1           1       2.963   46.1%
+       apply       min 2.963   max 3.458   mean 3.210 (ms)
+       imbalance   1.08 (max ÷ mean apply)
+       efficiency  0.010 (Σ lane apply ÷ (k × gather wait))
+       tree        depth 1   leaves 2   objs 4   lane time 6.421 ms
+       level 1     2 places, imbalance 1.08
+       critical    //0 3.458 ms
        stage     min (ms)   max (ms)
-       rewrite      9.083     10.127
-       resolve      0.024      0.027
-       apply      290.877    335.821
+       rewrite      9.463     12.093
+       resolve      0.025      0.068
+       apply      314.570    353.050
        insts     1
        resolve sub-stages (avg ms):
-         inst-resolve         1.728   44.2%
-         generic-binding      1.988   50.8%
-         inst-composition     0.198    5.1%
+         inst-resolve         1.865   46.1%
+         generic-binding      1.952   48.3%
+         inst-composition     0.225    5.6%
        rewrite rules:
                      law_shard           branch_factor       derivation_contractiongremlin_pushdown    branch_collapse     theory_unit_removal 
            insts.in  50                  50                  50                  50                  50                  50                  
            insts.out 50                  50                  50                  50                  50                  50                  
-           time(ms)  11.627              8.605               6.147               1.015               0.836               0.718               
-           TOTAL     inst.in 1   inst.out 1   time(ms) 45.541
+           time(ms)  13.740              10.057              6.869               1.229               0.999               0.831               
+           TOTAL     inst.in 1   inst.out 1   time(ms) 52.842
        apply sub-stages (avg ms):
          split        0.007    0.0%
-         apply      301.136  100.0%
+         apply      333.058  100.0%
          next         0.002    0.0%
        per-instruction (per iteration):
                      branch    
@@ -1216,65 +1204,65 @@ that ran, a <code>branch</code> and a <code>sum</code>, and the time spent at th
            in.coeff  0         
            out.monad 1         
            out.coeff 2         
-           time(ms)  301.136   
+           time(ms)  333.058   
        flow       monads=5 coeff-sum=0 compression=0.00 processors=10
        cache     hits=59045 misses=1 hit=100.0%
-       //0   apply 2.716 ms, a leaf, objs 3
+       //0   apply 3.458 ms, a leaf, objs 3, straggler
          stage     min (ms)   max (ms)
-         rewrite      6.115      7.280
-         resolve      0.031      0.049
-         apply        2.716      2.992
+         rewrite      6.558      8.623
+         resolve      0.032      0.049
+         apply        3.458      4.535
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         1.129   56.1%
-           generic-binding      0.447   22.2%
-           inst-composition     0.438   21.7%
+           inst-resolve         1.477   58.0%
+           generic-binding      0.543   21.3%
+           inst-composition     0.527   20.7%
          rewrite rules:
                        law_shard           branch_factor       derivation_contractiontheory_unit_removal gremlin_pushdown    law_idempotent      
              insts.in  30                  30                  30                  30                  30                  30                  
              insts.out 30                  30                  30                  30                  30                  30                  
-             time(ms)  18.094              7.492               1.536               0.766               0.477               0.378               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 32.039
+             time(ms)  22.858              8.937               1.735               0.928               0.642               0.474               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 39.415
          apply sub-stages (avg ms):
-           split        0.009    4.8%
-           apply        0.181   93.7%
-           next         0.003    1.5%
+           split        0.010    3.9%
+           apply        0.239   94.8%
+           next         0.003    1.3%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         3         
              out.monad 1         1         1         
              out.coeff 1         3         1         
-             time(ms)  0.018     0.163     0.000     
+             time(ms)  0.024     0.215     0.000     
          flow       monads=20 coeff-sum=25 compression=1.25 processors=10
          cache     hits=32325 misses=0 hit=100.0%
-       //1   apply 2.786 ms, a leaf, objs 1, straggler
+       //1   apply 2.963 ms, a leaf, objs 1
          stage     min (ms)   max (ms)
-         rewrite      6.428      6.832
-         resolve      0.029      0.035
-         apply        2.786      5.003
+         rewrite      8.208      9.450
+         resolve      0.039      0.048
+         apply        2.963      3.905
          insts     3
          resolve sub-stages (avg ms):
-           inst-resolve         1.333   56.9%
-           generic-binding      0.461   19.7%
-           inst-composition     0.549   23.4%
+           inst-resolve         1.487   55.0%
+           generic-binding      0.575   21.3%
+           inst-composition     0.641   23.7%
          rewrite rules:
-                       law_shard           branch_factor       derivation_contractiontheory_unit_removal gremlin_pushdown    law_monoidic        
+                       law_shard           branch_factor       derivation_contractiontheory_unit_removal gremlin_pushdown    law_idempotent      
              insts.in  30                  30                  30                  30                  30                  30                  
              insts.out 30                  30                  30                  30                  30                  30                  
-             time(ms)  16.905              8.987               1.463               0.668               0.541               0.359               
-             TOTAL     inst.in 3   inst.out 3   time(ms) 32.127
+             time(ms)  22.599              11.151              1.798               1.099               0.720               0.547               
+             TOTAL     inst.in 3   inst.out 3   time(ms) 42.301
          apply sub-stages (avg ms):
-           split        0.010    4.0%
-           apply        0.230   94.6%
-           next         0.003    1.4%
+           split        0.013    4.7%
+           apply        0.254   93.6%
+           next         0.004    1.6%
          per-instruction (per iteration):
                        start     plus      sum       
              in.monad  0         1         1         
              in.coeff  0         1         1         
              out.monad 1         1         1         
              out.coeff 1         1         1         
-             time(ms)  0.022     0.208     0.000     
+             time(ms)  0.027     0.227     0.000     
          flow       monads=20 coeff-sum=15 compression=0.75 processors=10
          cache     hits=32970 misses=0 hit=100.0%
    &quot;&quot;&quot;

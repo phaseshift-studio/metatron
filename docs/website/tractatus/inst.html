@@ -709,12 +709,19 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
      boot=&gt;&lt;boot/docs.mtron&gt;,
      local=&gt;booger],
     file=&gt;&lt;boot/docs.mtron&gt;@boot/file]
+==&gt;created_in=&gt;[lop=&gt;{marko,josh,peter},
+    ripple=&gt;josh]@created_in
 ==&gt;v1=&gt;[name=&gt;'marko',
     age=&gt;29,
     outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
     created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 ==&gt;v2=&gt;[name=&gt;'vadas']
+==&gt;modern_in=&gt;[lop=&gt;{marko,josh,peter},
+    vadas=&gt;marko,
+    josh=&gt;marko,
+    ripple=&gt;josh]@modern_in
 ==&gt;v3=&gt;[name=&gt;'josh']
+==&gt;&lt;2&gt;=&gt;mult?rec&lt;=rec([lop=&gt;{marko,josh,peter},ripple=&gt;josh]){&lt;j&gt;}
 ==&gt;&lt;1&gt;=&gt;plus?int&lt;=int(1){&lt;j&gt;}
 ==&gt;harvest=&gt;harvest?rec&lt;=int{*}(uri{?}::T){
      spawn?uri&lt;=int(&lt;//localhost:${_ + 1111}/${_}&gt;,&lt;//${_}&gt;,*0).split([host=&gt;id()]).
@@ -727,11 +734,18 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
     out_=&gt;[created=&gt;!*v4]]
 ==&gt;chicken=&gt;animal::T@chicken
 ==&gt;v4=&gt;[name=&gt;'lop']
+==&gt;created=&gt;[marko=&gt;lop,
+    josh=&gt;{ripple,lop},
+    peter=&gt;lop]@created
+==&gt;knows=&gt;[marko=&gt;{vadas,josh}]@knows
 ==&gt;animal=&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal
 ==&gt;out=&gt;out?rec{*}&lt;=rec(label=&gt;uri{*}::T){
      rshift(outE_).rshift(*label).
      rshift(inV_) }
-==&gt;equipment=&gt;rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment</code></pre>
+==&gt;equipment=&gt;rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment
+==&gt;modern=&gt;[marko=&gt;{lop,vadas,josh},
+    josh=&gt;{ripple,lop},
+    peter=&gt;lop]@modern</code></pre>
 </div>
 </div>
 </div>
