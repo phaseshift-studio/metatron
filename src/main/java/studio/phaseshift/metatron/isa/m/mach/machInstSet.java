@@ -76,6 +76,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -130,8 +131,9 @@ public class machInstSet extends AbstractInstSet {
      * the reply can address.
      * <p>
      * The tag is an ordinary value argument (not the vid of anything), so what it addresses is the ANSWER: a value
-     * leaves with the tag on it, and nothing leaves as {@link #NOOBJ_SENTINEL} — the mark that says "the answer was
-     * empty, and this is the trip it belonged to".
+     * leaves with the tag on it, a bag with the tag on each member (a bag holds no vid on the wire), and nothing
+     * leaves as {@link #NOOBJ_SENTINEL} — the mark that says "the answer was empty, and this is the trip it belonged
+     * to".
      */
     public static final fURI REPLY_INST_TID = MACH_INST_TID.extend("reply");
 
@@ -1353,14 +1355,22 @@ public class machInstSet extends AbstractInstSet {
                                     // NOOBJ_SENTINEL). clone().selfVID, never vid(): vid() clones AND WRITES the tagged
                                     // obj at the address (Obj.Helper.objClone -> objCheckAndSave -> Machine.write), so on
                                     // the far side every trip would leave a bookkeeping entry on its variableStack
-                                    final Obj answer = payload.isNoObj() ? uri(NOOBJ_SENTINEL) : payload.clone();
                                     // THE TAG IS THE VID'S LAST SEGMENT, never a replacement for the vid: an answer's own
                                     // vid is its identity (a graph element's g:V/1), and a tag that replaced it detached
                                     // every addressed answer a lane shipped home. One with no vid is addressed by the tag
                                     // a tag that is not a hex literal comes from a client built before the hex
                                     // segment: it replaces the vid, as that client's router expects
-                                    return answer.selfVID(null == answer.vid() || !studio.phaseshift.metatron.util.CommonUtil.isHex(tag.name())
+                                    final java.util.function.UnaryOperator<Obj> tagged = answer -> answer.selfVID(null == answer.vid() || !studio.phaseshift.metatron.util.CommonUtil.isHex(tag.name())
                                             ? tag : answer.vid().extend(tag.toString()));
+                                    // A BAG HOLDS NO ADDRESS ON THE WIRE: its vid (a barrier's, say, where to?T{*}<=T{*}
+                                    // wrote it) stays on this machine, as the serializer writes only its members and no
+                                    // spelling puts a vid on one ({…}@x reads as at(x)). Two bags answered on one socket
+                                    // came home with nothing to tell their trips apart. Each member carries the tag, a
+                                    // clone of it (a bag's clone shares its members), and the socket reads the trip off
+                                    // the first
+                                    return payload.isNoObj() ? tagged.apply(uri(NOOBJ_SENTINEL))
+                                            : payload.isObjs() ? objs(payload.stream().map(member -> tagged.apply(member.clone())).toList())
+                                            : tagged.apply(payload.clone());
                                 })
                                 .create()
                 ))),

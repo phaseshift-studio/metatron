@@ -941,6 +941,28 @@ public abstract class AbstractDistributedComputingTest extends AbstractMetatronT
     }
 
     /**
+     * X, THE LIVE DEMO'S SUPERSTEP, here (Marko's live server, 2026-11-28): k's square, with each place holding the
+     * out-edges of its heads, marko's on peer 1 and josh's and peter's on peer 2, each written whole by the barrier.
+     * Every edge of k goes to the place holding its tail's out-edges and is composed there, and the sinks' lane
+     * (is(false)) is dealt to the peers too, so a socket holds several trips at once and each bag of rels has to find
+     * its own. A reply that tagged the bag rather than its members lost the tag on the wire, and the composed bag's trip
+     * timed out. The answer is k * k as this machine computes it.
+     */
+    @Test
+    void test_X_the_superstep_of_a_matrix_product_answers_the_square() {
+        named(NUMBERS, () -> {
+            checkCodeParseApply(LOG, "1.branch(//1 => start({marko=>lop, marko=>josh, marko=>vadas}).to?rel{*}<=rel{*}(/n/ae))",
+                    "{marko=>lop,marko=>josh,marko=>vadas}");
+            checkCodeParseApply(LOG, "1.branch(//2 => start({josh=>lop, josh=>ripple, peter=>lop}).to?rel{*}<=rel{*}(/n/be))",
+                    "{josh=>lop,josh=>ripple,peter=>lop}");
+            final String k = "{marko=>lop, marko=>vadas, marko=>josh, josh=>ripple, josh=>lop, peter=>lop}";
+            checkCodeParseApply(LOG, k + " * " + k, "{marko=>lop,marko=>ripple}");
+            checkCodeParseApply(LOG, k + ".partition(rshift() => {josh => //2 => mult(*/n/be), peter => //2 => mult(*/n/be), "
+                    + "marko => //1 => mult(*/n/ae), _ => is(false)})", "{marko=>lop,marko=>ripple}");
+        });
+    }
+
+    /**
      * X IS A LAYOUT ALREADY: its lanes are routed by their keys, so the planner leaves it as written, and the fold after
      * it stays home.
      */
