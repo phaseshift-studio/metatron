@@ -440,7 +440,7 @@ The sections below run each one on two places.
 integer it is given, boots it from the file it is handed, and dials each one as a `ws_client` peer.
 
 ```mtron_pre
-[NO_OUTPUT] harvest?rec<=int{*}(uri{?}::T){ /
+[MAXOUTPUT 5] harvest?rec<=int{*}(uri{?}::T){ /
   spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>,*0). /
     -<[host=>_].as(ws_client::T).barrier()>>host.>-[,].as(rec::T)}@harvest
 {0,1}.harvest(<boot/space/grph/peer.boot.mtron>)
@@ -455,9 +455,10 @@ is the sum of the reads, $\mathrm{from}(p_{0} + p_{1}) = \mathrm{from}(p_{0}) + 
 own sum:
 
 ```mtron_pre
-[NO_OUTPUT]branch(<//0> => start([a=>{b,c,d}]).to(/n/g), <//1> => start([b=>{c,d},c=>{a,d}]).to(/n/g))
+[MAXOUTPUT 5]branch(<//0> => start([a=>{b,c,d}]).to(/n/g), <//1> => start([b=>{c,d},c=>{a,d}]).to(/n/g))
 *//{0,1}/n/g
 *//{0,1}/n/g.sum()
+*//{0,1}/n/g.sum().explain()>>format
 ```
 
 ## Rows stay where they are: $(\Delta_{p}\mathbf{A})\,\mathbf{A}$
@@ -475,12 +476,14 @@ nothing until it reads the result, and the rows of $\mathbf{A}^{(t)}$ are where 
 $t$:
 
 ```mtron_pre
-[NO_OUTPUT]*g.move(<//0>).to(/n/a)
-[NO_OUTPUT]*g.move(<//1>).to(/n/a)
-[NO_OUTPUT]branch(<//0> => start(*/n/g).mult(*/n/a).to(/n/g2), <//1> => start(*/n/g).mult(*/n/a).to(/n/g2))
+[MAXOUTPUT 5]*g.move(<//0>).to(/n/a)
+[MAXOUTPUT 5]*g.move(<//1>).to(/n/a)
+*g.move(<//1>).to(/n/a).explain()>>format
+[MAXOUTPUT 5]branch(<//0> => start(*/n/g).mult(*/n/a).to(/n/g2), <//1> => start(*/n/g).mult(*/n/a).to(/n/g2))
+branch(<//0> => start(*/n/g).mult(*/n/a).to(/n/g2), <//1> => start(*/n/g).mult(*/n/a).to(/n/g2)).explain()>>format
 *//{0,1}/n/g2.sum()
 *g * *g
-[NO_OUTPUT]branch(<//0> => start(*/n/g2).mult(*/n/a).to(/n/g3), <//1> => start(*/n/g2).mult(*/n/a).to(/n/g3))
+[MAXOUTPUT 5]branch(<//0> => start(*/n/g2).mult(*/n/a).to(/n/g3), <//1> => start(*/n/g2).mult(*/n/a).to(/n/g3))
 *//0/n/g3
 *//{0,1}/n/g3.sum()
 *g.{2}mult(*g)
@@ -497,7 +500,8 @@ Left distributivity splits the other factor. Each place composes the whole graph
 walks whose middle vertex it owns:
 
 ```mtron_pre
-[NO_OUTPUT]branch(<//0> => start(*/n/a).mult(*/n/g).to(/n/m2), <//1> => start(*/n/a).mult(*/n/g).to(/n/m2))
+[MAXOUTPUT 5]branch(<//0> => start(*/n/a).mult(*/n/g).to(/n/m2), <//1> => start(*/n/a).mult(*/n/g).to(/n/m2))
+branch(<//0> => start(*/n/a).mult(*/n/g).to(/n/m2), <//1> => start(*/n/a).mult(*/n/g).to(/n/m2)).explain()>>format
 *//0/n/m2
 *//1/n/m2
 *//{0,1}/n/m2.sum()
@@ -520,10 +524,11 @@ a partition keyed by an edge's tail, `rshift()`, routing each key to its owner. 
 one place and josh's and peter's at the other:
 
 ```mtron_pre
-[NO_OUTPUT]{marko=>lop,marko=>vadas,marko=>josh,josh=>ripple,josh=>lop,peter=>lop}.to?rel{*}<=rel{*}(m)
-[NO_OUTPUT]branch(<//0> => start({marko=>lop,marko=>josh,marko=>vadas}).to?rel{*}<=rel{*}(/n/m), /
+[MAXOUTPUT 5]{marko=>lop,marko=>vadas,marko=>josh,josh=>ripple,josh=>lop,peter=>lop}.to?rel{*}<=rel{*}(m)
+[MAXOUTPUT 5]branch(<//0> => start({marko=>lop,marko=>josh,marko=>vadas}).to?rel{*}<=rel{*}(/n/m), /
   <//1> => start({josh=>lop,josh=>ripple,peter=>lop}).to?rel{*}<=rel{*}(/n/m))
 *m.partition(rshift() => {marko => //0 => mult(*/n/m), josh => //1 => mult(*/n/m), peter => //1 => mult(*/n/m), _ => is(false)})
+*m.partition(rshift() => {marko => //0 => mult(*/n/m), josh => //1 => mult(*/n/m), peter => //1 => mult(*/n/m), _ => is(false)}).explain()>>format
 *m * *m
 ```
 

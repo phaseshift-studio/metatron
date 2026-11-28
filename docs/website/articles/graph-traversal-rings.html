@@ -1025,7 +1025,7 @@ integer it is given, boots it from the file it is handed, and dials each one as 
 <pre><code class="language-mtron">mtron&gt; harvest?rec&lt;=int{*}(uri{?}::T){
          spawn?uri&lt;=int(&lt;//localhost:${_ + 1111}/${_}&gt;,&lt;//${_}&gt;,*0).
            -&lt;[host=&gt;_].as(ws_client::T).barrier()&gt;&gt;host.&gt;-[,].as(rec::T)}@harvest
-...
+==&gt;[=&gt;]
 mtron&gt; {0,1}.harvest(&lt;boot/space/grph/peer.boot.mtron&gt;)
 ==&gt;[0=&gt;ws://localhost:1111/mtron,
     1=&gt;ws://localhost:1112/mtron]
@@ -1037,12 +1037,19 @@ is the sum of the reads, \(\mathrm{from}(p_{0} + p_{1}) = \mathrm{from}(p_{0}) +
 <a href="./ring-theoretic-distributed-computing.html">[2]</a>. The stream of row blocks folds back into the graph under the rec's
 own sum:</p>
 <pre><code class="language-mtron">mtron&gt; branch(&lt;//0&gt; =&gt; start([a=&gt;{b,c,d}]).to(/n/g), &lt;//1&gt; =&gt; start([b=&gt;{c,d},c=&gt;{a,d}]).to(/n/g))
-...
+==&gt;[a=&gt;{b,c,d}]
+==&gt;[b=&gt;{c,d},c=&gt;{a,d}]
 mtron&gt; *//{0,1}/n/g
 ==&gt;[a=&gt;{b,c,d}]
 ==&gt;[b=&gt;{c,d},c=&gt;{a,d}]
 mtron&gt; *//{0,1}/n/g.sum()
 ==&gt;[a=&gt;{b,c,d},b=&gt;{c,d},c=&gt;{a,d}]
+mtron&gt; *//{0,1}/n/g.sum().explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op    dom      rng      args             f    desc      c_dom  c_rng  c_out 
+    from  #{?}::T  #{*}::T  [&lt;//{0,1}/n/g&gt;]  &lt;j&gt;  standard  {?}    {*}    {*}   
+    sum   #{*}::T  #::T                      &lt;?&gt;  reducer   {*}    {1}    {1}   
+   &quot;&quot;&quot;
 </code></pre>
 <h3>Rows stay where they are: \((\Delta_{p}\mathbf{A})\,\mathbf{A}\)</h3>
 <p>The product is associative, so a place's rows of the next power are its rows of this one times the whole graph:</p>
@@ -1055,11 +1062,28 @@ mtron&gt; *//{0,1}/n/g.sum()
 nothing until it reads the result, and the rows of \(\mathbf{A}^{(t)}\) are where the rows of \(\mathbf{A}\) are, at every
 \(t\):</p>
 <pre><code class="language-mtron">mtron&gt; *g.move(&lt;//0&gt;).to(/n/a)
-...
+==&gt;[a=&gt;{b,c,d},b=&gt;{c,d},c=&gt;{a,d}]
 mtron&gt; *g.move(&lt;//1&gt;).to(/n/a)
-...
+==&gt;[a=&gt;{b,c,d},b=&gt;{c,d},c=&gt;{a,d}]
+mtron&gt; *g.move(&lt;//1&gt;).to(/n/a).explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op    dom        rng        args                            f    desc      c_dom  c_rng  c_out 
+    from  #{?}::T    rec{*}::T  [g]                             &lt;j&gt;  standard  {?}    {*}    {*}   
+    cut   rec{*}::T  #{*}::T    [ws://localhost:1112,to(/n/a)]  &lt;j&gt;  gather    {*}    {*}    {*}   
+   &quot;&quot;&quot;
 mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/g).mult(*/n/a).to(/n/g2), &lt;//1&gt; =&gt; start(*/n/g).mult(*/n/a).to(/n/g2))
-...
+==&gt;[a=&gt;{b=&gt;c,b=&gt;d,c=&gt;a,c=&gt;d}]
+==&gt;[b=&gt;{c=&gt;a,c=&gt;d},c=&gt;{a=&gt;b,a=&gt;c,a=&gt;d}]
+mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/g).mult(*/n/a).to(/n/g2), &lt;//1&gt; =&gt; start(*/n/g).mult(*/n/a).to(/n/g2)).explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op      dom      rng      args                                                           f    desc      c_dom  c_rng  c_out 
+    branch  A{?}::T  #{*}::T  [cut(ws://localhost:1111,start(*/n/g).mult(*/n/a).to(/n/g2)),  &lt;j&gt;  standard  {?}    {*}    {*}   
+                               cut(ws://localhost:1112,start(*/n/g).mult(*/n/a).to(/n/g2))]                                     
+   
+        ┌─►//0─{*}─{*}─{*}─┐
+   {*}──┤                  ├─►//local─{*}
+        └─►//1─{*}─{*}─{*}─┘
+   &quot;&quot;&quot;
 mtron&gt; *//{0,1}/n/g2.sum()
 ==&gt;[a=&gt;{b=&gt;c,b=&gt;d,c=&gt;a,c=&gt;d},
     b=&gt;{c=&gt;a,c=&gt;d},
@@ -1069,7 +1093,9 @@ mtron&gt; *g * *g
     b=&gt;{c=&gt;a,c=&gt;d},
     c=&gt;{a=&gt;b,a=&gt;c,a=&gt;d}]
 mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/g2).mult(*/n/a).to(/n/g3), &lt;//1&gt; =&gt; start(*/n/g2).mult(*/n/a).to(/n/g3))
-...
+==&gt;[a=&gt;{b=&gt;c=&gt;a,b=&gt;c=&gt;d,c=&gt;a=&gt;b,c=&gt;a=&gt;c,c=&gt;a=&gt;d}]
+==&gt;[b=&gt;{c=&gt;a=&gt;b,c=&gt;a=&gt;c,c=&gt;a=&gt;d},
+    c=&gt;{a=&gt;b=&gt;c,a=&gt;b=&gt;d,a=&gt;c=&gt;a,a=&gt;c=&gt;d}]
 mtron&gt; *//0/n/g3
 ==&gt;[a=&gt;{b=&gt;c=&gt;a,b=&gt;c=&gt;d,c=&gt;a=&gt;b,c=&gt;a=&gt;c,c=&gt;a=&gt;d}]
 mtron&gt; *//{0,1}/n/g3.sum()
@@ -1089,7 +1115,19 @@ rels is a stream, and a stream handed to a <code>branch</code> reaches each lane
 <p>Left distributivity splits the other factor. Each place composes the whole graph with its own rows, which gives the
 walks whose middle vertex it owns:</p>
 <pre><code class="language-mtron">mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/a).mult(*/n/g).to(/n/m2), &lt;//1&gt; =&gt; start(*/n/a).mult(*/n/g).to(/n/m2))
-...
+==&gt;[c=&gt;{a=&gt;b,a=&gt;c,a=&gt;d}]
+==&gt;[a=&gt;{b=&gt;c,b=&gt;d,c=&gt;a,c=&gt;d},
+    b=&gt;{c=&gt;a,c=&gt;d}]
+mtron&gt; branch(&lt;//0&gt; =&gt; start(*/n/a).mult(*/n/g).to(/n/m2), &lt;//1&gt; =&gt; start(*/n/a).mult(*/n/g).to(/n/m2)).explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op      dom      rng      args                                                           f    desc      c_dom  c_rng  c_out 
+    branch  A{?}::T  #{*}::T  [cut(ws://localhost:1111,start(*/n/a).mult(*/n/g).to(/n/m2)),  &lt;j&gt;  standard  {?}    {*}    {*}   
+                               cut(ws://localhost:1112,start(*/n/a).mult(*/n/g).to(/n/m2))]                                     
+   
+        ┌─►//0─{*}─{*}─{*}─┐
+   {*}──┤                  ├─►//local─{*}
+        └─►//1─{*}─{*}─{*}─┘
+   &quot;&quot;&quot;
 mtron&gt; *//0/n/m2
 ==&gt;[c=&gt;{a=&gt;b,a=&gt;c,a=&gt;d}]
 mtron&gt; *//1/n/m2
@@ -1113,13 +1151,35 @@ them at every step.</p>
 a partition keyed by an edge's tail, <code>rshift()</code>, routing each key to its owner. The modern graph's edges, marko's rows at
 one place and josh's and peter's at the other:</p>
 <pre><code class="language-mtron">mtron&gt; {marko=&gt;lop,marko=&gt;vadas,marko=&gt;josh,josh=&gt;ripple,josh=&gt;lop,peter=&gt;lop}.to?rel{*}&lt;=rel{*}(m)
-...
+==&gt;marko=&gt;lop
+==&gt;marko=&gt;vadas
+==&gt;marko=&gt;josh
+==&gt;josh=&gt;ripple
+==&gt;josh=&gt;lop
+   ...
 mtron&gt; branch(&lt;//0&gt; =&gt; start({marko=&gt;lop,marko=&gt;josh,marko=&gt;vadas}).to?rel{*}&lt;=rel{*}(/n/m),
          &lt;//1&gt; =&gt; start({josh=&gt;lop,josh=&gt;ripple,peter=&gt;lop}).to?rel{*}&lt;=rel{*}(/n/m))
-...
+==&gt;marko=&gt;lop
+==&gt;marko=&gt;josh
+==&gt;marko=&gt;vadas
+==&gt;josh=&gt;lop
+==&gt;josh=&gt;ripple
+   ...
 mtron&gt; *m.partition(rshift() =&gt; {marko =&gt; //0 =&gt; mult(*/n/m), josh =&gt; //1 =&gt; mult(*/n/m), peter =&gt; //1 =&gt; mult(*/n/m), _ =&gt; is(false)})
 ==&gt;marko=&gt;lop
 ==&gt;marko=&gt;ripple
+mtron&gt; *m.partition(rshift() =&gt; {marko =&gt; //0 =&gt; mult(*/n/m), josh =&gt; //1 =&gt; mult(*/n/m), peter =&gt; //1 =&gt; mult(*/n/m), _ =&gt; is(false)}).explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op         dom        rng        args                                                                                                  f    desc      c_dom  c_rng  c_out 
+    from       #{?}::T    rel{*}::T  [m]                                                                                                   &lt;j&gt;  standard  {?}    {*}    {*}   
+    partition  rel{*}::T  #{*}::T    [rshift()=&gt;{marko=&gt;//0=&gt;mult(*/n/m),josh=&gt;//1=&gt;mult(*/n/m),peter=&gt;//1=&gt;mult(*/n/m),id()=&gt;is(false)}]  &lt;j&gt;  gather    {*}    {*}    {*}   
+   
+        ┌─►//0─────{*}─{*}─┐
+        ├─►//1─────{*}─{*}─┤
+   {*}──┤                  ├─►//local─{*}
+        ├─►//1─────{*}─{*}─┤
+        └─►//local─{*}─{*}─┘
+   &quot;&quot;&quot;
 mtron&gt; *m * *m
 ==&gt;marko=&gt;ripple
 ==&gt;marko=&gt;lop
